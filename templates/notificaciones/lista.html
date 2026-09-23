@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block encabezado %}Notificaciones{% endblock %}
+{% block acciones %}
+<form method="post" action="{% url 'notificaciones:marcar_leidas' %}">{% csrf_token %}
+  <button class="btn btn-sm btn-borde">Marcar todas como leidas</button></form>
+{% endblock %}
+{% block contenido %}
+<div class="tarjeta"><div class="tabla-envoltura"><table class="tabla">
+  <thead><tr><th>Fecha</th><th>Negocio</th><th>Titulo</th><th>Mensaje</th><th>Estado</th><th></th></tr></thead>
+  <tbody>
+  {% for n in notificaciones %}
+    <tr class="{% if not n.leida %}fw-semibold{% endif %}">
+      <td>{{ n.creado_en|date:"d/m/Y H:i" }}</td>
+      <td>{{ n.negocio }}</td>
+      <td>{{ n.titulo }}</td>
+      <td class="small">{{ n.mensaje }}</td>
+      <td><span class="badge text-bg-{% if n.leida %}secondary{% else %}primary{% endif %} badge-estado">{% if n.leida %}Leida{% else %}Nueva{% endif %}</span></td>
+      <td>{% if n.url %}<a class="btn btn-sm btn-borde" href="{{ n.url }}">Abrir</a>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6">{% include "components/estado_vacio.html" with mensaje="Sin notificaciones." icono="bi-bell" %}</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% include "components/paginacion.html" %}
+{% endblock %}

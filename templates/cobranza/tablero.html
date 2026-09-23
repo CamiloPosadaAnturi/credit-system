@@ -1,0 +1,103 @@
+{% extends "base.html" %}{% load formato %}
+{% block encabezado %}Cobranza y cartera vencida{% endblock %}
+{% block acciones %}
+<form method="post" action="{% url 'cobranza:actualizar_mora' %}" class="d-inline">
+  {% csrf_token %}<button class="btn btn-sm btn-borde">Actualizar estados de mora</button>
+</form>
+{% endblock %}
+{% block contenido %}
+<form class="filtros" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-3">{{ formulario_filtro.negocio.label_tag }}{{ formulario_filtro.negocio }}</div>
+    <div class="col-md-3">{{ formulario_filtro.cobrador.label_tag }}{{ formulario_filtro.cobrador }}</div>
+    <div class="col-md-2">{{ formulario_filtro.atraso_minimo.label_tag }}{{ formulario_filtro.atraso_minimo }}</div>
+    <div class="col-md-2 d-grid"><button class="btn btn-primary btn-sm">Filtrar</button></div>
+  </div>
+</form>
+
+{% with c=clasificacion %}
+<div class="indicadores mb-4">
+  {% include "components/indicador.html" with etiqueta="Vencen hoy" valor=c.vencen_hoy pie="Cuotas programadas" acento="acento-ambar" %}
+  {% include "components/indicador.html" with etiqueta="Proximas (7 dias)" valor=c.proximas acento="acento-azul" %}
+  {% include "components/indicador.html" with etiqueta="Cuotas vencidas" valor=c.vencidas acento="acento-rojo" %}
+  {% include "components/indicador.html" with etiqueta="Creditos en mora" valor=c.creditos_en_mora acento="acento-rojo" %}
+  {% include "components/indicador.html" with etiqueta="Saldo vencido" valor=c.saldo_vencido|mxn acento="acento-rojo" %}
+  {% include "components/indicador.html" with etiqueta="Saldo total" valor=c.saldo_total|mxn acento="acento-ambar" %}
+  {% include "components/indicador.html" with etiqueta="Parcialmente pagados" valor=c.parcialmente_pagados acento="acento-azul" %}
+  {% include "components/indicador.html" with etiqueta="Clientes con varios creditos" valor=c.clientes_multiples_creditos acento="acento-azul" %}
+</div>
+{% endwith %}
+
+<ul class="nav nav-tabs mb-3">
+  <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabHoy">Vencen hoy</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabMora">En mora</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabVencidas">Cuotas vencidas</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabProximas">Proximas a vencer</button></li>
+</ul>
+
+<div class="tab-content">
+  <div class="tab-pane fade show active" id="tabHoy">
+    <div class="tarjeta"><div class="tabla-envoltura"><table class="tabla">
+      <thead><tr><th>Cliente</th><th>Telefono</th><th>Credito</th><th class="num">Cuota</th>
+        <th class="num">Saldo</th><th>Cobrador</th><th></th></tr></thead>
+      <tbody>
+      {% for cuota in cuotas_hoy %}
+        <tr><td>{{ cuota.credito.cliente }}</td><td>{{ cuota.credito.cliente.telefono_principal }}</td>
+          <td><a href="{{ cuota.credito.get_absolute_url }}">{{ cuota.credito.folio }}</a></td>
+          <td class="num">{{ cuota.importe_programado|mxn }}</td>
+          <td class="num">{{ cuota.saldo|mxn }}</td>
+          <td>{{ cuota.credito.cobrador|default:"-" }}</td>
+          <td>{% if permisos_usuario.registrar_pago %}<a class="btn btn-sm btn-primary" href="{% url 'pagos:registrar' cuota.credito.pk %}">Cobrar</a>{% endif %}</td></tr>
+      {% empty %}<tr><td colspan="7">{% include "components/estado_vacio.html" with mensaje="Nada programado para hoy." icono="bi-calendar-check" %}</td></tr>{% endfor %}
+      </tbody></table></div></div>
+  </div>
+
+  <div class="tab-pane fade" id="tabMora">
+    <div class="tarjeta"><div class="tabla-envoltura"><table class="tabla">
+      <thead><tr><th>Cliente</th><th>Telefono</th><th>Credito</th><th class="num">Cuotas vencidas</th>
+        <th class="num">Dias</th><th class="num">Saldo vencido</th><th class="num">Saldo total</th>
+        <th>Ultima gestion</th><th></th></tr></thead>
+      <tbody>
+      {% for fila in mora %}
+        <tr><td>{{ fila.cliente }}</td><td>{{ fila.cliente.telefono_principal }}</td>
+          <td><a href="{{ fila.credito.get_absolute_url }}">{{ fila.credito.folio }}</a></td>
+          <td class="num">{{ fila.cuotas_vencidas }}</td>
+          <td class="num text-danger fw-semibold">{{ fila.dias_atraso }}</td>
+          <td class="num">{{ fila.saldo_vencido|mxn }}</td>
+          <td class="num">{{ fila.saldo_total|mxn }}</td>
+          <td class="small">{% if fila.ultima_gestion %}{{ fila.ultima_gestion.get_tipo_display }} - {{ fila.ultima_gestion.fecha|date:"d/m/Y" }}{% else %}<span class="text-secondary">Sin gestiones</span>{% endif %}</td>
+          <td>{% if permisos_usuario.registrar_gestion %}<a class="btn btn-sm btn-borde" href="{% url 'cobranza:registrar_gestion' fila.credito.pk %}">Gestionar</a>{% endif %}</td></tr>
+      {% empty %}<tr><td colspan="9">{% include "components/estado_vacio.html" with mensaje="Sin creditos en mora." icono="bi-emoji-smile" %}</td></tr>{% endfor %}
+      </tbody></table></div></div>
+  </div>
+
+  <div class="tab-pane fade" id="tabVencidas">
+    <div class="tarjeta"><div class="tabla-envoltura"><table class="tabla">
+      <thead><tr><th>Cliente</th><th>Credito</th><th>#</th><th>Vencio</th><th class="num">Atraso</th>
+        <th class="num">Saldo cuota</th><th>Cobrador</th></tr></thead>
+      <tbody>
+      {% for cuota in cuotas_vencidas %}
+        <tr><td>{{ cuota.credito.cliente }}</td>
+          <td><a href="{{ cuota.credito.get_absolute_url }}">{{ cuota.credito.folio }}</a></td>
+          <td>{{ cuota.numero }}</td><td>{{ cuota.fecha_vencimiento|date:"d/m/Y" }}</td>
+          <td class="num text-danger">{{ cuota.dias_atraso }} d</td>
+          <td class="num">{{ cuota.saldo|mxn }}</td>
+          <td>{{ cuota.credito.cobrador|default:"-" }}</td></tr>
+      {% empty %}<tr><td colspan="7">{% include "components/estado_vacio.html" with mensaje="No hay cuotas vencidas." %}</td></tr>{% endfor %}
+      </tbody></table></div></div>
+  </div>
+
+  <div class="tab-pane fade" id="tabProximas">
+    <div class="tarjeta"><div class="tabla-envoltura"><table class="tabla">
+      <thead><tr><th>Cliente</th><th>Credito</th><th>#</th><th>Vence</th><th class="num">Saldo cuota</th><th>Cobrador</th></tr></thead>
+      <tbody>
+      {% for cuota in cuotas_proximas %}
+        <tr><td>{{ cuota.credito.cliente }}</td>
+          <td><a href="{{ cuota.credito.get_absolute_url }}">{{ cuota.credito.folio }}</a></td>
+          <td>{{ cuota.numero }}</td><td>{{ cuota.fecha_vencimiento|date:"d/m/Y" }}</td>
+          <td class="num">{{ cuota.saldo|mxn }}</td><td>{{ cuota.credito.cobrador|default:"-" }}</td></tr>
+      {% empty %}<tr><td colspan="6">{% include "components/estado_vacio.html" with mensaje="Sin vencimientos en los proximos 7 dias." %}</td></tr>{% endfor %}
+      </tbody></table></div></div>
+  </div>
+</div>
+{% endblock %}

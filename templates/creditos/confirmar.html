@@ -1,0 +1,72 @@
+{% extends "base.html" %}{% load formato %}
+{% block encabezado %}Confirmar condiciones del credito{% endblock %}
+{% block contenido %}
+{% if resumen_cliente.alertas %}
+  <div class="alert alert-warning">
+    <strong>Revisa antes de otorgar:</strong>
+    <ul class="mb-0 mt-1">{% for alerta in resumen_cliente.alertas %}<li>{{ alerta }}</li>{% endfor %}</ul>
+  </div>
+{% endif %}
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="tarjeta mb-3">
+      <div class="tarjeta-cabecera"><h2>Condiciones</h2></div>
+      <div class="tarjeta-cuerpo">
+        <dl class="row mb-0">
+          <dt class="col-6">Cliente</dt><dd class="col-6 text-end">{{ cliente }}</dd>
+          <dt class="col-6">Capital prestado</dt><dd class="col-6 text-end">{{ simulacion.capital|mxn }}</dd>
+          <dt class="col-6">Interes total</dt><dd class="col-6 text-end">{{ simulacion.interes_total|mxn }}</dd>
+          <dt class="col-6 fw-semibold">Total a pagar</dt><dd class="col-6 text-end fw-semibold">{{ simulacion.total_a_pagar|mxn }}</dd>
+          <dt class="col-6">Numero de cuotas</dt><dd class="col-6 text-end">{{ simulacion.numero_cuotas }}</dd>
+          <dt class="col-6">Importe por cuota</dt><dd class="col-6 text-end">{{ simulacion.importe_cuota|mxn }}</dd>
+          <dt class="col-6">Ultima cuota</dt><dd class="col-6 text-end">{{ simulacion.importe_ultima_cuota|mxn }}</dd>
+          <dt class="col-6">Primer pago</dt><dd class="col-6 text-end">{{ simulacion.fecha_primer_pago|date:"d/m/Y" }}</dd>
+          <dt class="col-6">Vencimiento final</dt><dd class="col-6 text-end">{{ simulacion.fecha_vencimiento_final|date:"d/m/Y" }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="tarjeta">
+      <div class="tarjeta-cabecera"><h2>Historial del cliente</h2></div>
+      <div class="tarjeta-cuerpo">
+        <dl class="row small mb-0">
+          <dt class="col-7">Creditos vigentes</dt><dd class="col-5 text-end">{{ resumen_cliente.creditos_vigentes_num }}</dd>
+          <dt class="col-7">Saldo pendiente</dt><dd class="col-5 text-end">{{ resumen_cliente.saldo_pendiente|mxn }}</dd>
+          <dt class="col-7">Cuotas vencidas</dt><dd class="col-5 text-end">{{ resumen_cliente.cuotas_vencidas }}</dd>
+          <dt class="col-7">Puntualidad historica</dt><dd class="col-5 text-end">{{ resumen_cliente.puntualidad|porcentaje }}</dd>
+          <dt class="col-7">Total pagado</dt><dd class="col-5 text-end">{{ resumen_cliente.total_pagado|mxn }}</dd>
+        </dl>
+        <p class="ayuda mt-3 mb-0">El sistema no aprueba ni rechaza automaticamente: la decision es tuya.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="tarjeta">
+      <div class="tarjeta-cabecera"><h2>Calendario propuesto</h2></div>
+      <div class="tabla-envoltura" style="max-height:420px;overflow-y:auto">
+        <table class="tabla">
+          <thead><tr><th>#</th><th>Vence</th><th class="num">Capital</th><th class="num">Interes</th><th class="num">Cuota</th></tr></thead>
+          <tbody>
+          {% for fila in simulacion.calendario %}
+            <tr><td>{{ fila.numero }}</td><td>{{ fila.fecha_vencimiento|date:"d/m/Y" }}</td>
+              <td class="num">{{ fila.capital_programado|mxn }}</td>
+              <td class="num">{{ fila.interes_programado|mxn }}</td>
+              <td class="num fw-semibold">{{ fila.importe_programado|mxn }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<form method="post" action="{% url 'creditos:crear' %}" class="mt-3" data-una-vez>
+  {% csrf_token %}
+  {% for campo in form %}{{ campo.as_hidden }}{% endfor %}
+  <input type="hidden" name="confirmar" value="1">
+  <button class="btn btn-primary" type="submit">Confirmar y registrar credito</button>
+  <a class="btn btn-borde" href="{% url 'creditos:crear' %}">Corregir condiciones</a>
+</form>
+{% endblock %}

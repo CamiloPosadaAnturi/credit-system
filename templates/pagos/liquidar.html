@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% load formato %}
+{% block encabezado %}Liquidacion anticipada{% endblock %}
+{% block subtitulo %}<p class="text-secondary small mb-0">{{ credito.folio }} &middot; {{ credito.cliente }}</p>{% endblock %}
+{% block contenido %}
+<div class="row g-3"><div class="col-lg-6">
+  {% if not calculo.permitida %}
+    <div class="alert alert-danger">Este negocio no permite la liquidacion anticipada.</div>
+  {% endif %}
+  <div class="tarjeta mb-3"><div class="tarjeta-cabecera"><h2>Calculo</h2></div>
+    <div class="tarjeta-cuerpo"><dl class="row mb-0">
+      <dt class="col-7">Saldo contractual</dt><dd class="col-5 text-end">{{ calculo.saldo_contractual|mxn }}</dd>
+      <dt class="col-7">Interes no devengado</dt><dd class="col-5 text-end">{{ calculo.interes_no_devengado|mxn }}</dd>
+      <dt class="col-7">Descuento autorizado</dt><dd class="col-5 text-end">- {{ calculo.descuento|mxn }}</dd>
+      <dt class="col-7 fw-semibold">Importe a recibir hoy</dt><dd class="col-5 text-end fw-semibold">{{ calculo.importe_liquidacion|mxn }}</dd>
+    </dl>
+    <p class="ayuda mt-3 mb-0">
+      El descuento se registra como una condonacion auditada, no como dinero recibido.
+      Con descuento 0 el cliente paga el saldo contractual completo.
+    </p>
+    </div>
+  </div>
+  {% if calculo.permitida %}
+  <div class="tarjeta"><div class="tarjeta-cuerpo">
+    <form method="post" data-una-vez data-confirmar="Confirmas la liquidacion del credito?">
+      {% csrf_token %}
+      {% include "components/formulario.html" %}
+      <button class="btn btn-success" type="submit">Liquidar credito</button>
+      <a class="btn btn-borde" href="{{ credito.get_absolute_url }}">Volver</a>
+    </form>
+  </div></div>
+  {% endif %}
+</div></div>
+{% endblock %}

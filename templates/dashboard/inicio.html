@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+{% load formato %}
+{% block encabezado %}Dashboard{% endblock %}
+{% block subtitulo %}
+  <p class="text-secondary small mb-0">
+    Periodo {{ indicadores.desde|date:"d/m/Y" }} - {{ indicadores.hasta|date:"d/m/Y" }}
+    {% if negocio_seleccionado %} &middot; {{ negocio_seleccionado }}{% else %} &middot; todos los negocios{% endif %}
+  </p>
+{% endblock %}
+
+{% block acciones %}
+<form class="d-flex gap-2 flex-wrap" method="get">
+  <select name="negocio" class="form-select form-select-sm" style="min-width:160px">
+    <option value="">Todos los negocios</option>
+    {% for n in negocios_usuario %}
+      <option value="{{ n.pk }}" {% if negocio_seleccionado and negocio_seleccionado.pk == n.pk %}selected{% endif %}>{{ n }}</option>
+    {% endfor %}
+  </select>
+  <input type="date" name="desde" value="{{ desde }}" class="form-control form-control-sm">
+  <input type="date" name="hasta" value="{{ hasta }}" class="form-control form-control-sm">
+  <button class="btn btn-sm btn-primary" type="submit">Aplicar</button>
+</form>
+{% endblock %}
+
+{% block contenido %}
+{% with i=indicadores %}
+<div class="indicadores mb-4">
+  {% include "components/indicador.html" with etiqueta="Capital colocado" valor=i.capital_colocado|mxn pie="Dinero prestado en el periodo" acento="acento-azul" %}
+  {% include "components/indicador.html" with etiqueta="Interes contractual" valor=i.interes_contractual|mxn pie="Pactado, no necesariamente cobrado" acento="acento-azul" %}
+  {% include "components/indicador.html" with etiqueta="Total recaudado" valor=i.total_recaudado|mxn pie="Pagos confirmados del periodo" acento="acento-verde" %}
+  {% include "components/indicador.html" with etiqueta="Saldo pendiente" valor=i.saldo_pendiente|mxn pie="Por cobrar de creditos vigentes" acento="acento-ambar" %}
+  {% include "components/indicador.html" with etiqueta="Saldo vencido" valor=i.saldo_vencido|mxn pie="Cuotas con fecha ya vencida" acento="acento-rojo" %}
+  {% include "components/indicador.html" with etiqueta="Creditos activos" valor=i.creditos_activos pie=i.creditos_en_mora|stringformat:"s"|add:" en mora" acento="acento-azul" %}
+  {% include "components/indicador.html" with etiqueta="Creditos liquidados" valor=i.creditos_liquidados pie="Historico" acento="acento-verde" %}
+  {% include "components/indicador.html" with etiqueta="Clientes activos" valor=i.clientes_activos pie="Con al menos un credito vigente" acento="acento-azul" %}
+  {% include "components/indicador.html" with etiqueta="Programado hoy" valor=i.pagos_programados_hoy|mxn pie=i.pagos_programados_hoy_num|stringformat:"s"|add:" cuota(s)" acento="acento-ambar" %}
+  {% include "components/indicador.html" with etiqueta="Recibido hoy" valor=i.pagos_recibidos_hoy|mxn pie=i.pagos_recibidos_hoy_num|stringformat:"s"|add:" pago(s)" acento="acento-verde" %}
+  {% include "components/indicador.html" with etiqueta="% de recuperacion" valor=i.porcentaje_recuperacion|porcentaje pie="Recaudado / total contractual del periodo" acento="acento-verde" %}
+  {% include "components/indicador.html" with etiqueta="% cartera vencida" valor=i.porcentaje_cartera_vencida|porcentaje pie="Saldo vencido / saldo pendiente" acento="acento-rojo" %}
+</div>
+{% endwith %}
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-8">
+    <div class="tarjeta h-100">
+      <div class="tarjeta-cabecera"><h2>Programado vs. cobrado (ultimos 14 dias)</h2></div>
+      <div class="tarjeta-cuerpo"><canvas id="graficoPagos" height="110"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="tarjeta h-100">
+      <div class="tarjeta-cabecera"><h2>Composicion de la cartera</h2></div>
+      <div class="tarjeta-cuerpo"><canvas id="graficoCartera" height="180"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-6">
+    <div class="tarjeta h-100">
+      <div class="tarjeta-cabecera">
+        <h2>A. Clientes que deben pagar hoy</h2>
+        <a class="btn btn-sm btn-borde" href="{% url 'cobranza:mi_cartera' %}">Ver cartera</a>
+      </div>
+      <div class="tabla-envoltura">
+        <table class="tabla">
+          <thead><tr>
+            <th>Cliente</th><th>Telefono</th><th>Credito</th>
+            <th class="num">Cuota</th><th class="num">Abonado</th><th class="num">Saldo</th>
+            <th>Cobrador</th><th>Estado</th><th></th>
+          </tr></thead>
+          <tbody>
+          {% for cuota in cobrar_hoy %}
+            <tr>
+              <td>{{ cuota.credito.cliente }}</td>
+              <td>{{ cuota.credito.cliente.telefono_principal }}</td>
+              <td><a href="{{ cuota.credito.get_absolute_url }}">{{ cuota.credito.folio }}</a></td>
+              <td class="num">{{ cuota.importe_programado|mxn }}</td>
+              <td class="num">{{ cuota.importe_pagado|mxn }}</td>
+              <td class="num fw-semibold">{{ cuota.saldo|mxn }}</td>
+              <td>{{ cuota.credito.cobrador|default:"-" }}</td>
+              <td><span class="badge text-bg-{{ cuota.estado|badge }} badge-estado">{{ cuota.get_estado_display }}</span></td>
+              <td>{% if permisos_usuario.registrar_pago %}
+                <a class="btn btn-sm btn-primary" href="{% url 'pagos:registrar' cuota.credito.pk %}">Cobrar</a>
+              {% endif %}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="9">{% include "components/estado_vacio.html" with mensaje="No hay cuotas programadas para hoy." icono="bi-calendar-check" %}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="tarjeta h-100">
+      <div class="tarjeta-cabecera">
+        <h2>B. Clientes en mora</h2>
+        <a class="btn btn-sm btn-borde" href="{% url 'cobranza:tablero' %}">Tablero de cobranza</a>
+      </div>
+      <div class="tabla-envoltura">
+        <table class="tabla">
+          <thead><tr>
+            <th>Cliente</th><th>Telefono</th><th>Credito</th><th class="num">Cuotas</th>
+            <th class="num">Atraso</th><th class="num">Vencido</th><th class="num">Saldo total</th>
+            <th>Ultima gestion</th>
+          </tr></thead>
+          <tbody>
+          {% for fila in mora %}
+            <tr>
+              <td>{{ fila.cliente }}</td>
+              <td>{{ fila.cliente.telefono_principal }}</td>
+              <td><a href="{{ fila.credito.get_absolute_url }}">{{ fila.credito.folio }}</a></td>
+              <td class="num">{{ fila.cuotas_vencidas }}</td>
+              <td class="num text-danger fw-semibold">{{ fila.dias_atraso }} d</td>
+              <td class="num">{{ fila.saldo_vencido|mxn }}</td>
+              <td class="num">{{ fila.saldo_total|mxn }}</td>
+              <td class="small">{% if fila.ultima_gestion %}{{ fila.ultima_gestion.get_tipo_display }}<br>
+                <span class="text-secondary">{{ fila.ultima_gestion.fecha|date:"d/m/Y" }}</span>
+                {% else %}<span class="text-secondary">Sin gestiones</span>{% endif %}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="8">{% include "components/estado_vacio.html" with mensaje="Ningun credito en mora. Buen trabajo." icono="bi-emoji-smile" %}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="tarjeta h-100">
+      <div class="tarjeta-cabecera"><h2>C. Clientes que mas credito han solicitado</h2></div>
+      <div class="tarjeta-cuerpo">
+        <ul class="nav nav-tabs nav-sm mb-3" role="tablist">
+          <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#porMonto" type="button">Por monto</button></li>
+          <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#porNumero" type="button">Por numero</button></li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="porMonto">
+            <table class="tabla"><thead><tr><th>Cliente</th><th class="num">Capital historico</th><th class="num">Creditos</th></tr></thead>
+              <tbody>
+              {% for fila in ranking_solicitantes.por_monto %}
+                <tr><td>{{ fila.cliente__nombres }} {{ fila.cliente__apellido_paterno }} {{ fila.cliente__apellido_materno }}</td>
+                  <td class="num">{{ fila.capital|mxn }}</td><td class="num">{{ fila.numero }}</td></tr>
+              {% empty %}<tr><td colspan="3" class="text-secondary small">Sin datos en el periodo.</td></tr>{% endfor %}
+              </tbody></table>
+          </div>
+          <div class="tab-pane fade" id="porNumero">
+            <table class="tabla"><thead><tr><th>Cliente</th><th class="num">Creditos</th><th class="num">Capital</th></tr></thead>
+              <tbody>
+              {% for fila in ranking_solicitantes.por_numero %}
+                <tr><td>{{ fila.cliente__nombres }} {{ fila.cliente__apellido_paterno }}</td>
+                  <td class="num">{{ fila.numero }}</td><td class="num">{{ fila.capital|mxn }}</td></tr>
+              {% empty %}<tr><td colspan="3" class="text-secondary small">Sin datos en el periodo.</td></tr>{% endfor %}
+              </tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="tarjeta h-100">
+      <div class="tarjeta-cabecera"><h2>D. Clientes que mas han pagado</h2></div>
+      <div class="tarjeta-cuerpo">
+        <ul class="nav nav-tabs mb-3" role="tablist">
+          <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pagPeriodo" type="button">Periodo</button></li>
+          <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pagHistorico" type="button">Historico</button></li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="pagPeriodo">
+            <table class="tabla"><thead><tr><th>Cliente</th><th class="num">Pagado</th><th class="num">Pagos</th></tr></thead><tbody>
+              {% for fila in ranking_pagadores.periodo %}
+                <tr><td>{{ fila.cliente__nombres }} {{ fila.cliente__apellido_paterno }}</td>
+                  <td class="num">{{ fila.total|mxn }}</td><td class="num">{{ fila.numero }}</td></tr>
+              {% empty %}<tr><td colspan="3" class="text-secondary small">Sin pagos en el periodo.</td></tr>{% endfor %}
+            </tbody></table>
+          </div>
+          <div class="tab-pane fade" id="pagHistorico">
+            <table class="tabla"><thead><tr><th>Cliente</th><th class="num">Pagado</th><th class="num">Pagos</th></tr></thead><tbody>
+              {% for fila in ranking_pagadores.historico %}
+                <tr><td>{{ fila.cliente__nombres }} {{ fila.cliente__apellido_paterno }}</td>
+                  <td class="num">{{ fila.total|mxn }}</td><td class="num">{{ fila.numero }}</td></tr>
+              {% empty %}<tr><td colspan="3" class="text-secondary small">Sin pagos registrados.</td></tr>{% endfor %}
+            </tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if cobradores %}
+  <div class="col-12">
+    <div class="tarjeta">
+      <div class="tarjeta-cabecera">
+        <h2>E. Desempeno de cobradores</h2>
+        <span class="ayuda">El monto recibido no es utilidad: incluye capital e interes.</span>
+      </div>
+      <div class="tabla-envoltura">
+        <table class="tabla">
+          <thead><tr>
+            <th>Cobrador</th><th class="num">Pagos recibidos</th><th class="num">No. pagos</th>
+            <th class="num">Cartera asignada</th><th class="num">Creditos</th>
+            <th class="num">Saldo vencido</th><th class="num">Gestiones</th>
+            <th class="num">Promesas</th><th class="num">Cumplidas</th>
+          </tr></thead>
+          <tbody>
+          {% for fila in cobradores %}
+            <tr>
+              <td>{{ fila.cobrador }}</td>
+              <td class="num">{{ fila.pagos_recibidos|mxn }}</td>
+              <td class="num">{{ fila.pagos_numero }}</td>
+              <td class="num">{{ fila.cartera_asignada|mxn }}</td>
+              <td class="num">{{ fila.creditos_asignados }}</td>
+              <td class="num">{{ fila.saldo_vencido|mxn }}</td>
+              <td class="num">{{ fila.gestiones }}</td>
+              <td class="num">{{ fila.promesas }}</td>
+              <td class="num">{{ fila.promesas_cumplidas }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="9">{% include "components/estado_vacio.html" with mensaje="No hay cobradores registrados." icono="bi-person-walking" %}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="col-12">
+    <div class="tarjeta">
+      <div class="tarjeta-cabecera"><h2>F. Actividad reciente</h2></div>
+      <div class="tarjeta-cuerpo">
+        <div class="row g-4">
+          <div class="col-md-3">
+            <h3 class="h6 text-secondary">Clientes nuevos</h3>
+            <ul class="list-unstyled small mb-0">
+              {% for c in actividad.clientes_nuevos %}
+                <li class="mb-1"><a href="{{ c.get_absolute_url }}">{{ c }}</a>
+                  <span class="text-secondary d-block">{{ c.creado_en|date:"d/m/Y" }}</span></li>
+              {% empty %}<li class="text-secondary">Sin registros.</li>{% endfor %}
+            </ul>
+          </div>
+          <div class="col-md-3">
+            <h3 class="h6 text-secondary">Creditos registrados</h3>
+            <ul class="list-unstyled small mb-0">
+              {% for c in actividad.creditos_nuevos %}
+                <li class="mb-1"><a href="{{ c.get_absolute_url }}">{{ c.folio }}</a> - {{ c.cliente }}
+                  <span class="text-secondary d-block">{{ c.capital|mxn }} &middot; {{ c.get_estado_display }}</span></li>
+              {% empty %}<li class="text-secondary">Sin registros.</li>{% endfor %}
+            </ul>
+          </div>
+          <div class="col-md-3">
+            <h3 class="h6 text-secondary">Desembolsos</h3>
+            <ul class="list-unstyled small mb-0">
+              {% for c in actividad.desembolsos %}
+                <li class="mb-1"><a href="{{ c.get_absolute_url }}">{{ c.folio }}</a>
+                  <span class="text-secondary d-block">{{ c.fecha_desembolso|date:"d/m/Y" }} &middot; {{ c.capital|mxn }}</span></li>
+              {% empty %}<li class="text-secondary">Sin registros.</li>{% endfor %}
+            </ul>
+          </div>
+          <div class="col-md-3">
+            <h3 class="h6 text-secondary">Pagos recibidos</h3>
+            <ul class="list-unstyled small mb-0">
+              {% for p in actividad.pagos_recientes %}
+                <li class="mb-1"><a href="{{ p.get_absolute_url }}">{{ p.folio }}</a> - {{ p.cliente }}
+                  <span class="text-secondary d-block">{{ p.fecha|date:"d/m/Y H:i" }} &middot; {{ p.importe|mxn }}</span></li>
+              {% empty %}<li class="text-secondary">Sin registros.</li>{% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const pagos = {{ grafico_pagos|safe }};
+  const cartera = {{ grafico_cartera|safe }};
+  const moneda = (v) => "$" + Number(v).toLocaleString("es-MX", {minimumFractionDigits: 2});
+
+  new Chart(document.getElementById("graficoPagos"), {
+    type: "bar",
+    data: {
+      labels: pagos.etiquetas,
+      datasets: [
+        {label: "Programado", data: pagos.programado, backgroundColor: "#c7d7ea"},
+        {label: "Cobrado", data: pagos.cobrado, backgroundColor: "#2f5c8f"}
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {tooltip: {callbacks: {label: (c) => c.dataset.label + ": " + moneda(c.parsed.y)}}},
+      scales: {y: {beginAtZero: true, ticks: {callback: (v) => moneda(v)}}}
+    }
+  });
+
+  new Chart(document.getElementById("graficoCartera"), {
+    type: "doughnut",
+    data: {
+      labels: cartera.etiquetas,
+      datasets: [{
+        data: cartera.numeros,
+        backgroundColor: ["#2f5c8f", "#0f9d58", "#f2a600", "#d93025", "#64748b", "#8b5cf6", "#0ea5e9"]
+      }]
+    },
+    options: {responsive: true, plugins: {legend: {position: "bottom", labels: {boxWidth: 12}}}}
+  });
+})();
+</script>
+{% endblock %}

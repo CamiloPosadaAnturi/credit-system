@@ -1,0 +1,110 @@
+{% extends "base.html" %}{% load formato %}
+{% block encabezado %}{{ cliente.nombre_completo }}{% endblock %}
+{% block subtitulo %}
+<p class="text-secondary small mb-0">{{ cliente.codigo }} &middot; {{ cliente.negocio }}
+  &middot; <span class="badge text-bg-{{ cliente.estado|badge }} badge-estado">{{ cliente.get_estado_display }}</span></p>
+{% endblock %}
+{% block acciones %}
+  {% if permisos_usuario.crear_credito %}
+    <a class="btn btn-sm btn-primary" href="{% url 'creditos:crear' %}?cliente={{ cliente.pk }}">Nuevo credito</a>
+  {% endif %}
+  {% if permisos_usuario.gestionar_clientes %}
+    <a class="btn btn-sm btn-borde" href="{% url 'clientes:editar' cliente.pk %}">Editar</a>
+    <form method="post" action="{% url 'clientes:estado' cliente.pk %}" class="d-inline">
+      {% csrf_token %}
+      <select name="estado" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+        <option value="activo" {% if cliente.estado == 'activo' %}selected{% endif %}>Activo</option>
+        <option value="inactivo" {% if cliente.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+        <option value="restringido" {% if cliente.estado == 'restringido' %}selected{% endif %}>Restringido</option>
+      </select>
+    </form>
+  {% endif %}
+{% endblock %}
+{% block contenido %}
+<div class="indicadores mb-4">
+  {% include "components/indicador.html" with etiqueta="Total solicitado" valor=resumen.total_solicitado|mxn pie="Capital historico" acento="acento-azul" %}
+  {% include "components/indicador.html" with etiqueta="Total pagado" valor=resumen.total_pagado|mxn acento="acento-verde" %}
+  {% include "components/indicador.html" with etiqueta="Saldo pendiente" valor=resumen.saldo_pendiente|mxn acento="acento-ambar" %}
+  {% include "components/indicador.html" with etiqueta="Saldo vencido" valor=resumen.saldo_vencido|mxn acento="acento-rojo" %}
+  {% include "components/indicador.html" with etiqueta="Creditos vigentes" valor=resumen.creditos_vigentes_num pie=resumen.creditos_liquidados|stringformat:"s"|add:" liquidados" acento="acento-azul" %}
+  {% include "components/indicador.html" with etiqueta="Puntualidad" valor=resumen.puntualidad|porcentaje pie="Cuotas pagadas a tiempo" acento="acento-verde" %}
+  {% include "components/indicador.html" with etiqueta="Cuotas vencidas" valor=resumen.cuotas_vencidas pie=resumen.dias_atraso_maximo|stringformat:"s"|add:" dias de atraso maximo" acento="acento-rojo" %}
+  {% include "components/indicador.html" with etiqueta="Reestructuraciones" valor=resumen.creditos_reestructurados acento="acento-ambar" %}
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="tarjeta h-100">
+      <div class="tarjeta-cabecera"><h2>Datos del cliente</h2></div>
+      <div class="tarjeta-cuerpo">
+        <dl class="row small mb-0">
+          <dt class="col-5">Telefono</dt><dd class="col-7">{{ cliente.telefono_principal }}</dd>
+          <dt class="col-5">Alterno</dt><dd class="col-7">{{ cliente.telefono_alterno|default:"-" }}</dd>
+          <dt class="col-5">Correo</dt><dd class="col-7">{{ cliente.email|default:"-" }}</dd>
+          <dt class="col-5">Direccion</dt><dd class="col-7">{{ cliente.direccion|default:"-" }}</dd>
+          <dt class="col-5">Ciudad</dt><dd class="col-7">{{ cliente.ciudad|default:"-" }} {{ cliente.get_estado_republica_display|default:"" }}</dd>
+          <dt class="col-5">CP</dt><dd class="col-7">{{ cliente.codigo_postal|default:"-" }}</dd>
+          <dt class="col-5">Ocupacion</dt><dd class="col-7">{{ cliente.ocupacion|default:"-" }}</dd>
+          <dt class="col-5">Cobrador</dt><dd class="col-7">{{ cliente.cobrador|default:"-" }}</dd>
+          {% if puede_ver_sensibles %}
+            <dt class="col-5">CURP</dt><dd class="col-7">{{ cliente.curp|default:"-" }}</dd>
+            <dt class="col-5">RFC</dt><dd class="col-7">{{ cliente.rfc|default:"-" }}</dd>
+          {% else %}
+            <dt class="col-12 text-secondary fst-italic mt-2">CURP y RFC ocultos: tu rol no tiene acceso a datos sensibles.</dt>
+          {% endif %}
+        </dl>
+        {% if cliente.referencias.exists %}
+          <hr><h3 class="h6">Referencias</h3>
+          <ul class="list-unstyled small mb-0">
+            {% for r in cliente.referencias.all %}
+              <li>{{ r.nombre }} {% if r.parentesco %}({{ r.parentesco }}){% endif %} - {{ r.telefono }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        {% if cliente.observaciones %}<hr><p class="small mb-0">{{ cliente.observaciones|linebreaksbr }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="tarjeta mb-3">
+      <div class="tarjeta-cabecera"><h2>Historial de creditos</h2></div>
+      <div class="tabla-envoltura">
+        <table class="tabla">
+          <thead><tr><th>Folio</th><th>Desembolso</th><th class="num">Capital</th><th class="num">Total</th>
+            <th class="num">Saldo</th><th>Estado</th></tr></thead>
+          <tbody>
+          {% for credito in creditos %}
+            <tr><td><a href="{{ credito.get_absolute_url }}">{{ credito.folio }}</a></td>
+              <td>{{ credito.fecha_desembolso|date:"d/m/Y"|default:"-" }}</td>
+              <td class="num">{{ credito.capital|mxn }}</td>
+              <td class="num">{{ credito.total_a_pagar|mxn }}</td>
+              <td class="num">{{ credito.saldo_pendiente|mxn }}</td>
+              <td><span class="badge text-bg-{{ credito.estado|badge }} badge-estado">{{ credito.get_estado_display }}</span></td></tr>
+          {% empty %}<tr><td colspan="6">{% include "components/estado_vacio.html" with mensaje="Este cliente aun no tiene creditos." %}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tarjeta">
+      <div class="tarjeta-cabecera"><h2>Historial de pagos</h2></div>
+      <div class="tabla-envoltura">
+        <table class="tabla">
+          <thead><tr><th>Folio</th><th>Fecha</th><th>Credito</th><th class="num">Importe</th><th>Metodo</th><th>Estado</th></tr></thead>
+          <tbody>
+          {% for pago in pagos %}
+            <tr><td><a href="{{ pago.get_absolute_url }}">{{ pago.folio }}</a></td>
+              <td>{{ pago.fecha|date:"d/m/Y H:i" }}</td>
+              <td>{{ pago.credito.folio }}</td>
+              <td class="num">{{ pago.importe|mxn }}</td>
+              <td>{{ pago.get_metodo_display }}</td>
+              <td><span class="badge text-bg-{{ pago.estado|badge }} badge-estado">{{ pago.get_estado_display }}</span></td></tr>
+          {% empty %}<tr><td colspan="6">{% include "components/estado_vacio.html" with mensaje="Sin pagos registrados." icono="bi-cash-stack" %}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

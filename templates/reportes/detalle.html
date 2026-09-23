@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% load formato %}
+{% block encabezado %}{{ reporte.nombre }}{% endblock %}
+{% block subtitulo %}<p class="text-secondary small mb-0">{{ reporte.descripcion }}</p>{% endblock %}
+{% block acciones %}
+  <a class="btn btn-sm btn-borde" href="?{{ querystring }}&formato=excel"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+  <a class="btn btn-sm btn-borde" href="?{{ querystring }}&formato=csv"><i class="bi bi-filetype-csv"></i> CSV</a>
+  <a class="btn btn-sm btn-borde" href="{% url 'reportes:catalogo' %}">Catalogo</a>
+{% endblock %}
+{% block contenido %}
+<form class="filtros" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-2">{{ form.negocio.label_tag }}{{ form.negocio }}</div>
+    <div class="col-md-2">{{ form.desde.label_tag }}{{ form.desde }}</div>
+    <div class="col-md-2">{{ form.hasta.label_tag }}{{ form.hasta }}</div>
+    <div class="col-md-2">{{ form.estado.label_tag }}{{ form.estado }}</div>
+    <div class="col-md-2">{{ form.cobrador.label_tag }}{{ form.cobrador }}</div>
+    <div class="col-md-2">{{ form.metodo.label_tag }}{{ form.metodo }}</div>
+  </div>
+  <div class="mt-2"><button class="btn btn-primary btn-sm">Aplicar filtros</button></div>
+</form>
+
+<div class="tarjeta">
+  <div class="tarjeta-cabecera">
+    <h2>{{ total_filas }} registro{{ total_filas|pluralize }}</h2>
+    {% if total_filas > limite %}<span class="small text-secondary">Se muestran los primeros {{ limite }}. Exporta para ver todo.</span>{% endif %}
+  </div>
+  <div class="tabla-envoltura">
+    <table class="tabla">
+      <thead><tr>{% for clave, etiqueta in reporte.columnas %}<th>{{ etiqueta }}</th>{% endfor %}</tr></thead>
+      <tbody>
+      {% for fila in filas %}
+        <tr>{% for clave, etiqueta in reporte.columnas %}<td>{{ fila|get_item:clave|default_if_none:"-" }}</td>{% endfor %}</tr>
+      {% empty %}
+        <tr><td colspan="{{ reporte.columnas|length }}">{% include "components/estado_vacio.html" with mensaje="Sin datos para los filtros seleccionados." icono="bi-bar-chart" %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

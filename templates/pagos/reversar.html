@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% load formato %}
+{% block encabezado %}Reversar pago {{ pago.folio }}{% endblock %}
+{% block contenido %}
+<div class="row"><div class="col-lg-6">
+  <div class="alert alert-warning">
+    El pago no se elimina: queda marcado como reversado, con su motivo y su autor, y el saldo del
+    credito se recalcula desde cero.
+  </div>
+  <div class="tarjeta"><div class="tarjeta-cuerpo">
+    <dl class="row small">
+      <dt class="col-6">Cliente</dt><dd class="col-6">{{ pago.cliente }}</dd>
+      <dt class="col-6">Credito</dt><dd class="col-6">{{ pago.credito.folio }}</dd>
+      <dt class="col-6">Importe</dt><dd class="col-6">{{ pago.importe|mxn }}</dd>
+      <dt class="col-6">Fecha</dt><dd class="col-6">{{ pago.fecha|date:"d/m/Y H:i" }}</dd>
+    </dl>
+    <form method="post" data-una-vez data-confirmar="Confirmas el reverso de este pago?">
+      {% csrf_token %}
+      {% include "components/formulario.html" %}
+      <button class="btn btn-danger" type="submit">Reversar pago</button>
+      <a class="btn btn-borde" href="{{ pago.get_absolute_url }}">Volver</a>
+    </form>
+  </div></div>
+</div></div>
+{% endblock %}

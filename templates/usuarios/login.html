@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block titulo %}Entrar{% endblock %}
+{% block sin_sesion %}
+<div class="login-pantalla">
+  <div class="login-caja">
+    <div class="text-center text-white mb-4">
+      <div class="marca-icono mx-auto mb-3" style="width:48px;height:48px;font-size:1.4rem;">
+        <i class="bi bi-cash-coin"></i>
+      </div>
+      <h1 class="h4 mb-1">Sistema de Creditos</h1>
+      <p class="small opacity-75 mb-0">Administracion de prestamos, pagos y cobranza (MXN)</p>
+    </div>
+    <div class="tarjeta">
+      <div class="tarjeta-cuerpo">
+        {% if form.errors %}
+          <div class="alert alert-danger py-2 small">
+            Usuario o contrasena incorrectos.
+          </div>
+        {% endif %}
+        <form method="post" data-una-vez>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.username.id_for_label }}">Usuario</label>
+            {{ form.username }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.password.id_for_label }}">Contrasena</label>
+            {{ form.password }}
+          </div>
+          <button class="btn btn-primary w-100" type="submit">Entrar</button>
+        </form>
+      </div>
+    </div>
+    <p class="text-center text-white-50 small mt-3 mb-0">Zona horaria America/Mexico_City</p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% load formato %}
+{% block encabezado %}Cancelar {{ credito.folio }}{% endblock %}
+{% block contenido %}
+<div class="row"><div class="col-lg-6">
+  <div class="alert alert-warning">
+    La cancelacion conserva todo el historial. Solo es posible si el credito no tiene pagos aplicados;
+    si ya recibio pagos, primero reversalos o usa una reestructuracion.
+  </div>
+  <div class="tarjeta"><div class="tarjeta-cuerpo">
+    <dl class="row small">
+      <dt class="col-6">Cliente</dt><dd class="col-6">{{ credito.cliente }}</dd>
+      <dt class="col-6">Capital</dt><dd class="col-6">{{ credito.capital|mxn }}</dd>
+      <dt class="col-6">Pagado</dt><dd class="col-6">{{ credito.total_pagado|mxn }}</dd>
+      <dt class="col-6">Saldo</dt><dd class="col-6">{{ credito.saldo_pendiente|mxn }}</dd>
+    </dl>
+    <form method="post" data-una-vez data-confirmar="Confirmas la cancelacion del credito?">
+      {% csrf_token %}
+      {% include "components/formulario.html" %}
+      <button class="btn btn-danger" type="submit">Cancelar credito</button>
+      <a class="btn btn-borde" href="{{ credito.get_absolute_url }}">Volver</a>
+    </form>
+  </div></div>
+</div></div>
+{% endblock %}

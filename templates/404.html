@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block encabezado %}Pagina no encontrada{% endblock %}
+{% block contenido %}
+<div class="tarjeta"><div class="tarjeta-cuerpo">
+  <p class="text-secondary">El recurso que buscas no existe o fue movido.</p>
+  <a class="btn btn-primary" href="{% url 'dashboard:inicio' %}">Volver al dashboard</a>
+</div></div>
+{% endblock %}
+{% block sin_sesion %}<div class="login-pantalla"><div class="login-caja tarjeta"><div class="tarjeta-cuerpo">
+  <h1 class="h5">Pagina no encontrada</h1><a class="btn btn-primary" href="{% url 'usuarios:login' %}">Entrar</a>
+</div></div></div>{% endblock %}

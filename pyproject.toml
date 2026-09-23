@@ -1,0 +1,30 @@
+[project]
+name = "sistema-creditos"
+version = "0.1.0"
+description = "Plataforma web de administracion de creditos, pagos y cobranza (MXN)"
+requires-python = ">=3.10"
+dependencies = [
+    "django>=5.1,<5.2",
+    "django-environ>=0.11",
+    "psycopg[binary]>=3.1",
+    "openpyxl>=3.1",
+    "whitenoise>=6.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.5",
+    "coverage>=7.5",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = ["venv", "*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.coverage.run]
+source = ["apps"]
+omit = ["*/migrations/*", "*/tests/*"]

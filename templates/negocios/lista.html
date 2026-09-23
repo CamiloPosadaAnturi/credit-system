@@ -1,0 +1,49 @@
+{% extends "base.html" %}{% load formato %}
+{% block encabezado %}Negocios y sucursales{% endblock %}
+{% block acciones %}
+  {% if permisos_usuario.gestionar_negocios %}
+    <a class="btn btn-primary btn-sm" href="{% url 'negocios:crear' %}"><i class="bi bi-plus-lg"></i> Nuevo negocio</a>
+  {% endif %}
+{% endblock %}
+{% block contenido %}
+<form class="filtros" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-4">{{ formulario_filtro.q.label_tag }}{{ formulario_filtro.q }}</div>
+    <div class="col-md-2">{{ formulario_filtro.activo.label_tag }}{{ formulario_filtro.activo }}</div>
+    <div class="col-md-2">{{ formulario_filtro.desde.label_tag }}{{ formulario_filtro.desde }}</div>
+    <div class="col-md-2">{{ formulario_filtro.hasta.label_tag }}{{ formulario_filtro.hasta }}</div>
+    <div class="col-md-2 d-flex gap-2">
+      <button class="btn btn-primary btn-sm w-100">Filtrar</button>
+      <a class="btn btn-borde btn-sm" href="{% url 'negocios:lista' %}">Limpiar</a>
+    </div>
+  </div>
+</form>
+
+<div class="tarjeta">
+  <div class="tabla-envoltura">
+    <table class="tabla">
+      <thead><tr><th>Negocio</th><th>RFC</th><th>Ciudad</th><th>Responsable</th>
+        <th class="num">Tasa</th><th>Frecuencia</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+      {% for negocio in negocios %}
+        <tr>
+          <td><a href="{{ negocio.get_absolute_url }}" class="fw-semibold">{{ negocio.nombre_comercial }}</a>
+            {% if negocio.razon_social %}<span class="d-block text-secondary small">{{ negocio.razon_social }}</span>{% endif %}</td>
+          <td>{{ negocio.rfc|default:"-" }}</td>
+          <td>{{ negocio.ciudad|default:"-" }} {{ negocio.get_estado_display|default:"" }}</td>
+          <td>{{ negocio.responsable|default:"-" }}</td>
+          <td class="num">{{ negocio.tasa_porcentaje }}%<span class="d-block text-secondary small">{{ negocio.interes_por_mil|mxn }} x $1,000</span></td>
+          <td>{{ negocio.get_frecuencia_pago_display }}</td>
+          <td><span class="badge text-bg-{% if negocio.activo %}success{% else %}secondary{% endif %} badge-estado">
+            {% if negocio.activo %}Activo{% else %}Inactivo{% endif %}</span></td>
+          <td><a class="btn btn-sm btn-borde" href="{% url 'negocios:dashboard' negocio.pk %}">Dashboard</a></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8">{% include "components/estado_vacio.html" with mensaje="Aun no tienes negocios registrados." icono="bi-shop" accion_url="/negocios/nuevo/" accion_texto="Registrar el primer negocio" %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "components/paginacion.html" %}
+{% endblock %}

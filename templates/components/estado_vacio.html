@@ -1,0 +1,5 @@
+<div class="estado-vacio">
+  <i class="bi {{ icono|default:'bi-inbox' }}"></i>
+  <p class="mb-2">{{ mensaje|default:"Todavia no hay informacion para mostrar." }}</p>
+  {% if accion_url %}<a class="btn btn-sm btn-primary" href="{{ accion_url }}">{{ accion_texto|default:"Crear el primero" }}</a>{% endif %}
+</div>

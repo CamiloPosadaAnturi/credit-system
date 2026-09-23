@@ -1,0 +1,152 @@
+{% extends "base.html" %}{% load formato %}
+{% block encabezado %}{{ credito.folio }}{% endblock %}
+{% block subtitulo %}
+<p class="text-secondary small mb-0">
+  <a href="{{ credito.cliente.get_absolute_url }}">{{ credito.cliente }}</a> &middot; {{ credito.negocio }}
+  &middot; <span class="badge text-bg-{{ credito.estado|badge }} badge-estado">{{ credito.get_estado_display }}</span>
+  {% if credito.credito_origen %}&middot; reestructuracion de {{ credito.credito_origen.folio }}{% endif %}
+</p>
+{% endblock %}
+{% block acciones %}
+  {% if puede_aprobar %}
+    <form method="post" action="{% url 'creditos:aprobar' credito.pk %}" class="d-inline" data-una-vez
+          data-confirmar="Al aprobar se congela la tasa y se genera el calendario definitivo. Continuar?">
+      {% csrf_token %}<button class="btn btn-sm btn-success">Aprobar</button>
+    </form>
+  {% endif %}
+  {% if puede_desembolsar %}
+    <form method="post" action="{% url 'creditos:desembolsar' credito.pk %}" class="d-inline" data-una-vez
+          data-confirmar="Confirmas la entrega del dinero al cliente?">
+      {% csrf_token %}<button class="btn btn-sm btn-primary">Desembolsar</button>
+    </form>
+  {% endif %}
+  {% if puede_registrar_pago %}
+    <a class="btn btn-sm btn-success" href="{% url 'pagos:registrar' credito.pk %}">Registrar pago</a>
+    <a class="btn btn-sm btn-borde" href="{% url 'pagos:liquidar' credito.pk %}">Liquidar</a>
+  {% endif %}
+  {% if permisos_usuario.registrar_gestion and credito.esta_vigente %}
+    <a class="btn btn-sm btn-borde" href="{% url 'cobranza:registrar_gestion' credito.pk %}">Gestion</a>
+  {% endif %}
+  {% if credito.es_editable %}
+    <a class="btn btn-sm btn-borde" href="{% url 'creditos:editar' credito.pk %}">Editar</a>
+  {% endif %}
+  {% if puede_reestructurar %}
+    <a class="btn btn-sm btn-outline-warning" href="{% url 'creditos:reestructurar' credito.pk %}">Reestructurar</a>
+  {% endif %}
+  {% if puede_cancelar %}
+    <a class="btn btn-sm btn-outline-danger" href="{% url 'creditos:cancelar' credito.pk %}">Cancelar</a>
+  {% endif %}
+{% endblock %}
+{% block contenido %}
+{% if not credito.es_editable and credito.esta_vigente %}
+  <div class="alert alert-info py-2 small">
+    Este credito ya fue desembolsado: sus condiciones no se editan. Cualquier ajuste se hace con un
+    reverso de pago auditado o una reestructuracion autorizada.
+  </div>
+{% endif %}
+
+<div class="indicadores mb-4">
+  {% include "components/indicador.html" with etiqueta="Capital" valor=credito.capital|mxn acento="acento-azul" %}
+  {% include "components/indicador.html" with etiqueta="Interes" valor=credito.interes_total|mxn acento="acento-azul" %}
+  {% include "components/indicador.html" with etiqueta="Total a pagar" valor=credito.total_a_pagar|mxn acento="acento-ambar" %}
+  {% include "components/indicador.html" with etiqueta="Pagado" valor=credito.total_pagado|mxn pie=credito.porcentaje_pagado|porcentaje acento="acento-verde" %}
+  {% include "components/indicador.html" with etiqueta="Saldo pendiente" valor=credito.saldo_pendiente|mxn acento="acento-ambar" %}
+  {% include "components/indicador.html" with etiqueta="Saldo vencido" valor=credito.saldo_vencido|mxn pie=credito.dias_atraso|stringformat:"s"|add:" dias de atraso" acento="acento-rojo" %}
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="tarjeta h-100">
+      <div class="tarjeta-cabecera"><h2>Condiciones</h2></div>
+      <div class="tarjeta-cuerpo">
+        <dl class="row small mb-0">
+          <dt class="col-6">Modalidad</dt><dd class="col-6">{{ credito.get_modalidad_interes_display }}</dd>
+          <dt class="col-6">Tasa aplicada</dt><dd class="col-6">{{ credito.tasa_interes }} ({{ credito.interes_por_mil|mxn }} por $1,000)</dd>
+          <dt class="col-6">Periodo de la tasa</dt><dd class="col-6">{{ credito.get_periodo_tasa_display }}</dd>
+          <dt class="col-6">Frecuencia</dt><dd class="col-6">{{ credito.get_frecuencia_pago_display }}</dd>
+          <dt class="col-6">Cuotas</dt><dd class="col-6">{{ credito.numero_cuotas }} de {{ credito.importe_cuota|mxn }}</dd>
+          <dt class="col-6">Primer pago</dt><dd class="col-6">{{ credito.fecha_primer_pago|date:"d/m/Y" }}</dd>
+          <dt class="col-6">Vence</dt><dd class="col-6">{{ credito.fecha_vencimiento_final|date:"d/m/Y"|default:"-" }}</dd>
+          <dt class="col-6">Solicitud</dt><dd class="col-6">{{ credito.fecha_solicitud|date:"d/m/Y" }}</dd>
+          <dt class="col-6">Aprobacion</dt><dd class="col-6">{{ credito.fecha_aprobacion|date:"d/m/Y"|default:"-" }}</dd>
+          <dt class="col-6">Desembolso</dt><dd class="col-6">{{ credito.fecha_desembolso|date:"d/m/Y"|default:"-" }}</dd>
+          <dt class="col-6">Cobrador</dt><dd class="col-6">{{ credito.cobrador|default:"-" }}</dd>
+          <dt class="col-6">Registrado por</dt><dd class="col-6">{{ credito.creado_por|default:"-" }}</dd>
+          <dt class="col-6">Aprobado por</dt><dd class="col-6">{{ credito.aprobado_por|default:"-" }}</dd>
+        </dl>
+        {% if credito.contrato %}<hr><a class="btn btn-sm btn-borde" href="{{ credito.contrato.url }}">Ver contrato</a>{% endif %}
+        {% if credito.observaciones %}<hr><p class="small mb-0">{{ credito.observaciones|linebreaksbr }}</p>{% endif %}
+        {% if credito.motivo_cancelacion %}<hr><p class="small text-danger mb-0">Cancelado: {{ credito.motivo_cancelacion }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="tarjeta mb-3">
+      <div class="tarjeta-cabecera"><h2>Calendario de pagos</h2>
+        <a class="btn btn-sm btn-borde" href="{% url 'creditos:calendario' credito.pk %}">Ver completo</a></div>
+      <div class="tabla-envoltura" style="max-height:360px;overflow-y:auto">
+        <table class="tabla">
+          <thead><tr><th>#</th><th>Vence</th><th class="num">Capital</th><th class="num">Interes</th>
+            <th class="num">Cuota</th><th class="num">Pagado</th><th class="num">Saldo</th><th>Estado</th></tr></thead>
+          <tbody>
+          {% for cuota in cuotas %}
+            <tr>
+              <td>{{ cuota.numero }}</td>
+              <td>{{ cuota.fecha_vencimiento|date:"d/m/Y" }}</td>
+              <td class="num">{{ cuota.capital_programado|mxn }}</td>
+              <td class="num">{{ cuota.interes_programado|mxn }}</td>
+              <td class="num">{{ cuota.importe_programado|mxn }}</td>
+              <td class="num">{{ cuota.importe_pagado|mxn }}</td>
+              <td class="num fw-semibold">{{ cuota.saldo|mxn }}</td>
+              <td><span class="badge text-bg-{{ cuota.estado|badge }} badge-estado">{{ cuota.get_estado_display }}</span></td>
+            </tr>
+          {% empty %}<tr><td colspan="8">{% include "components/estado_vacio.html" with mensaje="El calendario se genera al registrar el credito." %}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tarjeta mb-3">
+      <div class="tarjeta-cabecera"><h2>Pagos del credito</h2></div>
+      <div class="tabla-envoltura">
+        <table class="tabla">
+          <thead><tr><th>Folio</th><th>Fecha</th><th class="num">Importe</th><th class="num">Aplicado</th>
+            <th>Metodo</th><th>Tipo</th><th>Registro</th><th>Estado</th></tr></thead>
+          <tbody>
+          {% for pago in pagos %}
+            <tr><td><a href="{{ pago.get_absolute_url }}">{{ pago.folio }}</a></td>
+              <td>{{ pago.fecha|date:"d/m/Y H:i" }}</td>
+              <td class="num">{{ pago.importe|mxn }}</td>
+              <td class="num">{{ pago.importe_aplicado|mxn }}</td>
+              <td>{{ pago.get_metodo_display }}</td>
+              <td>{{ pago.get_tipo_display }}</td>
+              <td class="small">{{ pago.recibido_por }}</td>
+              <td><span class="badge text-bg-{{ pago.estado|badge }} badge-estado">{{ pago.get_estado_display }}</span></td></tr>
+          {% empty %}<tr><td colspan="8">{% include "components/estado_vacio.html" with mensaje="Aun no hay pagos registrados." icono="bi-cash-stack" %}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tarjeta">
+      <div class="tarjeta-cabecera"><h2>Gestiones de cobranza</h2></div>
+      <div class="tabla-envoltura">
+        <table class="tabla">
+          <thead><tr><th>Fecha</th><th>Tipo</th><th>Resultado</th><th class="num">Prometido</th><th>Proximo contacto</th><th>Usuario</th></tr></thead>
+          <tbody>
+          {% for gestion in credito.gestiones.all %}
+            <tr><td>{{ gestion.fecha|date:"d/m/Y H:i" }}</td>
+              <td>{{ gestion.get_tipo_display }}</td>
+              <td>{{ gestion.get_resultado_display }}</td>
+              <td class="num">{{ gestion.monto_prometido|mxn }}</td>
+              <td>{{ gestion.proxima_fecha_contacto|date:"d/m/Y"|default:"-" }}</td>
+              <td class="small">{{ gestion.usuario }}</td></tr>
+          {% empty %}<tr><td colspan="6" class="text-secondary small p-3">Sin gestiones registradas.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

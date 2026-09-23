@@ -1,0 +1,47 @@
+{% extends "base.html" %}{% load formato %}
+{% block encabezado %}Creditos{% endblock %}
+{% block acciones %}
+  {% if permisos_usuario.crear_credito %}
+    <a class="btn btn-primary btn-sm" href="{% url 'creditos:crear' %}"><i class="bi bi-plus-lg"></i> Nuevo credito</a>
+  {% endif %}
+{% endblock %}
+{% block contenido %}
+<form class="filtros" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-3">{{ formulario_filtro.q.label_tag }}{{ formulario_filtro.q }}</div>
+    <div class="col-md-2">{{ formulario_filtro.negocio.label_tag }}{{ formulario_filtro.negocio }}</div>
+    <div class="col-md-2">{{ formulario_filtro.estado.label_tag }}{{ formulario_filtro.estado }}</div>
+    <div class="col-md-2">{{ formulario_filtro.cobrador.label_tag }}{{ formulario_filtro.cobrador }}</div>
+    <div class="col-md-1">{{ formulario_filtro.desde.label_tag }}{{ formulario_filtro.desde }}</div>
+    <div class="col-md-1">{{ formulario_filtro.hasta.label_tag }}{{ formulario_filtro.hasta }}</div>
+    <div class="col-md-1 d-grid"><button class="btn btn-primary btn-sm">Filtrar</button></div>
+  </div>
+</form>
+<div class="tarjeta">
+  <div class="tabla-envoltura">
+    <table class="tabla">
+      <thead><tr><th>Folio</th><th>Cliente</th><th>Desembolso</th><th class="num">Capital</th>
+        <th class="num">Interes</th><th class="num">Total</th><th class="num">Saldo</th>
+        <th class="num">Atraso</th><th>Estado</th></tr></thead>
+      <tbody>
+      {% for credito in creditos %}
+        <tr>
+          <td><a href="{{ credito.get_absolute_url }}" class="fw-semibold">{{ credito.folio }}</a></td>
+          <td>{{ credito.cliente }}<span class="d-block text-secondary small">{{ credito.negocio.nombre_comercial }}</span></td>
+          <td>{{ credito.fecha_desembolso|date:"d/m/Y"|default:"-" }}</td>
+          <td class="num">{{ credito.capital|mxn }}</td>
+          <td class="num">{{ credito.interes_total|mxn }}</td>
+          <td class="num">{{ credito.total_a_pagar|mxn }}</td>
+          <td class="num fw-semibold">{{ credito.saldo_pendiente|mxn }}</td>
+          <td class="num">{% if credito.dias_atraso %}<span class="text-danger">{{ credito.dias_atraso }} d</span>{% else %}-{% endif %}</td>
+          <td><span class="badge text-bg-{{ credito.estado|badge }} badge-estado">{{ credito.get_estado_display }}</span></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="9">{% include "components/estado_vacio.html" with mensaje="No hay creditos con ese filtro." icono="bi-file-earmark-text" accion_url="/creditos/nuevo/" accion_texto="Registrar credito" %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "components/paginacion.html" %}
+{% endblock %}

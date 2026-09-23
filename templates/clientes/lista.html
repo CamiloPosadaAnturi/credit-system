@@ -1,0 +1,45 @@
+{% extends "base.html" %}{% load formato %}
+{% block encabezado %}Clientes{% endblock %}
+{% block acciones %}
+  {% if permisos_usuario.gestionar_clientes %}
+    <a class="btn btn-primary btn-sm" href="{% url 'clientes:crear' %}"><i class="bi bi-person-plus"></i> Nuevo cliente</a>
+  {% endif %}
+{% endblock %}
+{% block contenido %}
+<form class="filtros" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-4">{{ formulario_filtro.q.label_tag }}{{ formulario_filtro.q }}</div>
+    <div class="col-md-3">{{ formulario_filtro.negocio.label_tag }}{{ formulario_filtro.negocio }}</div>
+    <div class="col-md-2">{{ formulario_filtro.estado.label_tag }}{{ formulario_filtro.estado }}</div>
+    <div class="col-md-2">{{ formulario_filtro.cobrador.label_tag }}{{ formulario_filtro.cobrador }}</div>
+    <div class="col-md-1 d-grid"><button class="btn btn-primary btn-sm">Filtrar</button></div>
+  </div>
+</form>
+<div class="tarjeta">
+  <div class="tabla-envoltura">
+    <table class="tabla">
+      <thead><tr><th>Codigo</th><th>Cliente</th><th>Telefono</th><th>Negocio</th>
+        <th>Cobrador</th><th class="num">Creditos</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+      {% for cliente in clientes %}
+        <tr>
+          <td class="text-secondary small">{{ cliente.codigo }}</td>
+          <td><a href="{{ cliente.get_absolute_url }}" class="fw-semibold">{{ cliente.nombre_completo }}</a>
+            {% if cliente.ocupacion %}<span class="d-block text-secondary small">{{ cliente.ocupacion }}</span>{% endif %}</td>
+          <td>{{ cliente.telefono_principal }}</td>
+          <td>{{ cliente.negocio.nombre_comercial }}</td>
+          <td>{{ cliente.cobrador|default:"-" }}</td>
+          <td class="num">{{ cliente.creditos.count }}</td>
+          <td><span class="badge text-bg-{{ cliente.estado|badge }} badge-estado">{{ cliente.get_estado_display }}</span></td>
+          <td>{% if permisos_usuario.crear_credito %}
+            <a class="btn btn-sm btn-borde" href="{% url 'creditos:crear' %}?cliente={{ cliente.pk }}">Nuevo credito</a>{% endif %}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8">{% include "components/estado_vacio.html" with mensaje="No hay clientes que coincidan con el filtro." icono="bi-people" accion_url="/clientes/nuevo/" accion_texto="Registrar cliente" %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "components/paginacion.html" %}
+{% endblock %}

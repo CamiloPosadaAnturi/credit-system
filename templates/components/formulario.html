@@ -1,0 +1,26 @@
+{% comment %}Renderiza un formulario agrupado por secciones (form.SECCIONES).{% endcomment %}
+{% if form.non_field_errors %}
+  <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+{% endif %}
+{% if form.SECCIONES %}
+  {% for titulo_seccion, campos in form.SECCIONES %}
+    <div class="form-seccion">
+      <h3>{{ titulo_seccion }}</h3>
+      <div class="row g-3">
+        {% for campo in form %}
+          {% if campo.name in campos %}
+            <div class="col-md-6">{% include "components/campo.html" with campo=campo %}</div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+  {% for campo in form.hidden_fields %}{{ campo }}{% endfor %}
+{% else %}
+  <div class="row g-3">
+    {% for campo in form.visible_fields %}
+      <div class="col-md-6">{% include "components/campo.html" with campo=campo %}</div>
+    {% endfor %}
+  </div>
+  {% for campo in form.hidden_fields %}{{ campo }}{% endfor %}
+{% endif %}

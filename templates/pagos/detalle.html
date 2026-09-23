@@ -1,0 +1,59 @@
+{% extends "base.html" %}{% load formato %}
+{% block encabezado %}Pago {{ pago.folio }}{% endblock %}
+{% block acciones %}
+  {% if puede_reversar %}<a class="btn btn-sm btn-outline-danger" href="{% url 'pagos:reversar' pago.pk %}">Reversar</a>{% endif %}
+  <a class="btn btn-sm btn-borde" href="{{ pago.credito.get_absolute_url }}">Ver credito</a>
+  <button class="btn btn-sm btn-borde" onclick="window.print()">Imprimir</button>
+{% endblock %}
+{% block contenido %}
+{% if not pago.esta_confirmado %}
+  <div class="alert alert-secondary">
+    Pago reversado el {{ pago.reversado_en|date:"d/m/Y H:i" }} por {{ pago.reversado_por }}.
+    Motivo: {{ pago.motivo_reverso }}. El registro original se conserva para auditoria.
+  </div>
+{% endif %}
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="tarjeta"><div class="tarjeta-cabecera"><h2>Comprobante</h2></div>
+      <div class="tarjeta-cuerpo"><dl class="row small mb-0">
+        <dt class="col-5">Cliente</dt><dd class="col-7">{{ pago.cliente }}</dd>
+        <dt class="col-5">Credito</dt><dd class="col-7">{{ pago.credito.folio }}</dd>
+        <dt class="col-5">Negocio</dt><dd class="col-7">{{ pago.negocio }}</dd>
+        <dt class="col-5">Fecha</dt><dd class="col-7">{{ pago.fecha|date:"d/m/Y H:i" }}</dd>
+        <dt class="col-5">Importe</dt><dd class="col-7 fw-semibold">{{ pago.importe|mxn }}</dd>
+        <dt class="col-5">Aplicado</dt><dd class="col-7">{{ pago.importe_aplicado|mxn }}</dd>
+        <dt class="col-5">Excedente</dt><dd class="col-7">{{ pago.excedente|mxn }}</dd>
+        <dt class="col-5">Metodo</dt><dd class="col-7">{{ pago.get_metodo_display }}</dd>
+        <dt class="col-5">Tipo</dt><dd class="col-7">{{ pago.get_tipo_display }}</dd>
+        <dt class="col-5">Referencia</dt><dd class="col-7">{{ pago.referencia|default:"-" }}</dd>
+        <dt class="col-5">Registrado por</dt><dd class="col-7">{{ pago.recibido_por }}</dd>
+        <dt class="col-5">Cobrador</dt><dd class="col-7">{{ pago.cobrador|default:"-" }}</dd>
+        <dt class="col-5">Estado</dt><dd class="col-7"><span class="badge text-bg-{{ pago.estado|badge }} badge-estado">{{ pago.get_estado_display }}</span></dd>
+      </dl>
+      {% if pago.observaciones %}<hr><p class="small mb-0">{{ pago.observaciones|linebreaksbr }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="tarjeta"><div class="tarjeta-cabecera"><h2>Distribucion del pago</h2></div>
+      <div class="tabla-envoltura">
+        <table class="tabla">
+          <thead><tr><th>Cuota</th><th>Vence</th><th class="num">Aplicado</th><th class="num">Capital</th><th class="num">Interes</th></tr></thead>
+          <tbody>
+          {% for aplicacion in aplicaciones %}
+            <tr><td>{{ aplicacion.cuota.numero }}</td>
+              <td>{{ aplicacion.cuota.fecha_vencimiento|date:"d/m/Y" }}</td>
+              <td class="num fw-semibold">{{ aplicacion.importe|mxn }}</td>
+              <td class="num">{{ aplicacion.capital|mxn }}</td>
+              <td class="num">{{ aplicacion.interes|mxn }}</td></tr>
+          {% empty %}<tr><td colspan="5" class="text-secondary small p-3">Este pago no se aplico a ninguna cuota.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="tarjeta-cuerpo border-top">
+        <p class="ayuda mb-0">Esta distribucion permite reconstruir el saldo del credito en cualquier momento.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

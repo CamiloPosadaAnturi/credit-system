@@ -1,0 +1,42 @@
+{% url 'dashboard:inicio' as url_dashboard %}
+<a class="nav-item {% if request.path == url_dashboard %}activo{% endif %}" href="{{ url_dashboard }}">
+  <i class="bi bi-speedometer2"></i><span class="marca-texto">Dashboard</span>
+</a>
+<a class="nav-item {% if '/negocios/' in request.path %}activo{% endif %}" href="{% url 'negocios:lista' %}">
+  <i class="bi bi-shop"></i><span class="marca-texto">Negocios</span>
+</a>
+<a class="nav-item {% if '/clientes/' in request.path %}activo{% endif %}" href="{% url 'clientes:lista' %}">
+  <i class="bi bi-people"></i><span class="marca-texto">Clientes</span>
+</a>
+<a class="nav-item {% if '/creditos/' in request.path %}activo{% endif %}" href="{% url 'creditos:lista' %}">
+  <i class="bi bi-file-earmark-text"></i><span class="marca-texto">Creditos</span>
+</a>
+<a class="nav-item {% if '/pagos/' in request.path %}activo{% endif %}" href="{% url 'pagos:lista' %}">
+  <i class="bi bi-cash-stack"></i><span class="marca-texto">Pagos</span>
+</a>
+{% if permisos_usuario.ver_cobranza %}
+<a class="nav-item {% if '/cobranza/' in request.path %}activo{% endif %}" href="{% url 'cobranza:tablero' %}">
+  <i class="bi bi-clipboard-check"></i><span class="marca-texto">Cobranza</span>
+</a>
+<a class="nav-item {% if 'mi-cartera' in request.path %}activo{% endif %}" href="{% url 'cobranza:mi_cartera' %}">
+  <i class="bi bi-person-walking"></i><span class="marca-texto">Mi cartera</span>
+</a>
+{% endif %}
+{% if permisos_usuario.ver_reportes %}
+<a class="nav-item {% if '/reportes/' in request.path %}activo{% endif %}" href="{% url 'reportes:catalogo' %}">
+  <i class="bi bi-bar-chart-line"></i><span class="marca-texto">Reportes</span>
+</a>
+{% endif %}
+{% if permisos_usuario.gestionar_usuarios %}
+<a class="nav-item {% if request.path == '/usuarios/' %}activo{% endif %}" href="{% url 'usuarios:lista' %}">
+  <i class="bi bi-person-gear"></i><span class="marca-texto">Usuarios</span>
+</a>
+{% endif %}
+{% if permisos_usuario.ver_auditoria %}
+<a class="nav-item {% if '/auditoria/' in request.path %}activo{% endif %}" href="{% url 'auditoria:lista' %}">
+  <i class="bi bi-shield-check"></i><span class="marca-texto">Auditoria</span>
+</a>
+{% endif %}
+<a class="nav-item" href="{% url 'admin:index' %}">
+  <i class="bi bi-sliders"></i><span class="marca-texto">Configuracion</span>
+</a>

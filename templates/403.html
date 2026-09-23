@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block encabezado %}Acceso denegado{% endblock %}
+{% block contenido %}
+<div class="tarjeta"><div class="tarjeta-cuerpo">
+  <h2 class="h5">No tienes autorizacion para esta operacion</h2>
+  <p class="text-secondary mb-3">{{ exception|default:"Tu rol no permite ver o modificar esta informacion." }}</p>
+  <a class="btn btn-primary" href="{% url 'dashboard:inicio' %}">Volver al dashboard</a>
+</div></div>
+{% endblock %}
+{% block sin_sesion %}<div class="login-pantalla"><div class="login-caja tarjeta"><div class="tarjeta-cuerpo">
+  <h1 class="h5">Acceso denegado</h1><a class="btn btn-primary" href="{% url 'usuarios:login' %}">Entrar</a>
+</div></div></div>{% endblock %}

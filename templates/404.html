@@ -1,11 +1,11 @@
-{% extends "base.html" %}
-{% block encabezado %}Pagina no encontrada{% endblock %}
-{% block contenido %}
-<div class="tarjeta"><div class="tarjeta-cuerpo">
-  <p class="text-secondary">El recurso que buscas no existe o fue movido.</p>
-  <a class="btn btn-primary" href="{% url 'dashboard:inicio' %}">Volver al dashboard</a>
+{% extends "base.html" %}{% load i18n %}
+{% block heading %}{% trans "Page not found" %}{% endblock %}
+{% block content %}
+<div class="card-panel"><div class="card-panel-body">
+  <p class="text-secondary">{% trans "The resource you are looking for does not exist or was moved." %}</p>
+  <a class="btn btn-primary" href="{% url 'dashboard:home' %}">{% trans "Back to the dashboard" %}</a>
 </div></div>
 {% endblock %}
-{% block sin_sesion %}<div class="login-pantalla"><div class="login-caja tarjeta"><div class="tarjeta-cuerpo">
-  <h1 class="h5">Pagina no encontrada</h1><a class="btn btn-primary" href="{% url 'usuarios:login' %}">Entrar</a>
+{% block anonymous %}<div class="login-screen"><div class="login-box card-panel"><div class="card-panel-body">
+  <h1 class="h5">{% trans "Page not found" %}</h1><a class="btn btn-primary" href="{% url 'users:login' %}">{% trans "Sign in" %}</a>
 </div></div></div>{% endblock %}

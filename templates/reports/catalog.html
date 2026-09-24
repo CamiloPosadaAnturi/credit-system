@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% load i18n %}
+{% block heading %}{% trans "Reports" %}{% endblock %}
+{% block subheading %}<p class="text-secondary small mb-0">{% trans "Every report uses real data and respects your permissions and authorized businesses." %}</p>{% endblock %}
+{% block content %}
+<div class="row g-3">
+  {% for report in reports %}
+    <div class="col-md-6 col-xl-4">
+      <div class="card-panel h-100">
+        <div class="card-panel-body d-flex flex-column">
+          <h2 class="h6">{{ report.name }}</h2>
+          <p class="small text-secondary flex-grow-1">{{ report.description }}</p>
+          <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-primary" href="{% url 'reports:detail' report.key %}">{% trans "Open" %}</a>
+            <a class="btn btn-sm btn-outline-soft" href="{% url 'reports:detail' report.key %}?format=excel">Excel</a>
+            <a class="btn btn-sm btn-outline-soft" href="{% url 'reports:detail' report.key %}?format=csv">CSV</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

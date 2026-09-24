@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load i18n %}
+{% block heading %}{% trans "My profile" %}{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-6">
+<div class="card-panel"><div class="card-panel-body">
+  <p class="small text-secondary">{% trans "Role" %}: <strong>{{ user.get_role_display }}</strong> &middot;
+    {% trans "Businesses" %}: {% for business in user.businesses.all %}{{ business }}{% if not forloop.last %}, {% endif %}{% empty %}{% trans "all" %}{% endfor %}</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "components/form.html" %}
+    <button class="btn btn-primary" type="submit">{% trans "Save" %}</button>
+    <a class="btn btn-outline-soft" href="{% url 'users:own_password' %}">{% trans "Change password" %}</a>
+  </form>
+</div></div>
+</div></div>
+{% endblock %}

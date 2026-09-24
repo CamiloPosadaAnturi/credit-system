@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% load i18n %}
+{% block heading %}{% trans "Users" %}{% endblock %}
+{% block actions %}<a class="btn btn-primary btn-sm" href="{% url 'users:create' %}">{% trans "New user" %}</a>{% endblock %}
+{% block content %}
+<form class="filters" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-4"><label class="form-label">{% trans "Search" %}</label>
+      <input type="search" name="q" class="form-control" value="{{ q }}" placeholder="{% trans 'Name or username' %}"></div>
+    <div class="col-md-3"><label class="form-label">{% trans "Role" %}</label>
+      <select name="role" class="form-select">
+        <option value="">{% trans "All" %}</option>
+        {% for value, label in roles %}<option value="{{ value }}" {% if selected_role == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></div>
+    <div class="col-md-2 d-grid"><button class="btn btn-primary btn-sm">{% trans "Filter" %}</button></div>
+  </div>
+</form>
+<div class="card-panel"><div class="table-wrap"><table class="data-table">
+  <thead><tr><th>{% trans "Username" %}</th><th>{% trans "Name" %}</th><th>{% trans "Role" %}</th>
+    <th>{% trans "Businesses" %}</th><th>{% trans "Status" %}</th><th></th></tr></thead>
+  <tbody>
+  {% for item in users %}
+    <tr><td>{{ item.username }}</td><td>{{ item.full_name|default:"-" }}</td>
+      <td>{{ item.get_role_display }}</td>
+      <td class="small">{% for business in item.businesses.all %}{{ business.trade_name }}{% if not forloop.last %}, {% endif %}{% empty %}<span class="text-secondary">{% trans "Not assigned" %}</span>{% endfor %}</td>
+      <td><span class="badge text-bg-{% if item.is_active %}success{% else %}secondary{% endif %} status-badge">{% if item.is_active %}{% trans "Active" %}{% else %}{% trans "Inactive" %}{% endif %}</span></td>
+      <td><a class="btn btn-sm btn-outline-soft" href="{% url 'users:detail' item.pk %}">{% trans "View" %}</a>
+        <a class="btn btn-sm btn-outline-soft" href="{% url 'users:update' item.pk %}">{% trans "Edit" %}</a></td></tr>
+  {% empty %}<tr><td colspan="6">{% include "components/empty_state.html" with message=_("There are no users.") icon="bi-person-gear" %}</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% include "components/pagination.html" %}
+{% endblock %}

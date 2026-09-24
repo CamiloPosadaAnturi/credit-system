@@ -1,57 +1,53 @@
-import json
+import datetime as dt
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils.translation import gettext as _
 from django.views.generic import TemplateView
 
-from apps.core.fechas import hoy_local
-from apps.dashboard import servicios
-from apps.usuarios import permisos
+from apps.core.dates import today_local
+from apps.dashboard import services
+from apps.users import permissions
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
-    template_name = "dashboard/inicio.html"
+    template_name = "dashboard/home.html"
 
-    def get_periodo(self):
-        hoy = hoy_local()
-        desde = self.request.GET.get("desde") or hoy.replace(day=1).isoformat()
-        hasta = self.request.GET.get("hasta") or hoy.isoformat()
-        import datetime as dt
-
+    def get_period(self):
+        today = today_local()
+        start = self.request.GET.get("start") or today.replace(day=1).isoformat()
+        end = self.request.GET.get("end") or today.isoformat()
         try:
-            return (dt.date.fromisoformat(desde), dt.date.fromisoformat(hasta))
+            return (dt.date.fromisoformat(start), dt.date.fromisoformat(end))
         except ValueError:
-            return (hoy.replace(day=1), hoy)
+            return (today.replace(day=1), today)
 
-    def get_negocio(self):
-        valor = self.request.GET.get("negocio")
-        if not valor:
+    def get_business(self):
+        value = self.request.GET.get("business")
+        if not value:
             return None
-        return permisos.negocios_permitidos(self.request.user).filter(pk=valor).first()
+        return permissions.allowed_businesses(self.request.user).filter(pk=value).first()
 
     def get_context_data(self, **kwargs):
-        contexto = super().get_context_data(**kwargs)
-        usuario = self.request.user
-        desde, hasta = self.get_periodo()
-        negocio = self.get_negocio()
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        start, end = self.get_period()
+        business = self.get_business()
 
-        contexto["indicadores"] = servicios.indicadores(usuario, negocio, desde, hasta)
-        contexto["cobrar_hoy"] = servicios.clientes_a_cobrar_hoy(usuario, negocio)
-        contexto["mora"] = servicios.clientes_en_mora(usuario, negocio)[:15]
-        contexto["ranking_solicitantes"] = servicios.ranking_solicitantes(
-            usuario, negocio, desde, hasta)
-        contexto["ranking_pagadores"] = servicios.ranking_pagadores(
-            usuario, negocio, desde, hasta)
-        contexto["actividad"] = servicios.actividad_reciente(usuario, negocio)
-        if permisos.puede(usuario, permisos.VER_REPORTES):
-            contexto["cobradores"] = servicios.desempeno_cobradores(
-                usuario, negocio, desde, hasta)
-        contexto["grafico_pagos"] = json.dumps(
-            servicios.pagos_vs_programado(usuario, negocio))
-        contexto["grafico_cartera"] = json.dumps(
-            servicios.composicion_cartera(usuario, negocio))
-        contexto["serie_pagos"] = json.dumps(servicios.serie_pagos(usuario, negocio))
-        contexto["desde"] = desde.isoformat()
-        contexto["hasta"] = hasta.isoformat()
-        contexto["negocio_seleccionado"] = negocio
-        contexto["titulo"] = "Dashboard"
-        return contexto
+        context["indicators"] = services.indicators(user, business, start, end)
+        context["due_today"] = services.customers_due_today(user, business)
+        context["past_due"] = services.customers_past_due(user, business)[:15]
+        context["top_borrowers"] = services.top_borrowers(user, business, start, end)
+        context["top_payers"] = services.top_payers(user, business, start, end)
+        context["activity"] = services.recent_activity(user, business)
+        if permissions.can(user, permissions.VIEW_REPORTS):
+            context["collectors"] = services.collector_performance(
+                user, business, start, end)
+        # Passed as plain dicts: the template serializes them with json_script.
+        context["payments_chart"] = services.scheduled_vs_collected(user, business)
+        context["portfolio_chart"] = services.portfolio_composition(user, business)
+        context["collection_series"] = services.collection_series(user, business)
+        context["start"] = start.isoformat()
+        context["end"] = end.isoformat()
+        context["selected_business"] = business
+        context["title"] = _("Dashboard")
+        return context

@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% load i18n %}
+{% block title %}{% trans "Sign in" %}{% endblock %}
+{% block anonymous %}
+<div class="login-screen">
+  <div class="login-box">
+    <div class="text-center text-white mb-4">
+      <div class="brand-icon mx-auto mb-3" style="width:48px;height:48px;font-size:1.4rem;">
+        <i class="bi bi-cash-coin"></i>
+      </div>
+      <h1 class="h4 mb-1">{% trans "Credit System" %}</h1>
+      <p class="small opacity-75 mb-0">{% trans "Loan, payment and collection management (MXN)" %}</p>
+    </div>
+    <div class="card-panel">
+      <div class="card-panel-body">
+        {% if form.errors %}
+          <div class="alert alert-danger py-2 small">{% trans "Wrong username or password." %}</div>
+        {% endif %}
+        <form method="post" data-submit-once>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.username.id_for_label }}">{% trans "Username" %}</label>
+            {{ form.username }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.password.id_for_label }}">{% trans "Password" %}</label>
+            {{ form.password }}
+          </div>
+          <button class="btn btn-primary w-100" type="submit">{% trans "Sign in" %}</button>
+        </form>
+      </div>
+    </div>
+    <p class="text-center text-white-50 small mt-3 mb-0">America/Mexico_City</p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{% blocktrans with ref=payment.reference %}Payment {{ ref }}{% endblocktrans %}{% endblock %}
+{% block actions %}
+  {% if can_reverse %}<a class="btn btn-sm btn-outline-danger" href="{% url 'payments:reverse' payment.pk %}">{% trans "Reverse" %}</a>{% endif %}
+  <a class="btn btn-sm btn-outline-soft" href="{{ payment.loan.get_absolute_url }}">{% trans "View loan" %}</a>
+  <button class="btn btn-sm btn-outline-soft" onclick="window.print()">{% trans "Print" %}</button>
+{% endblock %}
+{% block content %}
+{% if not payment.is_confirmed %}
+  <div class="alert alert-secondary">
+    {% blocktrans with date=payment.reversed_at|date:"d/m/Y H:i" author=payment.reversed_by reason=payment.reversal_reason %}Payment reversed on {{ date }} by {{ author }}. Reason: {{ reason }}. The original record is kept for auditing.{% endblocktrans %}
+  </div>
+{% endif %}
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card-panel"><div class="card-panel-header"><h2>{% trans "Receipt" %}</h2></div>
+      <div class="card-panel-body"><dl class="row small mb-0">
+        <dt class="col-5">{% trans "Customer" %}</dt><dd class="col-7">{{ payment.customer }}</dd>
+        <dt class="col-5">{% trans "Loan" %}</dt><dd class="col-7">{{ payment.loan.reference }}</dd>
+        <dt class="col-5">{% trans "Business" %}</dt><dd class="col-7">{{ payment.business }}</dd>
+        <dt class="col-5">{% trans "Date" %}</dt><dd class="col-7">{{ payment.paid_at|date:"d/m/Y H:i" }}</dd>
+        <dt class="col-5">{% trans "Amount" %}</dt><dd class="col-7 fw-semibold">{{ payment.amount|mxn }}</dd>
+        <dt class="col-5">{% trans "Allocated" %}</dt><dd class="col-7">{{ payment.allocated_amount|mxn }}</dd>
+        <dt class="col-5">{% trans "Overpayment" %}</dt><dd class="col-7">{{ payment.overpayment|mxn }}</dd>
+        <dt class="col-5">{% trans "Method" %}</dt><dd class="col-7">{{ payment.get_method_display }}</dd>
+        <dt class="col-5">{% trans "Kind" %}</dt><dd class="col-7">{{ payment.get_kind_display }}</dd>
+        <dt class="col-5">{% trans "Reference" %}</dt><dd class="col-7">{{ payment.external_reference|default:"-" }}</dd>
+        <dt class="col-5">{% trans "Registered by" %}</dt><dd class="col-7">{{ payment.received_by }}</dd>
+        <dt class="col-5">{% trans "Collector" %}</dt><dd class="col-7">{{ payment.collector|default:"-" }}</dd>
+        <dt class="col-5">{% trans "Status" %}</dt><dd class="col-7"><span class="badge text-bg-{{ payment.status|badge }} status-badge">{{ payment.get_status_display }}</span></dd>
+      </dl>
+      {% if payment.notes %}<hr><p class="small mb-0">{{ payment.notes|linebreaksbr }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card-panel"><div class="card-panel-header"><h2>{% trans "Payment allocation" %}</h2></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>{% trans "Installment" %}</th><th>{% trans "Due" %}</th><th class="num">{% trans "Allocated" %}</th>
+            <th class="num">{% trans "Principal" %}</th><th class="num">{% trans "Interest" %}</th></tr></thead>
+          <tbody>
+          {% for allocation in allocations %}
+            <tr><td>{{ allocation.installment.number }}</td>
+              <td>{{ allocation.installment.due_date|date:"d/m/Y" }}</td>
+              <td class="num fw-semibold">{{ allocation.amount|mxn }}</td>
+              <td class="num">{{ allocation.principal|mxn }}</td>
+              <td class="num">{{ allocation.interest|mxn }}</td></tr>
+          {% empty %}<tr><td colspan="5" class="text-secondary small p-3">{% trans "This payment was not applied to any installment." %}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-panel-body border-top">
+        <p class="form-hint mb-0">{% trans "This allocation makes it possible to rebuild the loan balance at any time." %}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

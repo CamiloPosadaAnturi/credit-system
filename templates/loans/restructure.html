@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{% blocktrans with ref=loan.reference %}Restructure {{ ref }}{% endblocktrans %}{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="alert alert-info small">
+      {% blocktrans with balance=loan.outstanding_balance %}Restructuring closes this loan (it stays as restructured, with its history intact) and creates a new one for the outstanding balance of {{ balance }} MXN. The operation is recorded in the audit log.{% endblocktrans %}
+    </div>
+    <div class="card-panel"><div class="card-panel-body">
+      <form method="post" data-submit-once data-confirm="{% trans 'Confirm the restructuring?' %}">
+        {% csrf_token %}
+        {% include "components/form.html" %}
+        <button class="btn btn-warning" type="submit">{% trans "Restructure" %}</button>
+        <a class="btn btn-outline-soft" href="{{ loan.get_absolute_url }}">{% trans "Back" %}</a>
+      </form>
+    </div></div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card-panel"><div class="card-panel-header"><h2>{% trans "Current loan" %}</h2></div>
+      <div class="card-panel-body"><dl class="row small mb-0">
+        <dt class="col-6">{% trans "Customer" %}</dt><dd class="col-6">{{ loan.customer }}</dd>
+        <dt class="col-6">{% trans "Original principal" %}</dt><dd class="col-6">{{ loan.principal|mxn }}</dd>
+        <dt class="col-6">{% trans "Contractual total" %}</dt><dd class="col-6">{{ loan.total_payable|mxn }}</dd>
+        <dt class="col-6">{% trans "Paid" %}</dt><dd class="col-6">{{ loan.total_paid|mxn }}</dd>
+        <dt class="col-6 fw-semibold">{% trans "Balance to restructure" %}</dt><dd class="col-6 fw-semibold">{{ loan.outstanding_balance|mxn }}</dd>
+        <dt class="col-6">{% trans "Days past due" %}</dt><dd class="col-6">{{ loan.days_past_due }}</dd>
+      </dl></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

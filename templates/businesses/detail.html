@@ -1,0 +1,81 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{{ business.trade_name }}{% endblock %}
+{% block subheading %}<p class="text-secondary small mb-0">{{ business.legal_name|default:"" }} {% if business.tax_id %}&middot; RFC {{ business.tax_id }}{% endif %}</p>{% endblock %}
+{% block actions %}
+  <a class="btn btn-sm btn-outline-soft" href="{% url 'businesses:dashboard' business.pk %}">{% trans "Business dashboard" %}</a>
+  {% if user_permissions.manage_businesses %}
+    <a class="btn btn-sm btn-primary" href="{% url 'businesses:update' business.pk %}">{% trans "Edit" %}</a>
+    <form method="post" action="{% url 'businesses:toggle_active' business.pk %}" class="d-inline"
+          data-confirm="{% trans 'The financial history is kept. Confirm the status change?' %}">
+      {% csrf_token %}
+      <button class="btn btn-sm btn-outline-{% if business.is_active %}danger{% else %}success{% endif %}">
+        {% if business.is_active %}{% trans "Deactivate" %}{% else %}{% trans "Activate" %}{% endif %}</button>
+    </form>
+  {% endif %}
+{% endblock %}
+{% block content %}
+<div class="stat-grid mb-4">
+  {% include "components/stat_tile.html" with label=_("Disbursed principal") value=summary.disbursed_principal|mxn accent="accent-blue" %}
+  {% include "components/stat_tile.html" with label=_("Outstanding portfolio") value=summary.outstanding_balance|mxn accent="accent-amber" %}
+  {% include "components/stat_tile.html" with label=_("Overdue portfolio") value=summary.overdue_balance|mxn accent="accent-red" %}
+  {% include "components/stat_tile.html" with label=_("Total collected") value=summary.total_collected|mxn accent="accent-green" %}
+  {% include "components/stat_tile.html" with label=_("Live loans") value=summary.live_loans accent="accent-blue" %}
+  {% include "components/stat_tile.html" with label=_("Settled loans") value=summary.settled_loans accent="accent-green" %}
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card-panel h-100">
+      <div class="card-panel-header"><h2>{% trans "Details and configuration" %}</h2></div>
+      <div class="card-panel-body">
+        <dl class="row small mb-0">
+          <dt class="col-6">{% trans "Phone" %}</dt><dd class="col-6">{{ business.phone|default:"-" }}</dd>
+          <dt class="col-6">{% trans "Email" %}</dt><dd class="col-6">{{ business.email|default:"-" }}</dd>
+          <dt class="col-6">{% trans "Address" %}</dt><dd class="col-6">{{ business.address|default:"-" }}</dd>
+          <dt class="col-6">{% trans "City / State" %}</dt><dd class="col-6">{{ business.city|default:"-" }} {{ business.get_state_display|default:"" }}</dd>
+          <dt class="col-6">{% trans "In charge" %}</dt><dd class="col-6">{{ business.manager|default:"-" }}</dd>
+          <dt class="col-12"><hr class="my-2"></dt>
+          <dt class="col-6">{% trans "Interest mode" %}</dt><dd class="col-6">{{ business.get_interest_mode_display }}</dd>
+          <dt class="col-6">{% trans "Rate" %}</dt><dd class="col-6">{{ business.rate_percentage }}% ({{ business.interest_per_thousand|mxn }} / $1,000)</dd>
+          <dt class="col-6">{% trans "Rate period" %}</dt><dd class="col-6">{{ business.get_rate_period_display }}</dd>
+          <dt class="col-6">{% trans "Frequency" %}</dt><dd class="col-6">{{ business.get_payment_frequency_display }} / {{ business.installment_count }}</dd>
+          <dt class="col-6">{% trans "Grace days" %}</dt><dd class="col-6">{{ business.grace_days }}</dd>
+          <dt class="col-6">{% trans "Late fee" %}</dt><dd class="col-6">{% if business.charges_late_fee %}{{ business.late_fee_rate }} {% trans "daily" %}{% else %}{% trans "Not applied" %}{% endif %}</dd>
+          <dt class="col-6">{% trans "Early payoff" %}</dt><dd class="col-6">{% if business.allows_early_payoff %}{% trans "Allowed" %} ({{ business.early_payoff_discount }}){% else %}{% trans "Not allowed" %}{% endif %}</dd>
+        </dl>
+        {% if business.notes %}<hr><p class="small mb-0">{{ business.notes|linebreaksbr }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card-panel h-100">
+      <div class="card-panel-header"><h2>{% trans "Recent loans" %}</h2>
+        <a class="btn btn-sm btn-outline-soft" href="{% url 'loans:list' %}?business={{ business.pk }}">{% trans "See all" %}</a></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>{% trans "Reference" %}</th><th>{% trans "Customer" %}</th>
+            <th class="num">{% trans "Principal" %}</th><th class="num">{% trans "Balance" %}</th>
+            <th>{% trans "Status" %}</th></tr></thead>
+          <tbody>
+          {% for loan in recent_loans %}
+            <tr><td><a href="{{ loan.get_absolute_url }}">{{ loan.reference }}</a></td>
+              <td>{{ loan.customer }}</td>
+              <td class="num">{{ loan.principal|mxn }}</td>
+              <td class="num">{{ loan.outstanding_balance|mxn }}</td>
+              <td><span class="badge text-bg-{{ loan.status|badge }} status-badge">{{ loan.get_status_display }}</span></td></tr>
+          {% empty %}<tr><td colspan="5">{% include "components/empty_state.html" with message=_("This business has no loans yet.") %}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-panel-body border-top">
+        <h3 class="h6">{% trans "Authorized users" %}</h3>
+        <div class="d-flex flex-wrap gap-2">
+          {% for item in business_users %}
+            <span class="badge text-bg-light border">{{ item }} <span class="text-secondary">({{ item.get_role_display }})</span></span>
+          {% empty %}<span class="text-secondary small">{% trans "No users assigned." %}</span>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

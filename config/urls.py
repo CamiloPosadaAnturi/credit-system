@@ -6,20 +6,20 @@ from django.urls import include, path
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("apps.dashboard.urls")),
-    path("usuarios/", include("apps.usuarios.urls")),
-    path("negocios/", include("apps.negocios.urls")),
-    path("clientes/", include("apps.clientes.urls")),
-    path("creditos/", include("apps.creditos.urls")),
-    path("pagos/", include("apps.pagos.urls")),
-    path("cobranza/", include("apps.cobranza.urls")),
-    path("reportes/", include("apps.reportes.urls")),
-    path("notificaciones/", include("apps.notificaciones.urls")),
-    path("auditoria/", include("apps.auditoria.urls")),
+    path("users/", include("apps.users.urls")),
+    path("businesses/", include("apps.businesses.urls")),
+    path("customers/", include("apps.customers.urls")),
+    path("loans/", include("apps.loans.urls")),
+    path("payments/", include("apps.payments.urls")),
+    path("collections/", include("apps.collections.urls")),
+    path("reports/", include("apps.reports.urls")),
+    path("notifications/", include("apps.notifications.urls")),
+    path("audit/", include("apps.audit.urls")),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-admin.site.site_header = "Sistema de Creditos"
-admin.site.site_title = "Sistema de Creditos"
-admin.site.index_title = "Administracion"
+admin.site.site_header = "Credit System"
+admin.site.site_title = "Credit System"
+admin.site.index_title = "Administration"

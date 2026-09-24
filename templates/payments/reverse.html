@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{% blocktrans with ref=payment.reference %}Reverse payment {{ ref }}{% endblocktrans %}{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-6">
+  <div class="alert alert-warning">
+    {% trans "The payment is not deleted: it is marked as reversed, with its reason and author, and the loan balance is recomputed from scratch." %}
+  </div>
+  <div class="card-panel"><div class="card-panel-body">
+    <dl class="row small">
+      <dt class="col-6">{% trans "Customer" %}</dt><dd class="col-6">{{ payment.customer }}</dd>
+      <dt class="col-6">{% trans "Loan" %}</dt><dd class="col-6">{{ payment.loan.reference }}</dd>
+      <dt class="col-6">{% trans "Amount" %}</dt><dd class="col-6">{{ payment.amount|mxn }}</dd>
+      <dt class="col-6">{% trans "Date" %}</dt><dd class="col-6">{{ payment.paid_at|date:"d/m/Y H:i" }}</dd>
+    </dl>
+    <form method="post" data-submit-once data-confirm="{% trans 'Confirm the reversal of this payment?' %}">
+      {% csrf_token %}
+      {% include "components/form.html" %}
+      <button class="btn btn-danger" type="submit">{% trans "Reverse payment" %}</button>
+      <a class="btn btn-outline-soft" href="{{ payment.get_absolute_url }}">{% trans "Back" %}</a>
+    </form>
+  </div></div>
+</div></div>
+{% endblock %}

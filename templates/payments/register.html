@@ -1,0 +1,61 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{% trans "Register payment" %}{% endblock %}
+{% block subheading %}<p class="text-secondary small mb-0">{{ loan.reference }} &middot; {{ loan.customer }}</p>{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card-panel">
+      <div class="card-panel-header"><h2>{% trans "Payment details" %}</h2></div>
+      <div class="card-panel-body">
+        <form method="post" novalidate data-submit-once>
+          {% csrf_token %}
+          {% include "components/form.html" %}
+          <div class="d-flex gap-2 mt-2">
+            <button class="btn btn-success" type="submit">{% trans "Register payment" %}</button>
+            <a class="btn btn-outline-soft" href="{{ loan.get_absolute_url }}">{% trans "Cancel" %}</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card-panel mb-3">
+      <div class="card-panel-header"><h2>{% trans "Loan situation" %}</h2></div>
+      <div class="card-panel-body">
+        <dl class="row mb-0">
+          <dt class="col-7">{% trans "Contractual total" %}</dt><dd class="col-5 text-end">{{ loan.total_payable|mxn }}</dd>
+          <dt class="col-7">{% trans "Paid" %}</dt><dd class="col-5 text-end">{{ loan.total_paid|mxn }}</dd>
+          <dt class="col-7 fw-semibold">{% trans "Outstanding balance" %}</dt><dd class="col-5 text-end fw-semibold">{{ outstanding_balance|mxn }}</dd>
+          <dt class="col-7 text-danger">{% trans "Overdue balance" %}</dt><dd class="col-5 text-end text-danger">{{ overdue_balance|mxn }}</dd>
+          {% if next_installment %}
+            <dt class="col-7">{% blocktrans with number=next_installment.number %}Next installment ({{ number }}){% endblocktrans %}</dt>
+            <dd class="col-5 text-end">{{ next_installment.balance|mxn }} &middot; {{ next_installment.due_date|date:"d/m/Y" }}</dd>
+          {% endif %}
+        </dl>
+        <p class="form-hint mt-3 mb-0">
+          {% trans "The payment is applied first to the oldest overdue installments and, within each installment, first to interest and then to principal." %}
+        </p>
+      </div>
+    </div>
+    <div class="card-panel">
+      <div class="card-panel-header"><h2>{% trans "Schedule" %}</h2></div>
+      <div class="table-wrap" style="max-height:300px;overflow-y:auto">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>{% trans "Due" %}</th><th class="num">{% trans "Installment" %}</th>
+            <th class="num">{% trans "Paid" %}</th><th class="num">{% trans "Balance" %}</th><th>{% trans "Status" %}</th></tr></thead>
+          <tbody>
+          {% for installment in installments %}
+            <tr class="{% if installment.status == 'overdue' %}table-danger{% endif %}">
+              <td>{{ installment.number }}</td><td>{{ installment.due_date|date:"d/m/Y" }}</td>
+              <td class="num">{{ installment.scheduled_amount|mxn }}</td>
+              <td class="num">{{ installment.amount_paid|mxn }}</td>
+              <td class="num">{{ installment.balance|mxn }}</td>
+              <td><span class="badge text-bg-{{ installment.status|badge }} status-badge">{{ installment.get_status_display }}</span></td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

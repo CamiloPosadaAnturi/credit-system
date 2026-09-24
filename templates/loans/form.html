@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% load i18n %}
+{% block heading %}{{ title }}{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card-panel">
+      <div class="card-panel-body">
+        <form method="post" enctype="multipart/form-data" novalidate id="loanSimulator"
+              data-url="{% url 'loans:simulate' %}" data-csrf="{{ csrf_token }}">
+          {% csrf_token %}
+          {% include "components/form.html" %}
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary" type="submit">{% trans "Continue and review the terms" %}</button>
+            <a class="btn btn-outline-soft" href="{% url 'loans:list' %}">{% trans "Cancel" %}</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card-panel">
+      <div class="card-panel-header"><h2>{% trans "Preview" %}</h2></div>
+      <div class="card-panel-body">
+        <div id="simulationOutput" class="d-none">
+          <dl class="row mb-0">
+            <dt class="col-7">{% trans "Total interest" %}</dt><dd class="col-5 text-end" data-field="interest">-</dd>
+            <dt class="col-7">{% trans "Total payable" %}</dt><dd class="col-5 text-end fw-semibold" data-field="total">-</dd>
+            <dt class="col-7">{% trans "Installment amount" %}</dt><dd class="col-5 text-end" data-field="installment">-</dd>
+            <dt class="col-7">{% trans "Last installment" %}</dt><dd class="col-5 text-end" data-field="last">-</dd>
+          </dl>
+        </div>
+        <p class="form-hint mb-0 mt-3">
+          {% trans "This preview is informational. The server recomputes the interest, the total and the schedule when the loan is saved." %}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{% trans "Collections and past-due portfolio" %}{% endblock %}
+{% block actions %}
+<form method="post" action="{% url 'collections:refresh_past_due' %}" class="d-inline">
+  {% csrf_token %}<button class="btn btn-sm btn-outline-soft">{% trans "Refresh past-due statuses" %}</button>
+</form>
+{% endblock %}
+{% block content %}
+<form class="filters" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-3">{{ filter_form.business.label_tag }}{{ filter_form.business }}</div>
+    <div class="col-md-3">{{ filter_form.collector.label_tag }}{{ filter_form.collector }}</div>
+    <div class="col-md-2">{{ filter_form.min_days_past_due.label_tag }}{{ filter_form.min_days_past_due }}</div>
+    <div class="col-md-2 d-grid"><button class="btn btn-primary btn-sm">{% trans "Filter" %}</button></div>
+  </div>
+</form>
+
+<div class="stat-grid mb-4">
+  {% include "components/stat_tile.html" with label=_("Due today") value=breakdown.due_today hint=_("Scheduled installments") accent="accent-amber" %}
+  {% include "components/stat_tile.html" with label=_("Upcoming (7 days)") value=breakdown.upcoming accent="accent-blue" %}
+  {% include "components/stat_tile.html" with label=_("Overdue installments") value=breakdown.overdue accent="accent-red" %}
+  {% include "components/stat_tile.html" with label=_("Past-due loans") value=breakdown.past_due_loans accent="accent-red" %}
+  {% include "components/stat_tile.html" with label=_("Overdue balance") value=breakdown.overdue_balance|mxn accent="accent-red" %}
+  {% include "components/stat_tile.html" with label=_("Total balance") value=breakdown.total_balance|mxn accent="accent-amber" %}
+  {% include "components/stat_tile.html" with label=_("Partially paid") value=breakdown.partially_paid accent="accent-blue" %}
+  {% include "components/stat_tile.html" with label=_("Customers with several loans") value=breakdown.customers_with_several_loans accent="accent-blue" %}
+</div>
+
+<ul class="nav nav-tabs mb-3">
+  <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabToday">{% trans "Due today" %}</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabPastDue">{% trans "Past due" %}</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabOverdue">{% trans "Overdue installments" %}</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabUpcoming">{% trans "Upcoming" %}</button></li>
+</ul>
+
+<div class="tab-content">
+  <div class="tab-pane fade show active" id="tabToday">
+    <div class="card-panel"><div class="table-wrap"><table class="data-table">
+      <thead><tr><th>{% trans "Customer" %}</th><th>{% trans "Phone" %}</th><th>{% trans "Loan" %}</th>
+        <th class="num">{% trans "Installment" %}</th><th class="num">{% trans "Balance" %}</th>
+        <th>{% trans "Collector" %}</th><th></th></tr></thead>
+      <tbody>
+      {% for installment in due_today %}
+        <tr><td>{{ installment.loan.customer }}</td><td>{{ installment.loan.customer.phone }}</td>
+          <td><a href="{{ installment.loan.get_absolute_url }}">{{ installment.loan.reference }}</a></td>
+          <td class="num">{{ installment.scheduled_amount|mxn }}</td>
+          <td class="num">{{ installment.balance|mxn }}</td>
+          <td>{{ installment.loan.collector|default:"-" }}</td>
+          <td>{% if user_permissions.register_payment %}<a class="btn btn-sm btn-primary" href="{% url 'payments:register' installment.loan.pk %}">{% trans "Collect" %}</a>{% endif %}</td></tr>
+      {% empty %}<tr><td colspan="7">{% include "components/empty_state.html" with message=_("Nothing scheduled for today.") icon="bi-calendar-check" %}</td></tr>{% endfor %}
+      </tbody></table></div></div>
+  </div>
+
+  <div class="tab-pane fade" id="tabPastDue">
+    <div class="card-panel"><div class="table-wrap"><table class="data-table">
+      <thead><tr><th>{% trans "Customer" %}</th><th>{% trans "Phone" %}</th><th>{% trans "Loan" %}</th>
+        <th class="num">{% trans "Overdue installments" %}</th><th class="num">{% trans "Days" %}</th>
+        <th class="num">{% trans "Overdue balance" %}</th><th class="num">{% trans "Total balance" %}</th>
+        <th>{% trans "Last action" %}</th><th></th></tr></thead>
+      <tbody>
+      {% for row in past_due %}
+        <tr><td>{{ row.customer }}</td><td>{{ row.customer.phone }}</td>
+          <td><a href="{{ row.loan.get_absolute_url }}">{{ row.loan.reference }}</a></td>
+          <td class="num">{{ row.overdue_count }}</td>
+          <td class="num text-danger fw-semibold">{{ row.days_past_due }}</td>
+          <td class="num">{{ row.overdue_balance|mxn }}</td>
+          <td class="num">{{ row.total_balance|mxn }}</td>
+          <td class="small">{% if row.last_action %}{{ row.last_action.get_action_type_display }} - {{ row.last_action.performed_at|date:"d/m/Y" }}{% else %}<span class="text-secondary">{% trans "No actions" %}</span>{% endif %}</td>
+          <td>{% if user_permissions.log_collection_action %}<a class="btn btn-sm btn-outline-soft" href="{% url 'collections:log_action' row.loan.pk %}">{% trans "Log action" %}</a>{% endif %}</td></tr>
+      {% empty %}<tr><td colspan="9">{% include "components/empty_state.html" with message=_("No past-due loans.") icon="bi-emoji-smile" %}</td></tr>{% endfor %}
+      </tbody></table></div></div>
+  </div>
+
+  <div class="tab-pane fade" id="tabOverdue">
+    <div class="card-panel"><div class="table-wrap"><table class="data-table">
+      <thead><tr><th>{% trans "Customer" %}</th><th>{% trans "Loan" %}</th><th>#</th><th>{% trans "Was due" %}</th>
+        <th class="num">{% trans "Days past due" %}</th><th class="num">{% trans "Installment balance" %}</th>
+        <th>{% trans "Collector" %}</th></tr></thead>
+      <tbody>
+      {% for installment in overdue %}
+        <tr><td>{{ installment.loan.customer }}</td>
+          <td><a href="{{ installment.loan.get_absolute_url }}">{{ installment.loan.reference }}</a></td>
+          <td>{{ installment.number }}</td><td>{{ installment.due_date|date:"d/m/Y" }}</td>
+          <td class="num text-danger">{{ installment.days_past_due }} d</td>
+          <td class="num">{{ installment.balance|mxn }}</td>
+          <td>{{ installment.loan.collector|default:"-" }}</td></tr>
+      {% empty %}<tr><td colspan="7">{% include "components/empty_state.html" with message=_("No overdue installments.") %}</td></tr>{% endfor %}
+      </tbody></table></div></div>
+  </div>
+
+  <div class="tab-pane fade" id="tabUpcoming">
+    <div class="card-panel"><div class="table-wrap"><table class="data-table">
+      <thead><tr><th>{% trans "Customer" %}</th><th>{% trans "Loan" %}</th><th>#</th><th>{% trans "Due" %}</th>
+        <th class="num">{% trans "Installment balance" %}</th><th>{% trans "Collector" %}</th></tr></thead>
+      <tbody>
+      {% for installment in upcoming %}
+        <tr><td>{{ installment.loan.customer }}</td>
+          <td><a href="{{ installment.loan.get_absolute_url }}">{{ installment.loan.reference }}</a></td>
+          <td>{{ installment.number }}</td><td>{{ installment.due_date|date:"d/m/Y" }}</td>
+          <td class="num">{{ installment.balance|mxn }}</td><td>{{ installment.loan.collector|default:"-" }}</td></tr>
+      {% empty %}<tr><td colspan="6">{% include "components/empty_state.html" with message=_("Nothing due in the next 7 days.") %}</td></tr>{% endfor %}
+      </tbody></table></div></div>
+  </div>
+</div>
+{% endblock %}

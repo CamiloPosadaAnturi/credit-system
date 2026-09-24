@@ -1,12 +1,12 @@
-{% extends "base.html" %}
-{% block encabezado %}Acceso denegado{% endblock %}
-{% block contenido %}
-<div class="tarjeta"><div class="tarjeta-cuerpo">
-  <h2 class="h5">No tienes autorizacion para esta operacion</h2>
-  <p class="text-secondary mb-3">{{ exception|default:"Tu rol no permite ver o modificar esta informacion." }}</p>
-  <a class="btn btn-primary" href="{% url 'dashboard:inicio' %}">Volver al dashboard</a>
+{% extends "base.html" %}{% load i18n %}
+{% block heading %}{% trans "Access denied" %}{% endblock %}
+{% block content %}
+<div class="card-panel"><div class="card-panel-body">
+  <h2 class="h5">{% trans "You are not authorized to perform this operation" %}</h2>
+  <p class="text-secondary mb-3">{{ exception|default:_("Your role does not allow viewing or changing this information.") }}</p>
+  <a class="btn btn-primary" href="{% url 'dashboard:home' %}">{% trans "Back to the dashboard" %}</a>
 </div></div>
 {% endblock %}
-{% block sin_sesion %}<div class="login-pantalla"><div class="login-caja tarjeta"><div class="tarjeta-cuerpo">
-  <h1 class="h5">Acceso denegado</h1><a class="btn btn-primary" href="{% url 'usuarios:login' %}">Entrar</a>
+{% block anonymous %}<div class="login-screen"><div class="login-box card-panel"><div class="card-panel-body">
+  <h1 class="h5">{% trans "Access denied" %}</h1><a class="btn btn-primary" href="{% url 'users:login' %}">{% trans "Sign in" %}</a>
 </div></div></div>{% endblock %}

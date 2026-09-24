@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% load i18n %}
+{% block heading %}{% trans "Audit log" %}{% endblock %}
+{% block subheading %}<p class="text-secondary small mb-0">{% trans "Immutable record of the critical operations of the system." %}</p>{% endblock %}
+{% block content %}
+<form class="filters" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-3"><label class="form-label">{% trans "Search" %}</label>
+      <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="{% trans 'Description, reference or user' %}"></div>
+    <div class="col-md-3"><label class="form-label">{% trans "Action" %}</label>
+      <select name="action" class="form-select"><option value="">{% trans "All" %}</option>
+        {% for value, label in actions %}<option value="{{ value }}" {% if selected_action == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></div>
+    <div class="col-md-2"><label class="form-label">{% trans "From" %}</label><input type="date" name="start" value="{{ start }}" class="form-control"></div>
+    <div class="col-md-2"><label class="form-label">{% trans "To" %}</label><input type="date" name="end" value="{{ end }}" class="form-control"></div>
+    <div class="col-md-2 d-grid"><button class="btn btn-primary btn-sm">{% trans "Filter" %}</button></div>
+  </div>
+</form>
+<div class="card-panel"><div class="table-wrap"><table class="data-table">
+  <thead><tr><th>{% trans "Date" %}</th><th>{% trans "User" %}</th><th>{% trans "Business" %}</th>
+    <th>{% trans "Action" %}</th><th>{% trans "Object" %}</th><th>{% trans "Description" %}</th><th>{% trans "IP" %}</th></tr></thead>
+  <tbody>
+  {% for entry in entries %}
+    <tr><td class="small">{{ entry.created_at|date:"d/m/Y H:i:s" }}</td>
+      <td>{{ entry.user|default:_("system") }}</td>
+      <td class="small">{{ entry.business|default:"-" }}</td>
+      <td>{{ entry.get_action_display }}</td>
+      <td class="small">{{ entry.model_name }} {{ entry.object_id }}</td>
+      <td class="small">{{ entry.description }}</td>
+      <td class="small text-secondary">{{ entry.ip_address|default:"-" }}</td></tr>
+  {% empty %}<tr><td colspan="7">{% include "components/empty_state.html" with message=_("No audit entries.") icon="bi-shield-check" %}</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% include "components/pagination.html" %}
+{% endblock %}

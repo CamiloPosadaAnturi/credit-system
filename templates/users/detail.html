@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load i18n %}
+{% block heading %}{{ profile_user }}{% endblock %}
+{% block actions %}
+  <a class="btn btn-sm btn-outline-soft" href="{% url 'users:update' profile_user.pk %}">{% trans "Edit" %}</a>
+  <a class="btn btn-sm btn-outline-soft" href="{% url 'users:password' profile_user.pk %}">{% trans "Change password" %}</a>
+{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-6">
+<div class="card-panel"><div class="card-panel-body">
+  <dl class="row small mb-0">
+    <dt class="col-5">{% trans "Username" %}</dt><dd class="col-7">{{ profile_user.username }}</dd>
+    <dt class="col-5">{% trans "Email" %}</dt><dd class="col-7">{{ profile_user.email|default:"-" }}</dd>
+    <dt class="col-5">{% trans "Phone" %}</dt><dd class="col-7">{{ profile_user.phone|default:"-" }}</dd>
+    <dt class="col-5">{% trans "Role" %}</dt><dd class="col-7">{{ profile_user.get_role_display }}</dd>
+    <dt class="col-5">{% trans "Active" %}</dt><dd class="col-7">{{ profile_user.is_active|yesno:_("Yes,No") }}</dd>
+    <dt class="col-5">{% trans "Businesses" %}</dt><dd class="col-7">{% for business in profile_user.businesses.all %}{{ business }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</dd>
+    <dt class="col-5">{% trans "Assigned customers" %}</dt><dd class="col-7">{{ assigned_customers }}</dd>
+    <dt class="col-5">{% trans "Assigned loans" %}</dt><dd class="col-7">{{ assigned_loans }}</dd>
+    <dt class="col-5">{% trans "Created" %}</dt><dd class="col-7">{{ profile_user.created_at|date:"d/m/Y" }}</dd>
+  </dl>
+</div></div>
+</div></div>
+{% endblock %}

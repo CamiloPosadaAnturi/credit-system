@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{% trans "Payments" %}{% endblock %}
+{% block subheading %}<p class="text-secondary small mb-0">{% trans "Confirmed total with the current filters" %}: <strong>{{ filtered_total|mxn }}</strong></p>{% endblock %}
+{% block content %}
+<form class="filters" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-3">{{ filter_form.q.label_tag }}{{ filter_form.q }}</div>
+    <div class="col-md-2">{{ filter_form.business.label_tag }}{{ filter_form.business }}</div>
+    <div class="col-md-2">{{ filter_form.method.label_tag }}{{ filter_form.method }}</div>
+    <div class="col-md-2">{{ filter_form.status.label_tag }}{{ filter_form.status }}</div>
+    <div class="col-md-1">{{ filter_form.start.label_tag }}{{ filter_form.start }}</div>
+    <div class="col-md-1">{{ filter_form.end.label_tag }}{{ filter_form.end }}</div>
+    <div class="col-md-1 d-grid"><button class="btn btn-primary btn-sm">{% trans "Filter" %}</button></div>
+  </div>
+</form>
+<div class="card-panel">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>{% trans "Reference" %}</th><th>{% trans "Date" %}</th><th>{% trans "Customer" %}</th>
+        <th>{% trans "Loan" %}</th><th class="num">{% trans "Amount" %}</th><th class="num">{% trans "Allocated" %}</th>
+        <th>{% trans "Method" %}</th><th>{% trans "Collector" %}</th><th>{% trans "Status" %}</th></tr></thead>
+      <tbody>
+      {% for payment in payments %}
+        <tr><td><a href="{{ payment.get_absolute_url }}" class="fw-semibold">{{ payment.reference }}</a></td>
+          <td>{{ payment.paid_at|date:"d/m/Y H:i" }}</td>
+          <td>{{ payment.customer }}</td>
+          <td><a href="{{ payment.loan.get_absolute_url }}">{{ payment.loan.reference }}</a></td>
+          <td class="num">{{ payment.amount|mxn }}</td>
+          <td class="num">{{ payment.allocated_amount|mxn }}</td>
+          <td>{{ payment.get_method_display }}</td>
+          <td>{{ payment.collector|default:"-" }}</td>
+          <td><span class="badge text-bg-{{ payment.status|badge }} status-badge">{{ payment.get_status_display }}</span></td></tr>
+      {% empty %}
+        <tr><td colspan="9">{% include "components/empty_state.html" with message=_("No payments match the filters.") icon="bi-cash-stack" %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "components/pagination.html" %}
+{% endblock %}

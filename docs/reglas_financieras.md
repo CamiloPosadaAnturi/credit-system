@@ -6,6 +6,12 @@ uno de los dos, nunca dejarlos en desacuerdo.
 
 Moneda: **pesos mexicanos (MXN)**. Zona horaria: **America/Mexico_City**.
 
+> **Nota sobre los nombres.** El codigo fuente esta en ingles y la interfaz en
+> espanol. Este documento usa los terminos en espanol y, entre parentesis o en
+> los bloques de codigo, los identificadores reales del sistema. El README
+> tiene un glosario ingles/espanol completo.
+
+
 ---
 
 ## 1. Politica monetaria
@@ -17,14 +23,14 @@ Moneda: **pesos mexicanos (MXN)**. Zona horaria: **America/Mexico_City**.
 | Redondeo | `ROUND_HALF_UP` (medio hacia arriba) |
 | Diferencias de redondeo al dividir en cuotas | Se absorben en la **ultima cuota** |
 
-Implementacion: `apps/core/dinero.py` (`q`, `dividir_en_cuotas`, `prorratear`).
+Implementacion: `apps/core/money.py` (`money`, `split_into_installments`, `distribute`).
 
-Garantia verificable (probada en `apps/creditos/tests/test_calculos.py`):
+Garantia verificable (probada en `apps/loans/tests/test_calculations.py`):
 
 ```
-sum(cuota.capital_programado) == credito.capital
-sum(cuota.interes_programado) == credito.interes_total
-sum(cuota.importe_programado) == credito.total_a_pagar
+sum(installment.scheduled_principal) == loan.principal
+sum(installment.scheduled_interest) == loan.total_interest
+sum(installment.scheduled_amount) == loan.total_payable
 ```
 
 ---
@@ -35,13 +41,13 @@ El interes se calcula **una sola vez**, sobre el **capital inicial**, al crear y
 al aprobar el credito. No hay interes compuesto y el interes **no se recalcula
 con cada pago**.
 
-Modalidades (`apps/core/opciones.py`, `ModalidadInteres`):
+Modalidades (`apps/core/choices.py`, `InterestMode`):
 
 | Modalidad | Formula | Uso |
 |---|---|---|
-| `fijo_capital` (predeterminada) | `interes = capital x tasa` | Regla comercial inicial |
-| `simple_periodo` | `interes = capital x tasa x numero_cuotas` | Interes simple por periodo |
-| `sin_interes` | `interes = 0` | Prestamos sin costo |
+| `flat_on_principal` (predeterminada) | `interest = principal x rate` | Regla comercial inicial |
+| `simple_per_period` | `interest = principal x rate x installment_count` | Interes simple por periodo |
+| `no_interest` | `interest = 0` | Prestamos sin costo |
 
 ### Regla comercial inicial
 
@@ -58,15 +64,15 @@ definido.
 | $10,000 | $4,000 | $14,000 |
 
 ```
-interes        = capital * 0.40
-total_a_pagar  = capital + interes
-saldo_pendiente = total_a_pagar - pagos_aplicados
+total_interest      = principal * 0.40
+total_payable       = principal + total_interest
+outstanding_balance = total_payable - allocated_payments
 ```
 
 ### Advertencias importantes
 
 - El 40 % **no** es una tasa mensual ni anual: corresponde al **periodo
-  contractual** que se define en el campo `periodo_tasa` del credito y que
+  contractual** que se define en el campo `rate_period` del credito y que
   debe quedar explicito en el contrato firmado.
 - La tasa es **configurable por negocio** y se **copia al credito** al crearlo
   y al aprobarlo (snapshot). Cambiar la tasa del negocio **no** altera los
@@ -109,32 +115,32 @@ Ejemplo (1,000 de capital, 400 de interes, 4 cuotas semanales):
 
 ## 4. Aplicacion de pagos
 
-Orden de aplicacion (`apps/pagos/servicios.py`):
+Orden de aplicacion (`apps/payments/services.py`):
 
 1. **Entre cuotas**: primero las **vencidas mas antiguas**, despues las
    siguientes por orden de vencimiento.
 2. **Dentro de cada cuota**: primero el **interes** programado y despues el
    **capital**.
 
-Cada reparto se guarda como un registro `AplicacionPago` (pago, cuota, importe,
-capital, interes). Gracias a eso el saldo **siempre puede reconstruirse**:
+Cada reparto se guarda como un registro `PaymentAllocation` (payment, installment, amount,
+principal, interest). Gracias a eso el saldo **siempre puede reconstruirse**:
 
 ```
-importe_pagado(cuota)    = suma de aplicaciones confirmadas de esa cuota
-capital_pagado(credito)  = suma de la parte de capital de esas aplicaciones
-interes_pagado(credito)  = suma de la parte de interes
-saldo_pendiente(credito) = total_a_pagar - capital_pagado - interes_pagado
+installment.amount_paid  = suma de las aplicaciones confirmadas de esa cuota
+loan.principal_paid      = suma de la parte de capital de esas aplicaciones
+loan.interest_paid       = suma de la parte de interes
+loan.outstanding_balance = total_payable - principal_paid - interest_paid
 ```
 
 ### Reglas obligatorias implementadas
 
 | Regla | Como se cumple |
 |---|---|
-| Abonos parciales | Un pago menor a la cuota la deja en estado `parcial` |
-| Liquidacion anticipada | `liquidar_anticipadamente()` con descuento configurable |
-| Actualizacion de saldos | `recalcular_credito()` tras cada pago o reverso |
-| Cuotas pagadas | Estado `pagada` cuando `importe_pagado >= importe_programado` |
-| Credito liquidado | Estado `liquidado` cuando el saldo exigible llega a cero |
+| Abonos parciales | Un pago menor a la cuota la deja en estado `partial` |
+| Liquidacion anticipada | `settle_early()` con descuento configurable |
+| Actualizacion de saldos | `recalculate_loan()` tras cada pago o reverso |
+| Cuotas pagadas | Estado `paid` cuando `amount_paid >= scheduled_amount` |
+| Credito liquidado | Estado `settled` cuando el saldo exigible llega a cero |
 | Sin pagos duplicados | Clave de idempotencia unica + bloqueo de pagos identicos en 120 s |
 | Sin excedentes accidentales | Un pago mayor al saldo exige autorizacion explicita |
 | Sin borrado de pagos | Los pagos confirmados solo se **reversan**, nunca se eliminan |
@@ -142,19 +148,19 @@ saldo_pendiente(credito) = total_a_pagar - capital_pagado - interes_pagado
 
 ### Reversos
 
-Un reverso marca el pago como `reversado` (con motivo, autor y fecha), conserva
+Un reverso marca el pago como `reversed` (con motivo, autor y fecha), conserva
 el registro y las aplicaciones, y recalcula el credito ignorando los pagos no
-confirmados. Si el credito estaba liquidado, vuelve a `activo` o `en_mora`.
+confirmados. Si el credito estaba liquidado, vuelve a `active` o `past_due`.
 
 ### Liquidacion anticipada
 
 ```
-interes_no_devengado = suma del interes pendiente de las cuotas que AUN NO vencen
-descuento            = interes_no_devengado * descuento_liquidacion_anticipada
-importe_liquidacion  = saldo_pendiente - descuento
+unearned_interest = interes pendiente de las cuotas que AUN NO vencen
+discount          = unearned_interest * business.early_payoff_discount
+payoff_amount     = outstanding_balance - discount
 ```
 
-El descuento se registra como un pago de tipo **condonacion**: cierra el saldo
+El descuento se registra como un pago de tipo **write_off** (condonacion): cierra el saldo
 pero **no cuenta como dinero recibido** en los indicadores de recaudacion.
 
 ---
@@ -175,11 +181,11 @@ del credito, no al calculo del saldo vencido.
 ### Cargos moratorios
 
 El sistema **no agrega cargos por atraso de forma automatica**. Solo si el
-negocio activa `aplica_mora` y define `tasa_mora` se puede calcular, de forma
+negocio activa `charges_late_fee` y define `late_fee_rate` se puede calcular, de forma
 informativa:
 
 ```
-cargo = suma( saldo_cuota_vencida * tasa_mora * dias_de_atraso )
+late_fee = suma( installment.balance * late_fee_rate * days_past_due )
 ```
 
 Ese calculo **no se guarda ni se cobra solo**: requiere una politica
@@ -190,14 +196,14 @@ documentada, autorizada y comunicada al cliente.
 ## 6. Estados del credito
 
 ```
-borrador -> pendiente_aprobacion -> aprobado -> desembolsado -> activo
-                                                                  |
-                              +-----------------------------------+
-                              |                |                  |
-                          en_mora          liquidado        reestructurado
+draft -> pending_approval -> approved -> disbursed -> active
+                                                        |
+                        +-------------------------------+
+                        |            |                  |
+                    past_due      settled          restructured
 ```
 
-`cancelado` es posible desde cualquier estado previo al pago (sin pagos
+`cancelled` es posible desde cualquier estado previo al pago (sin pagos
 aplicados). Un credito **desembolsado no se edita**: los ajustes se hacen con
 reversos auditados o reestructuraciones.
 
@@ -223,7 +229,7 @@ El monto recibido por un cobrador es **cobranza**, no utilidad del negocio.
 
 ## 8. Auditoria
 
-Se registran en `apps/auditoria`: creacion y edicion de creditos, aprobaciones,
+Se registran en `apps/audit`: creacion y edicion de creditos, aprobaciones,
 desembolsos, cancelaciones, reestructuraciones, pagos, reversos, gestiones de
 cobranza y exportaciones de reportes, con usuario, negocio, IP y datos clave.
 La bitacora es de solo lectura desde la aplicacion.

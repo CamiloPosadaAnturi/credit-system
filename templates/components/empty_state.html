@@ -1,0 +1,6 @@
+{% load i18n %}
+<div class="empty-state">
+  <i class="bi {{ icon|default:'bi-inbox' }}"></i>
+  <p class="mb-2">{{ message|default:_("There is nothing to show yet.") }}</p>
+  {% if action_url %}<a class="btn btn-sm btn-primary" href="{{ action_url }}">{{ action_label|default:_("Create the first one") }}</a>{% endif %}
+</div>

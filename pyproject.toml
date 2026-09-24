@@ -1,7 +1,7 @@
 [project]
-name = "sistema-creditos"
-version = "0.1.0"
-description = "Plataforma web de administracion de creditos, pagos y cobranza (MXN)"
+name = "credit-system"
+version = "1.0.0"
+description = "Web platform for managing loans, payments and collections (MXN)"
 requires-python = ">=3.10"
 dependencies = [
     "django>=5.1,<5.2",
@@ -15,6 +15,7 @@ dependencies = [
 dev = [
     "ruff>=0.5",
     "coverage>=7.5",
+    "polib>=1.2",
 ]
 
 [tool.ruff]

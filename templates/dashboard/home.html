@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+{% load i18n formatting %}
+{% block heading %}{% trans "Dashboard" %}{% endblock %}
+{% block subheading %}
+  <p class="text-secondary small mb-0">
+    {% blocktrans with start=indicators.start|date:"d/m/Y" end=indicators.end|date:"d/m/Y" %}Period {{ start }} - {{ end }}{% endblocktrans %}
+    {% if selected_business %} &middot; {{ selected_business }}{% else %} &middot; {% trans "all businesses" %}{% endif %}
+  </p>
+{% endblock %}
+
+{% block actions %}
+<form class="d-flex gap-2 flex-wrap" method="get">
+  <select name="business" class="form-select form-select-sm" style="min-width:160px">
+    <option value="">{% trans "All businesses" %}</option>
+    {% for business in user_businesses %}
+      <option value="{{ business.pk }}" {% if selected_business and selected_business.pk == business.pk %}selected{% endif %}>{{ business }}</option>
+    {% endfor %}
+  </select>
+  <input type="date" name="start" value="{{ start }}" class="form-control form-control-sm">
+  <input type="date" name="end" value="{{ end }}" class="form-control form-control-sm">
+  <button class="btn btn-sm btn-primary" type="submit">{% trans "Apply" %}</button>
+</form>
+{% endblock %}
+
+{% block content %}
+{% with data=indicators %}
+<div class="stat-grid mb-4">
+  {% include "components/stat_tile.html" with label=_("Disbursed principal") value=data.disbursed_principal|mxn hint=_("Money lent in the period") accent="accent-blue" %}
+  {% include "components/stat_tile.html" with label=_("Contractual interest") value=data.contractual_interest|mxn hint=_("Agreed, not necessarily collected") accent="accent-blue" %}
+  {% include "components/stat_tile.html" with label=_("Total collected") value=data.total_collected|mxn hint=_("Confirmed payments in the period") accent="accent-green" %}
+  {% include "components/stat_tile.html" with label=_("Outstanding balance") value=data.outstanding_balance|mxn hint=_("Left to collect on live loans") accent="accent-amber" %}
+  {% include "components/stat_tile.html" with label=_("Overdue balance") value=data.overdue_balance|mxn hint=_("Installments already past due") accent="accent-red" %}
+  {% include "components/stat_tile.html" with label=_("Live loans") value=data.live_loans hint=data.past_due_loans accent="accent-blue" %}
+  {% include "components/stat_tile.html" with label=_("Settled loans") value=data.settled_loans hint=_("Historical") accent="accent-green" %}
+  {% include "components/stat_tile.html" with label=_("Active customers") value=data.active_customers hint=_("With at least one live loan") accent="accent-blue" %}
+  {% include "components/stat_tile.html" with label=_("Scheduled today") value=data.scheduled_today|mxn hint=data.scheduled_today_count accent="accent-amber" %}
+  {% include "components/stat_tile.html" with label=_("Collected today") value=data.collected_today|mxn hint=data.collected_today_count accent="accent-green" %}
+  {% include "components/stat_tile.html" with label=_("Recovery rate") value=data.recovery_rate|percent hint=_("Collected / contractual total") accent="accent-green" %}
+  {% include "components/stat_tile.html" with label=_("Overdue portfolio rate") value=data.overdue_portfolio_rate|percent hint=_("Overdue / outstanding balance") accent="accent-red" %}
+</div>
+{% endwith %}
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-8">
+    <div class="card-panel h-100">
+      <div class="card-panel-header"><h2>{% trans "Scheduled vs. collected (last 14 days)" %}</h2></div>
+      <div class="card-panel-body"><canvas id="paymentsChart" height="110"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card-panel h-100">
+      <div class="card-panel-header"><h2>{% trans "Portfolio composition" %}</h2></div>
+      <div class="card-panel-body"><canvas id="portfolioChart" height="180"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-6">
+    <div class="card-panel h-100">
+      <div class="card-panel-header">
+        <h2>{% trans "A. Customers who must pay today" %}</h2>
+        <a class="btn btn-sm btn-outline-soft" href="{% url 'collections:my_portfolio' %}">{% trans "View portfolio" %}</a>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>{% trans "Customer" %}</th><th>{% trans "Phone" %}</th><th>{% trans "Loan" %}</th>
+            <th class="num">{% trans "Installment" %}</th><th class="num">{% trans "Paid" %}</th>
+            <th class="num">{% trans "Balance" %}</th><th>{% trans "Collector" %}</th>
+            <th>{% trans "Status" %}</th><th></th>
+          </tr></thead>
+          <tbody>
+          {% for installment in due_today %}
+            <tr>
+              <td>{{ installment.loan.customer }}</td>
+              <td>{{ installment.loan.customer.phone }}</td>
+              <td><a href="{{ installment.loan.get_absolute_url }}">{{ installment.loan.reference }}</a></td>
+              <td class="num">{{ installment.scheduled_amount|mxn }}</td>
+              <td class="num">{{ installment.amount_paid|mxn }}</td>
+              <td class="num fw-semibold">{{ installment.balance|mxn }}</td>
+              <td>{{ installment.loan.collector|default:"-" }}</td>
+              <td><span class="badge text-bg-{{ installment.status|badge }} status-badge">{{ installment.get_status_display }}</span></td>
+              <td>{% if user_permissions.register_payment %}
+                <a class="btn btn-sm btn-primary" href="{% url 'payments:register' installment.loan.pk %}">{% trans "Collect" %}</a>
+              {% endif %}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="9">{% include "components/empty_state.html" with message=_("No installments scheduled for today.") icon="bi-calendar-check" %}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="card-panel h-100">
+      <div class="card-panel-header">
+        <h2>{% trans "B. Customers past due" %}</h2>
+        <a class="btn btn-sm btn-outline-soft" href="{% url 'collections:board' %}">{% trans "Collections board" %}</a>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>{% trans "Customer" %}</th><th>{% trans "Phone" %}</th><th>{% trans "Loan" %}</th>
+            <th class="num">{% trans "Installments" %}</th><th class="num">{% trans "Days" %}</th>
+            <th class="num">{% trans "Overdue" %}</th><th class="num">{% trans "Total balance" %}</th>
+            <th>{% trans "Last action" %}</th>
+          </tr></thead>
+          <tbody>
+          {% for row in past_due %}
+            <tr>
+              <td>{{ row.customer }}</td>
+              <td>{{ row.customer.phone }}</td>
+              <td><a href="{{ row.loan.get_absolute_url }}">{{ row.loan.reference }}</a></td>
+              <td class="num">{{ row.overdue_count }}</td>
+              <td class="num text-danger fw-semibold">{{ row.days_past_due }} d</td>
+              <td class="num">{{ row.overdue_balance|mxn }}</td>
+              <td class="num">{{ row.total_balance|mxn }}</td>
+              <td class="small">{% if row.last_action %}{{ row.last_action.get_action_type_display }}<br>
+                <span class="text-secondary">{{ row.last_action.performed_at|date:"d/m/Y" }}</span>
+                {% else %}<span class="text-secondary">{% trans "No actions" %}</span>{% endif %}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="8">{% include "components/empty_state.html" with message=_("No past-due loans. Well done.") icon="bi-emoji-smile" %}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="card-panel h-100">
+      <div class="card-panel-header"><h2>{% trans "C. Customers who borrowed the most" %}</h2></div>
+      <div class="card-panel-body">
+        <ul class="nav nav-tabs mb-3" role="tablist">
+          <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#byAmount" type="button">{% trans "By amount" %}</button></li>
+          <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#byCount" type="button">{% trans "By count" %}</button></li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="byAmount">
+            <table class="data-table"><thead><tr><th>{% trans "Customer" %}</th><th class="num">{% trans "Historical principal" %}</th><th class="num">{% trans "Loans" %}</th></tr></thead>
+              <tbody>
+              {% for row in top_borrowers.by_amount %}
+                <tr><td>{{ row.customer__first_name }} {{ row.customer__last_name }} {{ row.customer__second_last_name }}</td>
+                  <td class="num">{{ row.principal|mxn }}</td><td class="num">{{ row.count }}</td></tr>
+              {% empty %}<tr><td colspan="3" class="text-secondary small">{% trans "No data in the period." %}</td></tr>{% endfor %}
+              </tbody></table>
+          </div>
+          <div class="tab-pane fade" id="byCount">
+            <table class="data-table"><thead><tr><th>{% trans "Customer" %}</th><th class="num">{% trans "Loans" %}</th><th class="num">{% trans "Principal" %}</th></tr></thead>
+              <tbody>
+              {% for row in top_borrowers.by_count %}
+                <tr><td>{{ row.customer__first_name }} {{ row.customer__last_name }}</td>
+                  <td class="num">{{ row.count }}</td><td class="num">{{ row.principal|mxn }}</td></tr>
+              {% empty %}<tr><td colspan="3" class="text-secondary small">{% trans "No data in the period." %}</td></tr>{% endfor %}
+              </tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="card-panel h-100">
+      <div class="card-panel-header"><h2>{% trans "D. Customers who paid the most" %}</h2></div>
+      <div class="card-panel-body">
+        <ul class="nav nav-tabs mb-3" role="tablist">
+          <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#payPeriod" type="button">{% trans "Period" %}</button></li>
+          <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#payHistorical" type="button">{% trans "Historical" %}</button></li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="payPeriod">
+            <table class="data-table"><thead><tr><th>{% trans "Customer" %}</th><th class="num">{% trans "Paid" %}</th><th class="num">{% trans "Payments" %}</th></tr></thead><tbody>
+              {% for row in top_payers.period %}
+                <tr><td>{{ row.customer__first_name }} {{ row.customer__last_name }}</td>
+                  <td class="num">{{ row.total|mxn }}</td><td class="num">{{ row.count }}</td></tr>
+              {% empty %}<tr><td colspan="3" class="text-secondary small">{% trans "No payments in the period." %}</td></tr>{% endfor %}
+            </tbody></table>
+          </div>
+          <div class="tab-pane fade" id="payHistorical">
+            <table class="data-table"><thead><tr><th>{% trans "Customer" %}</th><th class="num">{% trans "Paid" %}</th><th class="num">{% trans "Payments" %}</th></tr></thead><tbody>
+              {% for row in top_payers.historical %}
+                <tr><td>{{ row.customer__first_name }} {{ row.customer__last_name }}</td>
+                  <td class="num">{{ row.total|mxn }}</td><td class="num">{{ row.count }}</td></tr>
+              {% empty %}<tr><td colspan="3" class="text-secondary small">{% trans "No payments recorded." %}</td></tr>{% endfor %}
+            </tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if collectors %}
+  <div class="col-12">
+    <div class="card-panel">
+      <div class="card-panel-header">
+        <h2>{% trans "E. Collector performance" %}</h2>
+        <span class="form-hint">{% trans "The amount received is not profit: it includes principal and interest." %}</span>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>{% trans "Collector" %}</th><th class="num">{% trans "Payments received" %}</th>
+            <th class="num">{% trans "No. of payments" %}</th><th class="num">{% trans "Assigned portfolio" %}</th>
+            <th class="num">{% trans "Loans" %}</th><th class="num">{% trans "Overdue balance" %}</th>
+            <th class="num">{% trans "Actions" %}</th><th class="num">{% trans "Promises" %}</th>
+            <th class="num">{% trans "Kept" %}</th>
+          </tr></thead>
+          <tbody>
+          {% for row in collectors %}
+            <tr>
+              <td>{{ row.collector }}</td>
+              <td class="num">{{ row.payments_received|mxn }}</td>
+              <td class="num">{{ row.payment_count }}</td>
+              <td class="num">{{ row.assigned_portfolio|mxn }}</td>
+              <td class="num">{{ row.assigned_loans }}</td>
+              <td class="num">{{ row.overdue_balance|mxn }}</td>
+              <td class="num">{{ row.actions }}</td>
+              <td class="num">{{ row.promises }}</td>
+              <td class="num">{{ row.promises_kept }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="9">{% include "components/empty_state.html" with message=_("No collectors registered.") icon="bi-person-walking" %}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="col-12">
+    <div class="card-panel">
+      <div class="card-panel-header"><h2>{% trans "F. Recent activity" %}</h2></div>
+      <div class="card-panel-body">
+        <div class="row g-4">
+          <div class="col-md-3">
+            <h3 class="h6 text-secondary">{% trans "New customers" %}</h3>
+            <ul class="list-unstyled small mb-0">
+              {% for customer in activity.new_customers %}
+                <li class="mb-1"><a href="{{ customer.get_absolute_url }}">{{ customer }}</a>
+                  <span class="text-secondary d-block">{{ customer.created_at|date:"d/m/Y" }}</span></li>
+              {% empty %}<li class="text-secondary">{% trans "No records." %}</li>{% endfor %}
+            </ul>
+          </div>
+          <div class="col-md-3">
+            <h3 class="h6 text-secondary">{% trans "Registered loans" %}</h3>
+            <ul class="list-unstyled small mb-0">
+              {% for loan in activity.new_loans %}
+                <li class="mb-1"><a href="{{ loan.get_absolute_url }}">{{ loan.reference }}</a> - {{ loan.customer }}
+                  <span class="text-secondary d-block">{{ loan.principal|mxn }} &middot; {{ loan.get_status_display }}</span></li>
+              {% empty %}<li class="text-secondary">{% trans "No records." %}</li>{% endfor %}
+            </ul>
+          </div>
+          <div class="col-md-3">
+            <h3 class="h6 text-secondary">{% trans "Disbursements" %}</h3>
+            <ul class="list-unstyled small mb-0">
+              {% for loan in activity.disbursements %}
+                <li class="mb-1"><a href="{{ loan.get_absolute_url }}">{{ loan.reference }}</a>
+                  <span class="text-secondary d-block">{{ loan.disbursement_date|date:"d/m/Y" }} &middot; {{ loan.principal|mxn }}</span></li>
+              {% empty %}<li class="text-secondary">{% trans "No records." %}</li>{% endfor %}
+            </ul>
+          </div>
+          <div class="col-md-3">
+            <h3 class="h6 text-secondary">{% trans "Payments received" %}</h3>
+            <ul class="list-unstyled small mb-0">
+              {% for payment in activity.recent_payments %}
+                <li class="mb-1"><a href="{{ payment.get_absolute_url }}">{{ payment.reference }}</a> - {{ payment.customer }}
+                  <span class="text-secondary d-block">{{ payment.paid_at|date:"d/m/Y H:i" }} &middot; {{ payment.amount|mxn }}</span></li>
+              {% empty %}<li class="text-secondary">{% trans "No records." %}</li>{% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ payments_chart|json_script:"paymentsData" }}
+{{ portfolio_chart|json_script:"portfolioData" }}
+<script>
+(function () {
+  const payments = JSON.parse(document.getElementById("paymentsData").textContent);
+  const portfolio = JSON.parse(document.getElementById("portfolioData").textContent);
+  const currency = (value) => "$" + Number(value).toLocaleString("es-MX", {minimumFractionDigits: 2});
+
+  new Chart(document.getElementById("paymentsChart"), {
+    type: "bar",
+    data: {
+      labels: payments.labels,
+      datasets: [
+        {label: "{% trans 'Scheduled' %}", data: payments.scheduled, backgroundColor: "#c7d7ea"},
+        {label: "{% trans 'Collected' %}", data: payments.collected, backgroundColor: "#2f5c8f"}
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {tooltip: {callbacks: {label: (c) => c.dataset.label + ": " + currency(c.parsed.y)}}},
+      scales: {y: {beginAtZero: true, ticks: {callback: (v) => currency(v)}}}
+    }
+  });
+
+  new Chart(document.getElementById("portfolioChart"), {
+    type: "doughnut",
+    data: {
+      labels: portfolio.labels,
+      datasets: [{
+        data: portfolio.counts,
+        backgroundColor: ["#2f5c8f", "#0f9d58", "#f2a600", "#d93025", "#64748b", "#8b5cf6", "#0ea5e9"]
+      }]
+    },
+    options: {responsive: true, plugins: {legend: {position: "bottom", labels: {boxWidth: 12}}}}
+  });
+})();
+</script>
+{% endblock %}

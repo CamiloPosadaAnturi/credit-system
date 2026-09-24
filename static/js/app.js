@@ -1,89 +1,108 @@
-// Interacciones generales del sistema.
+// General interactions of the credit system.
 (function () {
   "use strict";
 
   const shell = document.getElementById("appShell");
-  const boton = document.getElementById("btnMenu");
-  const CLAVE = "sidebar-colapsado";
+  const toggle = document.getElementById("menuToggle");
+  const STORAGE_KEY = "sidebar-collapsed";
 
-  if (shell && localStorage.getItem(CLAVE) === "1") {
-    shell.classList.add("colapsado");
+  function readPreference() {
+    try {
+      return localStorage.getItem(STORAGE_KEY);
+    } catch (error) {
+      return null;
+    }
   }
 
-  if (boton && shell) {
-    boton.addEventListener("click", function () {
+  function writePreference(value) {
+    try {
+      localStorage.setItem(STORAGE_KEY, value);
+    } catch (error) {
+      /* private mode or blocked storage: the preference is simply not kept */
+    }
+  }
+
+  if (shell && readPreference() === "1") {
+    shell.classList.add("collapsed");
+  }
+
+  if (toggle && shell) {
+    toggle.addEventListener("click", function () {
       if (window.innerWidth < 992) {
-        shell.classList.toggle("menu-abierto");
+        shell.classList.toggle("menu-open");
         return;
       }
-      shell.classList.toggle("colapsado");
-      localStorage.setItem(CLAVE, shell.classList.contains("colapsado") ? "1" : "0");
+      shell.classList.toggle("collapsed");
+      writePreference(shell.classList.contains("collapsed") ? "1" : "0");
     });
   }
 
-  // Confirmacion para operaciones sensibles.
-  document.querySelectorAll("form[data-confirmar]").forEach(function (formulario) {
-    formulario.addEventListener("submit", function (evento) {
-      if (!window.confirm(formulario.dataset.confirmar)) {
-        evento.preventDefault();
+  // Confirmation for sensitive operations.
+  document.querySelectorAll("form[data-confirm]").forEach(function (form) {
+    form.addEventListener("submit", function (event) {
+      if (!window.confirm(form.dataset.confirm)) {
+        event.preventDefault();
       }
     });
   });
 
-  // Evita doble envio de formularios (pagos, aprobaciones).
-  document.querySelectorAll("form[data-una-vez]").forEach(function (formulario) {
-    formulario.addEventListener("submit", function () {
-      const boton = formulario.querySelector("button[type=submit]");
-      if (boton) {
-        boton.disabled = true;
-        boton.innerHTML = "Procesando...";
+  // Prevent double submission (payments, approvals).
+  document.querySelectorAll("form[data-submit-once]").forEach(function (form) {
+    form.addEventListener("submit", function () {
+      const button = form.querySelector("button[type=submit]");
+      if (button) {
+        button.disabled = true;
+        button.textContent = button.dataset.busyLabel || "...";
       }
     });
   });
 
-  // Previsualizacion en vivo de las condiciones del credito.
-  // IMPORTANTE: es solo informativa; el servidor recalcula todo al guardar.
-  const simulador = document.getElementById("simulador");
-  if (simulador) {
-    const campos = ["capital", "tasa_interes", "numero_cuotas", "modalidad_interes",
-                    "frecuencia_pago", "dias_personalizados"];
-    const salida = document.getElementById("simulacion-salida");
+  // Live preview of the loan terms.
+  // IMPORTANT: informational only; the server recomputes everything on save.
+  const simulator = document.getElementById("loanSimulator");
+  if (simulator) {
+    const fieldNames = ["principal", "interest_rate", "installment_count",
+                        "interest_mode", "payment_frequency", "custom_days"];
+    const output = document.getElementById("simulationOutput");
 
-    function moneda(valor) {
-      return "$" + Number(valor).toLocaleString("es-MX", { minimumFractionDigits: 2 });
+    function currency(value) {
+      return "$" + Number(value).toLocaleString("es-MX", { minimumFractionDigits: 2 });
     }
 
-    function simular() {
-      const datos = {};
-      campos.forEach(function (nombre) {
-        const campo = simulador.querySelector("[name=" + nombre + "]");
-        if (campo) { datos[nombre] = campo.value; }
+    function runSimulation() {
+      const payload = {};
+      fieldNames.forEach(function (name) {
+        const field = simulator.querySelector("[name=" + name + "]");
+        if (field) { payload[name] = field.value; }
       });
-      if (!datos.capital || !datos.numero_cuotas) { return; }
-      fetch(simulador.dataset.url, {
+      if (!payload.principal || !payload.installment_count) { return; }
+      fetch(simulator.dataset.url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": simulador.dataset.csrf,
+          "X-CSRFToken": simulator.dataset.csrf,
         },
-        body: JSON.stringify(datos),
+        body: JSON.stringify(payload),
       })
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (datos) {
-          if (!datos || !salida) { return; }
-          salida.querySelector("[data-campo=interes]").textContent = moneda(datos.interes_total);
-          salida.querySelector("[data-campo=total]").textContent = moneda(datos.total_a_pagar);
-          salida.querySelector("[data-campo=cuota]").textContent = moneda(datos.importe_cuota);
-          salida.querySelector("[data-campo=ultima]").textContent = moneda(datos.importe_ultima_cuota);
-          salida.classList.remove("d-none");
+        .then(function (response) { return response.ok ? response.json() : null; })
+        .then(function (data) {
+          if (!data || !output) { return; }
+          output.querySelector("[data-field=interest]").textContent = currency(data.total_interest);
+          output.querySelector("[data-field=total]").textContent = currency(data.total_payable);
+          output.querySelector("[data-field=installment]").textContent = currency(data.installment_amount);
+          output.querySelector("[data-field=last]").textContent = currency(data.last_installment_amount);
+          output.classList.remove("d-none");
         })
-        .catch(function () { /* la previsualizacion es opcional */ });
+        .catch(function () { /* the preview is optional */ });
     }
 
-    campos.forEach(function (nombre) {
-      const campo = simulador.querySelector("[name=" + nombre + "]");
-      if (campo) { campo.addEventListener("change", simular); campo.addEventListener("keyup", simular); }
+    fieldNames.forEach(function (name) {
+      const field = simulator.querySelector("[name=" + name + "]");
+      if (field) {
+        field.addEventListener("change", runSimulation);
+        field.addEventListener("keyup", runSimulation);
+      }
     });
-    simular();
+    runSimulation();
   }
 })();

@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% load i18n %}
+{% block heading %}{{ title }}{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-8">
+<div class="card-panel"><div class="card-panel-body">
+  <form method="post" novalidate data-submit-once>
+    {% csrf_token %}
+    {% include "components/form.html" %}
+    {% if form.password1 %}
+      <div class="form-section"><h3>{% trans "Password" %}</h3>
+        <div class="row g-3">
+          <div class="col-md-6">{% include "components/field.html" with field=form.password1 %}</div>
+          <div class="col-md-6">{% include "components/field.html" with field=form.password2 %}</div>
+        </div>
+      </div>
+    {% endif %}
+    <button class="btn btn-primary" type="submit">{% trans "Save" %}</button>
+    <a class="btn btn-outline-soft" href="{% url 'users:list' %}">{% trans "Cancel" %}</a>
+  </form>
+</div></div>
+</div></div>
+{% endblock %}

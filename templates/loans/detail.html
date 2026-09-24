@@ -1,0 +1,155 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{{ loan.reference }}{% endblock %}
+{% block subheading %}
+<p class="text-secondary small mb-0">
+  <a href="{{ loan.customer.get_absolute_url }}">{{ loan.customer }}</a> &middot; {{ loan.business }}
+  &middot; <span class="badge text-bg-{{ loan.status|badge }} status-badge">{{ loan.get_status_display }}</span>
+  {% if loan.original_loan %}&middot; {% blocktrans with ref=loan.original_loan.reference %}restructuring of {{ ref }}{% endblocktrans %}{% endif %}
+</p>
+{% endblock %}
+{% block actions %}
+  {% if can_approve %}
+    <form method="post" action="{% url 'loans:approve' loan.pk %}" class="d-inline" data-submit-once
+          data-confirm="{% trans 'Approving freezes the rate and builds the final schedule. Continue?' %}">
+      {% csrf_token %}<button class="btn btn-sm btn-success">{% trans "Approve" %}</button>
+    </form>
+  {% endif %}
+  {% if can_disburse %}
+    <form method="post" action="{% url 'loans:disburse' loan.pk %}" class="d-inline" data-submit-once
+          data-confirm="{% trans 'Confirm the money was handed to the customer?' %}">
+      {% csrf_token %}<button class="btn btn-sm btn-primary">{% trans "Disburse" %}</button>
+    </form>
+  {% endif %}
+  {% if can_register_payment %}
+    <a class="btn btn-sm btn-success" href="{% url 'payments:register' loan.pk %}">{% trans "Register payment" %}</a>
+    <a class="btn btn-sm btn-outline-soft" href="{% url 'payments:payoff' loan.pk %}">{% trans "Pay off" %}</a>
+  {% endif %}
+  {% if user_permissions.log_collection_action and loan.is_live %}
+    <a class="btn btn-sm btn-outline-soft" href="{% url 'collections:log_action' loan.pk %}">{% trans "Collection action" %}</a>
+  {% endif %}
+  {% if loan.is_editable %}
+    <a class="btn btn-sm btn-outline-soft" href="{% url 'loans:update' loan.pk %}">{% trans "Edit" %}</a>
+  {% endif %}
+  {% if can_restructure %}
+    <a class="btn btn-sm btn-outline-warning" href="{% url 'loans:restructure' loan.pk %}">{% trans "Restructure" %}</a>
+  {% endif %}
+  {% if can_cancel %}
+    <a class="btn btn-sm btn-outline-danger" href="{% url 'loans:cancel' loan.pk %}">{% trans "Cancel" %}</a>
+  {% endif %}
+{% endblock %}
+{% block content %}
+{% if not loan.is_editable and loan.is_live %}
+  <div class="alert alert-info py-2 small">
+    {% trans "This loan was already disbursed: its terms cannot be edited. Any adjustment is made with an audited payment reversal or an authorized restructuring." %}
+  </div>
+{% endif %}
+
+<div class="stat-grid mb-4">
+  {% include "components/stat_tile.html" with label=_("Principal") value=loan.principal|mxn accent="accent-blue" %}
+  {% include "components/stat_tile.html" with label=_("Interest") value=loan.total_interest|mxn accent="accent-blue" %}
+  {% include "components/stat_tile.html" with label=_("Total payable") value=loan.total_payable|mxn accent="accent-amber" %}
+  {% include "components/stat_tile.html" with label=_("Paid") value=loan.total_paid|mxn hint=loan.percent_paid|percent accent="accent-green" %}
+  {% include "components/stat_tile.html" with label=_("Outstanding balance") value=loan.outstanding_balance|mxn accent="accent-amber" %}
+  {% include "components/stat_tile.html" with label=_("Overdue balance") value=loan.overdue_balance|mxn accent="accent-red" %}
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card-panel h-100">
+      <div class="card-panel-header"><h2>{% trans "Terms" %}</h2></div>
+      <div class="card-panel-body">
+        <dl class="row small mb-0">
+          <dt class="col-6">{% trans "Interest mode" %}</dt><dd class="col-6">{{ loan.get_interest_mode_display }}</dd>
+          <dt class="col-6">{% trans "Applied rate" %}</dt><dd class="col-6">{{ loan.interest_rate }} ({{ loan.interest_per_thousand|mxn }} / $1,000)</dd>
+          <dt class="col-6">{% trans "Rate period" %}</dt><dd class="col-6">{{ loan.get_rate_period_display }}</dd>
+          <dt class="col-6">{% trans "Frequency" %}</dt><dd class="col-6">{{ loan.get_payment_frequency_display }}</dd>
+          <dt class="col-6">{% trans "Installments" %}</dt><dd class="col-6">{{ loan.installment_count }} x {{ loan.installment_amount|mxn }}</dd>
+          <dt class="col-6">{% trans "First payment" %}</dt><dd class="col-6">{{ loan.first_payment_date|date:"d/m/Y" }}</dd>
+          <dt class="col-6">{% trans "Final due date" %}</dt><dd class="col-6">{{ loan.final_due_date|date:"d/m/Y"|default:"-" }}</dd>
+          <dt class="col-6">{% trans "Application" %}</dt><dd class="col-6">{{ loan.application_date|date:"d/m/Y" }}</dd>
+          <dt class="col-6">{% trans "Approval" %}</dt><dd class="col-6">{{ loan.approval_date|date:"d/m/Y"|default:"-" }}</dd>
+          <dt class="col-6">{% trans "Disbursement" %}</dt><dd class="col-6">{{ loan.disbursement_date|date:"d/m/Y"|default:"-" }}</dd>
+          <dt class="col-6">{% trans "Collector" %}</dt><dd class="col-6">{{ loan.collector|default:"-" }}</dd>
+          <dt class="col-6">{% trans "Registered by" %}</dt><dd class="col-6">{{ loan.created_by|default:"-" }}</dd>
+          <dt class="col-6">{% trans "Approved by" %}</dt><dd class="col-6">{{ loan.approved_by|default:"-" }}</dd>
+          <dt class="col-6">{% trans "Days past due" %}</dt><dd class="col-6">{{ loan.days_past_due }}</dd>
+        </dl>
+        {% if loan.contract %}<hr><a class="btn btn-sm btn-outline-soft" href="{{ loan.contract.url }}">{% trans "View contract" %}</a>{% endif %}
+        {% if loan.notes %}<hr><p class="small mb-0">{{ loan.notes|linebreaksbr }}</p>{% endif %}
+        {% if loan.cancellation_reason %}<hr><p class="small text-danger mb-0">{% trans "Cancelled" %}: {{ loan.cancellation_reason }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card-panel mb-3">
+      <div class="card-panel-header"><h2>{% trans "Payment schedule" %}</h2>
+        <a class="btn btn-sm btn-outline-soft" href="{% url 'loans:schedule' loan.pk %}">{% trans "See full schedule" %}</a></div>
+      <div class="table-wrap" style="max-height:360px;overflow-y:auto">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>{% trans "Due" %}</th><th class="num">{% trans "Principal" %}</th>
+            <th class="num">{% trans "Interest" %}</th><th class="num">{% trans "Installment" %}</th>
+            <th class="num">{% trans "Paid" %}</th><th class="num">{% trans "Balance" %}</th><th>{% trans "Status" %}</th></tr></thead>
+          <tbody>
+          {% for installment in installments %}
+            <tr>
+              <td>{{ installment.number }}</td>
+              <td>{{ installment.due_date|date:"d/m/Y" }}</td>
+              <td class="num">{{ installment.scheduled_principal|mxn }}</td>
+              <td class="num">{{ installment.scheduled_interest|mxn }}</td>
+              <td class="num">{{ installment.scheduled_amount|mxn }}</td>
+              <td class="num">{{ installment.amount_paid|mxn }}</td>
+              <td class="num fw-semibold">{{ installment.balance|mxn }}</td>
+              <td><span class="badge text-bg-{{ installment.status|badge }} status-badge">{{ installment.get_status_display }}</span></td>
+            </tr>
+          {% empty %}<tr><td colspan="8">{% include "components/empty_state.html" with message=_("The schedule is built when the loan is registered.") %}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card-panel mb-3">
+      <div class="card-panel-header"><h2>{% trans "Loan payments" %}</h2></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>{% trans "Reference" %}</th><th>{% trans "Date" %}</th><th class="num">{% trans "Amount" %}</th>
+            <th class="num">{% trans "Allocated" %}</th><th>{% trans "Method" %}</th><th>{% trans "Kind" %}</th>
+            <th>{% trans "Registered by" %}</th><th>{% trans "Status" %}</th></tr></thead>
+          <tbody>
+          {% for payment in payments %}
+            <tr><td><a href="{{ payment.get_absolute_url }}">{{ payment.reference }}</a></td>
+              <td>{{ payment.paid_at|date:"d/m/Y H:i" }}</td>
+              <td class="num">{{ payment.amount|mxn }}</td>
+              <td class="num">{{ payment.allocated_amount|mxn }}</td>
+              <td>{{ payment.get_method_display }}</td>
+              <td>{{ payment.get_kind_display }}</td>
+              <td class="small">{{ payment.received_by }}</td>
+              <td><span class="badge text-bg-{{ payment.status|badge }} status-badge">{{ payment.get_status_display }}</span></td></tr>
+          {% empty %}<tr><td colspan="8">{% include "components/empty_state.html" with message=_("No payments recorded yet.") icon="bi-cash-stack" %}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card-panel">
+      <div class="card-panel-header"><h2>{% trans "Collection actions" %}</h2></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>{% trans "Date" %}</th><th>{% trans "Type" %}</th><th>{% trans "Outcome" %}</th>
+            <th class="num">{% trans "Promised" %}</th><th>{% trans "Next contact" %}</th><th>{% trans "User" %}</th></tr></thead>
+          <tbody>
+          {% for action in loan.collection_actions.all %}
+            <tr><td>{{ action.performed_at|date:"d/m/Y H:i" }}</td>
+              <td>{{ action.get_action_type_display }}</td>
+              <td>{{ action.get_outcome_display }}</td>
+              <td class="num">{{ action.promised_amount|mxn }}</td>
+              <td>{{ action.next_contact_date|date:"d/m/Y"|default:"-" }}</td>
+              <td class="small">{{ action.user }}</td></tr>
+          {% empty %}<tr><td colspan="6" class="text-secondary small p-3">{% trans "No collection actions recorded." %}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

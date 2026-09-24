@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{% trans "Collection actions" %}{% endblock %}
+{% block content %}
+<form class="filters" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-2">{{ filter_form.business.label_tag }}{{ filter_form.business }}</div>
+    <div class="col-md-2">{{ filter_form.collector.label_tag }}{{ filter_form.collector }}</div>
+    <div class="col-md-2">{{ filter_form.action_type.label_tag }}{{ filter_form.action_type }}</div>
+    <div class="col-md-2">{{ filter_form.outcome.label_tag }}{{ filter_form.outcome }}</div>
+    <div class="col-md-1">{{ filter_form.start.label_tag }}{{ filter_form.start }}</div>
+    <div class="col-md-1">{{ filter_form.end.label_tag }}{{ filter_form.end }}</div>
+    <div class="col-md-2 d-grid"><button class="btn btn-primary btn-sm">{% trans "Filter" %}</button></div>
+  </div>
+</form>
+<div class="card-panel"><div class="table-wrap"><table class="data-table">
+  <thead><tr><th>{% trans "Date" %}</th><th>{% trans "Customer" %}</th><th>{% trans "Loan" %}</th>
+    <th>{% trans "Type" %}</th><th>{% trans "Outcome" %}</th><th class="num">{% trans "Promised" %}</th>
+    <th>{% trans "Promise date" %}</th><th>{% trans "Next contact" %}</th><th>{% trans "User" %}</th></tr></thead>
+  <tbody>
+  {% for action in actions %}
+    <tr><td>{{ action.performed_at|date:"d/m/Y H:i" }}</td>
+      <td>{{ action.customer }}</td>
+      <td><a href="{{ action.loan.get_absolute_url }}">{{ action.loan.reference }}</a></td>
+      <td>{{ action.get_action_type_display }}</td>
+      <td>{{ action.get_outcome_display }}</td>
+      <td class="num">{{ action.promised_amount|mxn }}</td>
+      <td>{{ action.promise_date|date:"d/m/Y"|default:"-" }}</td>
+      <td>{{ action.next_contact_date|date:"d/m/Y"|default:"-" }}</td>
+      <td class="small">{{ action.user }}</td></tr>
+  {% empty %}<tr><td colspan="9">{% include "components/empty_state.html" with message=_("No collection actions recorded.") icon="bi-clipboard-check" %}</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% include "components/pagination.html" %}
+{% endblock %}

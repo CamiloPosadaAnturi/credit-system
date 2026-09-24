@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{% trans "Log a collection action" %}{% endblock %}
+{% block subheading %}<p class="text-secondary small mb-0">{{ loan.reference }} &middot; {{ loan.customer }} &middot; {{ loan.customer.phone }}</p>{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card-panel"><div class="card-panel-body">
+      <form method="post" novalidate data-submit-once>
+        {% csrf_token %}
+        {% include "components/form.html" %}
+        <button class="btn btn-primary" type="submit">{% trans "Save action" %}</button>
+        <a class="btn btn-outline-soft" href="{{ loan.get_absolute_url }}">{% trans "Back" %}</a>
+      </form>
+    </div></div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card-panel mb-3"><div class="card-panel-header"><h2>{% trans "Situation" %}</h2></div>
+      <div class="card-panel-body"><dl class="row small mb-0">
+        <dt class="col-7">{% trans "Total balance" %}</dt><dd class="col-5 text-end">{{ loan.outstanding_balance|mxn }}</dd>
+        <dt class="col-7">{% trans "Overdue balance" %}</dt><dd class="col-5 text-end text-danger">{{ loan.overdue_balance|mxn }}</dd>
+        <dt class="col-7">{% trans "Days past due" %}</dt><dd class="col-5 text-end">{{ loan.days_past_due }}</dd>
+      </dl></div>
+    </div>
+    <div class="card-panel"><div class="card-panel-header"><h2>{% trans "Latest actions" %}</h2></div>
+      <div class="card-panel-body">
+        <ul class="list-unstyled small mb-0">
+          {% for action in actions %}
+            <li class="mb-2"><strong>{{ action.get_action_type_display }}</strong> - {{ action.get_outcome_display }}
+              <span class="d-block text-secondary">{{ action.performed_at|date:"d/m/Y H:i" }} &middot; {{ action.user }}</span>
+              {% if action.notes %}<span class="d-block">{{ action.notes }}</span>{% endif %}</li>
+          {% empty %}<li class="text-secondary">{% trans "No previous actions." %}</li>{% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

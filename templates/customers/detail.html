@@ -1,0 +1,112 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{{ customer.full_name }}{% endblock %}
+{% block subheading %}
+<p class="text-secondary small mb-0">{{ customer.code }} &middot; {{ customer.business }}
+  &middot; <span class="badge text-bg-{{ customer.status|badge }} status-badge">{{ customer.get_status_display }}</span></p>
+{% endblock %}
+{% block actions %}
+  {% if user_permissions.create_loan %}
+    <a class="btn btn-sm btn-primary" href="{% url 'loans:create' %}?customer={{ customer.pk }}">{% trans "New loan" %}</a>
+  {% endif %}
+  {% if user_permissions.manage_customers %}
+    <a class="btn btn-sm btn-outline-soft" href="{% url 'customers:update' customer.pk %}">{% trans "Edit" %}</a>
+    <form method="post" action="{% url 'customers:status' customer.pk %}" class="d-inline">
+      {% csrf_token %}
+      <select name="status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+        <option value="active" {% if customer.status == 'active' %}selected{% endif %}>{% trans "Active" %}</option>
+        <option value="inactive" {% if customer.status == 'inactive' %}selected{% endif %}>{% trans "Inactive" %}</option>
+        <option value="restricted" {% if customer.status == 'restricted' %}selected{% endif %}>{% trans "Restricted" %}</option>
+      </select>
+    </form>
+  {% endif %}
+{% endblock %}
+{% block content %}
+<div class="stat-grid mb-4">
+  {% include "components/stat_tile.html" with label=_("Total borrowed") value=summary.total_borrowed|mxn hint=_("Historical principal") accent="accent-blue" %}
+  {% include "components/stat_tile.html" with label=_("Total paid") value=summary.total_paid|mxn accent="accent-green" %}
+  {% include "components/stat_tile.html" with label=_("Outstanding balance") value=summary.outstanding_balance|mxn accent="accent-amber" %}
+  {% include "components/stat_tile.html" with label=_("Overdue balance") value=summary.overdue_balance|mxn accent="accent-red" %}
+  {% include "components/stat_tile.html" with label=_("Live loans") value=summary.live_loan_count accent="accent-blue" %}
+  {% include "components/stat_tile.html" with label=_("Punctuality") value=summary.punctuality|percent hint=_("Installments paid on time") accent="accent-green" %}
+  {% include "components/stat_tile.html" with label=_("Overdue installments") value=summary.overdue_installments accent="accent-red" %}
+  {% include "components/stat_tile.html" with label=_("Restructurings") value=summary.restructured_loans accent="accent-amber" %}
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card-panel h-100">
+      <div class="card-panel-header"><h2>{% trans "Customer details" %}</h2></div>
+      <div class="card-panel-body">
+        <dl class="row small mb-0">
+          <dt class="col-5">{% trans "Phone" %}</dt><dd class="col-7">{{ customer.phone }}</dd>
+          <dt class="col-5">{% trans "Alternate" %}</dt><dd class="col-7">{{ customer.alt_phone|default:"-" }}</dd>
+          <dt class="col-5">{% trans "Email" %}</dt><dd class="col-7">{{ customer.email|default:"-" }}</dd>
+          <dt class="col-5">{% trans "Address" %}</dt><dd class="col-7">{{ customer.address|default:"-" }}</dd>
+          <dt class="col-5">{% trans "City" %}</dt><dd class="col-7">{{ customer.city|default:"-" }} {{ customer.get_state_display|default:"" }}</dd>
+          <dt class="col-5">{% trans "Postal code" %}</dt><dd class="col-7">{{ customer.postal_code|default:"-" }}</dd>
+          <dt class="col-5">{% trans "Occupation" %}</dt><dd class="col-7">{{ customer.occupation|default:"-" }}</dd>
+          <dt class="col-5">{% trans "Collector" %}</dt><dd class="col-7">{{ customer.collector|default:"-" }}</dd>
+          {% if can_view_sensitive %}
+            <dt class="col-5">{% trans "CURP" %}</dt><dd class="col-7">{{ customer.national_id|default:"-" }}</dd>
+            <dt class="col-5">{% trans "RFC" %}</dt><dd class="col-7">{{ customer.tax_id|default:"-" }}</dd>
+          {% else %}
+            <dt class="col-12 text-secondary fst-italic mt-2">{% trans "CURP and RFC hidden: your role has no access to sensitive data." %}</dt>
+          {% endif %}
+        </dl>
+        {% if customer.references.exists %}
+          <hr><h3 class="h6">{% trans "References" %}</h3>
+          <ul class="list-unstyled small mb-0">
+            {% for reference in customer.references.all %}
+              <li>{{ reference.name }} {% if reference.relationship %}({{ reference.relationship }}){% endif %} - {{ reference.phone }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        {% if customer.notes %}<hr><p class="small mb-0">{{ customer.notes|linebreaksbr }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card-panel mb-3">
+      <div class="card-panel-header"><h2>{% trans "Loan history" %}</h2></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>{% trans "Reference" %}</th><th>{% trans "Disbursed" %}</th>
+            <th class="num">{% trans "Principal" %}</th><th class="num">{% trans "Total" %}</th>
+            <th class="num">{% trans "Balance" %}</th><th>{% trans "Status" %}</th></tr></thead>
+          <tbody>
+          {% for loan in loans %}
+            <tr><td><a href="{{ loan.get_absolute_url }}">{{ loan.reference }}</a></td>
+              <td>{{ loan.disbursement_date|date:"d/m/Y"|default:"-" }}</td>
+              <td class="num">{{ loan.principal|mxn }}</td>
+              <td class="num">{{ loan.total_payable|mxn }}</td>
+              <td class="num">{{ loan.outstanding_balance|mxn }}</td>
+              <td><span class="badge text-bg-{{ loan.status|badge }} status-badge">{{ loan.get_status_display }}</span></td></tr>
+          {% empty %}<tr><td colspan="6">{% include "components/empty_state.html" with message=_("This customer has no loans yet.") %}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card-panel">
+      <div class="card-panel-header"><h2>{% trans "Payment history" %}</h2></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>{% trans "Reference" %}</th><th>{% trans "Date" %}</th><th>{% trans "Loan" %}</th>
+            <th class="num">{% trans "Amount" %}</th><th>{% trans "Method" %}</th><th>{% trans "Status" %}</th></tr></thead>
+          <tbody>
+          {% for payment in payments %}
+            <tr><td><a href="{{ payment.get_absolute_url }}">{{ payment.reference }}</a></td>
+              <td>{{ payment.paid_at|date:"d/m/Y H:i" }}</td>
+              <td>{{ payment.loan.reference }}</td>
+              <td class="num">{{ payment.amount|mxn }}</td>
+              <td>{{ payment.get_method_display }}</td>
+              <td><span class="badge text-bg-{{ payment.status|badge }} status-badge">{{ payment.get_status_display }}</span></td></tr>
+          {% empty %}<tr><td colspan="6">{% include "components/empty_state.html" with message=_("No payments recorded.") icon="bi-cash-stack" %}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

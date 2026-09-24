@@ -1,24 +1,25 @@
-"""Modelos abstractos compartidos por todas las apps del sistema."""
+"""Abstract models shared by every app in the project."""
 from django.conf import settings
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
-class ModeloBase(models.Model):
-    """Marca de tiempo y trazabilidad basica de creacion/modificacion."""
+class BaseModel(models.Model):
+    """Timestamps and basic create/update traceability."""
 
-    creado_en = models.DateTimeField("creado en", auto_now_add=True, db_index=True)
-    actualizado_en = models.DateTimeField("actualizado en", auto_now=True)
-    creado_por = models.ForeignKey(
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
+    created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        verbose_name="creado por",
+        verbose_name=_("created by"),
         on_delete=models.PROTECT,
         null=True,
         blank=True,
         related_name="+",
     )
-    actualizado_por = models.ForeignKey(
+    updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        verbose_name="actualizado por",
+        verbose_name=_("updated by"),
         on_delete=models.PROTECT,
         null=True,
         blank=True,

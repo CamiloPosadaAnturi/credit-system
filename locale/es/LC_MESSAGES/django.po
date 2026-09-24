@@ -1,0 +1,2207 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: credit-system 1.0\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Audit"
+msgstr "Auditoría"
+
+msgid "Creation"
+msgstr "Creación"
+
+msgid "Update"
+msgstr "Edición"
+
+msgid "Deactivation"
+msgstr "Desactivación"
+
+msgid "Approval"
+msgstr "Aprobación"
+
+msgid "Disbursement"
+msgstr "Desembolso"
+
+msgid "Cancellation"
+msgstr "Cancelación"
+
+msgid "Restructuring"
+msgstr "Reestructuración"
+
+msgid "Payment registered"
+msgstr "Registro de pago"
+
+msgid "Payment reversal"
+msgstr "Reverso de pago"
+
+msgid "Collection action"
+msgstr "gestión de cobranza"
+
+msgid "System access"
+msgstr "Acceso al sistema"
+
+msgid "Data export"
+msgstr "Exportación de datos"
+
+msgid "date"
+msgstr "fecha"
+
+msgid "action"
+msgstr "acción"
+
+msgid "model"
+msgstr "modelo"
+
+msgid "object id"
+msgstr "id del objeto"
+
+msgid "description"
+msgstr "descripción"
+
+msgid "data"
+msgstr "datos"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "audit log entry"
+msgstr "registro de auditoría"
+
+msgid "audit log"
+msgstr "registros de auditoría"
+
+msgid "user"
+msgstr "usuario"
+
+msgid "business"
+msgstr "negocio"
+
+msgid "Audit log"
+msgstr "Auditoría"
+
+msgid "General information"
+msgstr "Datos generales"
+
+msgid "Location"
+msgstr "Ubicación"
+
+msgid "Interest"
+msgstr "Intereses"
+
+msgid "Late fees and payoff"
+msgstr "Mora y liquidación"
+
+msgid "Other"
+msgstr "Otros"
+
+msgid "Businesses and branches"
+msgstr "Negocios y sucursales"
+
+msgid "Interest configuration"
+msgstr "Configuración de intereses"
+
+msgid "Late payment and payoff policy"
+msgstr "Política de mora y liquidación"
+
+msgid "Search"
+msgstr "Buscar"
+
+msgid "Status"
+msgstr "Estado"
+
+msgid "Created from"
+msgstr "Creado desde"
+
+msgid "Created to"
+msgstr "Creado hasta"
+
+msgid "If the business charges late fees you must set the daily rate."
+msgstr "Si el negocio aplica cargos moratorios debes definir la tasa diaria."
+
+msgid "All"
+msgstr "Todos"
+
+msgid "Active"
+msgstr "Activo"
+
+msgid "Inactive"
+msgstr "Inactivo"
+
+msgid "Name, RFC or person in charge"
+msgstr "Nombre, RFC o responsable"
+
+msgid "trade name"
+msgstr "nombre comercial"
+
+msgid "legal name"
+msgstr "razón social"
+
+msgid "RFC"
+msgstr "RFC"
+
+msgid "phone"
+msgstr "teléfono"
+
+msgid "email"
+msgstr "correo electrónico"
+
+msgid "address"
+msgstr "dirección"
+
+msgid "city"
+msgstr "ciudad"
+
+msgid "state"
+msgstr "estado"
+
+msgid "active"
+msgstr "activo"
+
+msgid "interest mode"
+msgstr "modalidad de interés"
+
+msgid "interest rate"
+msgstr "tasa de interés"
+
+msgid "rate period"
+msgstr "periodo de la tasa"
+
+msgid "default payment frequency"
+msgstr "frecuencia de pago predeterminada"
+
+msgid "default number of installments"
+msgstr "número de cuotas predeterminado"
+
+msgid "grace days"
+msgstr "días de gracia"
+
+msgid "charges late fees"
+msgstr "aplica cargo moratorio"
+
+msgid "daily late fee rate"
+msgstr "tasa moratoria diaria"
+
+msgid "allows early payoff"
+msgstr "permite liquidación anticipada"
+
+msgid "early payoff discount"
+msgstr "descuento por liquidación anticipada"
+
+msgid "notes"
+msgstr "observaciones"
+
+msgid "businesses"
+msgstr "negocios"
+
+msgid "person in charge"
+msgstr "responsable"
+
+msgid "Expressed as a ratio. 0.4000 = 40% (400 MXN per 1,000 MXN)."
+msgstr ""
+"Expresada en tanto por uno. 0.4000 = 40% (400 MXN por cada 1,000 MXN)."
+
+msgid "Contractual period the rate refers to. It must match the contract."
+msgstr ""
+"Periodo contractual al que corresponde la tasa. Debe coincidir con lo "
+"pactado en el contrato."
+
+msgid "Days after the due date before an installment counts as overdue."
+msgstr "Días posteriores al vencimiento antes de considerar la cuota vencida."
+
+msgid ""
+"When off, the system never adds late charges. Turn it on only with a "
+"documented and authorized policy."
+msgstr ""
+"Si está desactivado, el sistema NO genera cargos por atraso. Actívalo solo "
+"con una política documentada y autorizada."
+
+msgid "Ratio applied to the overdue balance, per day past due."
+msgstr "Tanto por uno sobre el saldo vencido, por día de atraso."
+
+msgid ""
+"Ratio discounted from the UNEARNED interest. 0 = the full contractual "
+"balance is charged."
+msgstr ""
+"Tanto por uno de descuento sobre el interés NO devengado. 0 = se cobra el "
+"saldo contractual completo."
+
+msgid "New business"
+msgstr "Nuevo negocio"
+
+msgid "Business updated successfully."
+msgstr "Negocio actualizado correctamente."
+
+msgid "Edit %(name)s"
+msgstr "Editar %(name)s"
+
+msgid "Business '%(name)s' created successfully."
+msgstr "Negocio '%(name)s' creado correctamente."
+
+msgid "Business '%(name)s' was activated."
+msgstr "El negocio '%(name)s' fue activado."
+
+msgid "Business '%(name)s' was deactivated."
+msgstr "El negocio '%(name)s' fue desactivado."
+
+msgid "Collections"
+msgstr "Cobranza"
+
+msgid "Business"
+msgstr "Negocio"
+
+msgid "Collector"
+msgstr "Cobrador"
+
+msgid "From"
+msgstr "Desde"
+
+msgid "To"
+msgstr "Hasta"
+
+msgid "Minimum days past due"
+msgstr "Atraso mínimo (días)"
+
+msgid "Type"
+msgstr "Tipo"
+
+msgid "Outcome"
+msgstr "Resultado"
+
+msgid "State the date the customer committed to."
+msgstr "Indica para qué fecha se comprometió el cliente."
+
+msgid "State the promised amount."
+msgstr "Indica el monto prometido."
+
+msgid "Call made"
+msgstr "Llamada realizada"
+
+msgid "Message sent"
+msgstr "Mensaje enviado"
+
+msgid "Visit made"
+msgstr "Visita realizada"
+
+msgid "Promise to pay"
+msgstr "Promesa de pago"
+
+msgid "Customer not reached"
+msgstr "Cliente no localizado"
+
+msgid "Payment agreement"
+msgstr "Acuerdo de pago"
+
+msgid "Payment made"
+msgstr "Pago realizado"
+
+msgid "Promises to pay"
+msgstr "Promete pagar"
+
+msgid "No answer"
+msgstr "Sin respuesta"
+
+msgid "Refuses to pay"
+msgstr "Se niega a pagar"
+
+msgid "Reschedule contact"
+msgstr "Reagendar contacto"
+
+msgid "action date"
+msgstr "fecha de la gestión"
+
+msgid "action type"
+msgstr "tipo de gestión"
+
+msgid "outcome"
+msgstr "resultado"
+
+msgid "promised amount"
+msgstr "monto prometido"
+
+msgid "promise date"
+msgstr "fecha de la promesa"
+
+msgid "next contact date"
+msgstr "próxima fecha de contacto"
+
+msgid "created at"
+msgstr "creado en"
+
+msgid "collection action"
+msgstr "gestión de cobranza"
+
+msgid "collection actions"
+msgstr "gestiones de cobranza"
+
+msgid "loan"
+msgstr "crédito"
+
+msgid "customer"
+msgstr "cliente"
+
+msgid "handled by"
+msgstr "gestionado por"
+
+msgid "Collection actions"
+msgstr "Gestiones de cobranza"
+
+msgid "Collections and past-due portfolio"
+msgstr "Cobranza y cartera vencida"
+
+msgid "Collection action saved."
+msgstr "Gestión registrada."
+
+msgid "My portfolio for today"
+msgstr "Mi cartera de hoy"
+
+msgid "%(count)s loan(s) changed status."
+msgstr "%(count)s crédito(s) cambiaron de estado."
+
+msgid "Core"
+msgstr "Núcleo"
+
+msgid "Daily"
+msgstr "Diario"
+
+msgid "Weekly"
+msgstr "Semanal"
+
+msgid "Biweekly (every 15 days)"
+msgstr "Quincenal (cada 15 días)"
+
+msgid "Monthly"
+msgstr "Mensual"
+
+msgid "Custom (every N days)"
+msgstr "Personalizado (cada N días)"
+
+msgid "Flat interest on principal (rate x principal)"
+msgstr "Interés fijo sobre el capital (tasa x capital)"
+
+msgid "Simple interest per period (rate x principal x installments)"
+msgstr "Interés simple por periodo (tasa x capital x cuotas)"
+
+msgid "No interest"
+msgstr "Sin interés"
+
+msgid "For the whole contract term"
+msgstr "Por el plazo completo del contrato"
+
+msgid "Per day"
+msgstr "Por día"
+
+msgid "Per week"
+msgstr "Por semana"
+
+msgid "Per fortnight"
+msgstr "Por quincena"
+
+msgid "Per month"
+msgstr "Por mes"
+
+msgid "Operation without an associated business."
+msgstr "Operación sin negocio asociado."
+
+msgid "You are not allowed to perform this operation."
+msgstr "No tienes autorización para esta operación."
+
+msgid "updated at"
+msgstr "actualizado en"
+
+msgid "created by"
+msgstr "creado por"
+
+msgid "updated by"
+msgstr "actualizado por"
+
+msgid ""
+"The RFC format is not valid (12 characters for a company, 13 for an "
+"individual)."
+msgstr ""
+"El RFC no tiene un formato válido (12 caracteres para persona moral, 13 para"
+" persona física)."
+
+msgid "The CURP format is not valid (18 characters)."
+msgstr "La CURP no tiene un formato válido (18 caracteres)."
+
+msgid "The postal code must have 5 digits."
+msgstr "El código postal debe tener 5 dígitos."
+
+msgid "The phone number format is not valid."
+msgstr "El teléfono no tiene un formato válido."
+
+msgid "The amount must be greater than zero."
+msgstr "El importe debe ser mayor que cero."
+
+msgid "Customers"
+msgstr "Clientes"
+
+msgid "Identification"
+msgstr "Identificación"
+
+msgid "Documents (restricted access)"
+msgstr "Documentos (acceso restringido)"
+
+msgid "Contact"
+msgstr "Contacto"
+
+msgid "Address"
+msgstr "Domicilio"
+
+msgid "Operations"
+msgstr "Operación"
+
+msgid "The selected collector is not authorized for that business."
+msgstr "El cobrador seleccionado no está autorizado en ese negocio."
+
+msgid "Name, phone or code"
+msgstr "Nombre, teléfono o código"
+
+msgid "Restricted"
+msgstr "Restringido"
+
+msgid "code"
+msgstr "código"
+
+msgid "first name(s)"
+msgstr "nombre(s)"
+
+msgid "last name"
+msgstr "apellido paterno"
+
+msgid "second last name"
+msgstr "apellido materno"
+
+msgid "CURP"
+msgstr "CURP"
+
+msgid "date of birth"
+msgstr "fecha de nacimiento"
+
+msgid "primary phone"
+msgstr "teléfono principal"
+
+msgid "alternate phone"
+msgstr "teléfono alterno"
+
+msgid "postal code"
+msgstr "código postal"
+
+msgid "occupation"
+msgstr "ocupación o actividad económica"
+
+msgid "status"
+msgstr "estado"
+
+msgid "internal notes"
+msgstr "observaciones internas"
+
+msgid "customers"
+msgstr "clientes"
+
+msgid "name"
+msgstr "nombre"
+
+msgid "relationship"
+msgstr "parentesco o relación"
+
+msgid "personal reference"
+msgstr "referencia personal"
+
+msgid "personal references"
+msgstr "referencias personales"
+
+msgid "Internal identifier of the customer within the business."
+msgstr "Identificador interno del cliente dentro del negocio."
+
+msgid "assigned collector"
+msgstr "cobrador asignado"
+
+msgid "New customer"
+msgstr "Nuevo cliente"
+
+msgid "Customer registered successfully."
+msgstr "Cliente registrado correctamente."
+
+msgid "Customer updated."
+msgstr "Cliente actualizado."
+
+msgid "Invalid status."
+msgstr "Estado no válido."
+
+msgid "The customer is now %(status)s."
+msgstr "El cliente quedó como %(status)s."
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Loans"
+msgstr "Créditos"
+
+msgid "Only for the custom frequency."
+msgstr "Solo para la frecuencia personalizada."
+
+msgid "Ratio. 0.40 = 40% (400 MXN per 1,000 MXN lent)."
+msgstr "Tanto por uno. 0.40 = 40% (400 MXN por cada 1,000 MXN prestados)."
+
+msgid "Application"
+msgstr "Solicitud"
+
+msgid "Financial terms"
+msgstr "Condiciones financieras"
+
+msgid "Schedule"
+msgstr "Calendario"
+
+msgid "Documents"
+msgstr "Documentos"
+
+msgid "Disbursed from"
+msgstr "Desembolso desde"
+
+msgid "Disbursed to"
+msgstr "Desembolso hasta"
+
+msgid "Cancellation reason"
+msgstr "Motivo de la cancelación"
+
+msgid "New number of installments"
+msgstr "Nuevo número de cuotas"
+
+msgid "Frequency"
+msgstr "Frecuencia"
+
+msgid "First payment date"
+msgstr "Fecha del primer pago"
+
+msgid "Interest mode"
+msgstr "Modalidad de interés"
+
+msgid "Applied rate"
+msgstr "Tasa aplicada"
+
+msgid "Leave empty to keep the rate of the original loan."
+msgstr "Deja vacío para conservar la tasa del crédito original."
+
+msgid "Notes"
+msgstr "Observaciones"
+
+msgid "The customer does not belong to the selected business."
+msgstr "El cliente no pertenece al negocio seleccionado."
+
+msgid "State how many days apart the installments fall."
+msgstr "Indica cada cuántos días vence una cuota."
+
+msgid "The principal must be greater than zero."
+msgstr "El capital debe ser mayor que cero."
+
+msgid "There must be at least one installment."
+msgstr "Debe haber al menos una cuota."
+
+msgid "State the applied rate."
+msgstr "Indica la tasa aplicada."
+
+msgid "Reference or customer"
+msgstr "Folio o cliente"
+
+msgid "Draft"
+msgstr "Borrador"
+
+msgid "Pending approval"
+msgstr "Pendiente de aprobación"
+
+msgid "Approved"
+msgstr "Aprobado"
+
+msgid "Disbursed"
+msgstr "Desembolsado"
+
+msgid "Past due"
+msgstr "En mora"
+
+msgid "Settled"
+msgstr "Liquidado"
+
+msgid "Cancelled"
+msgstr "Cancelado"
+
+msgid "Restructured"
+msgstr "Reestructurado"
+
+msgid "Pending"
+msgstr "Pendiente"
+
+msgid "Partially paid"
+msgstr "Parcial"
+
+msgid "Paid"
+msgstr "Pagada"
+
+msgid "Overdue"
+msgstr "Vencida"
+
+msgid "reference"
+msgstr "folio"
+
+msgid "application date"
+msgstr "fecha de solicitud"
+
+msgid "approval date"
+msgstr "fecha de aprobación"
+
+msgid "disbursement date"
+msgstr "fecha de desembolso"
+
+msgid "principal"
+msgstr "capital prestado"
+
+msgid "applied interest rate"
+msgstr "tasa de interés aplicada"
+
+msgid "total interest"
+msgstr "interés total"
+
+msgid "total payable"
+msgstr "total a pagar"
+
+msgid "payment frequency"
+msgstr "frecuencia de pago"
+
+msgid "days between installments"
+msgstr "días entre cuotas"
+
+msgid "number of installments"
+msgstr "número de cuotas"
+
+msgid "installment amount"
+msgstr "importe de cada cuota"
+
+msgid "first payment date"
+msgstr "fecha del primer pago"
+
+msgid "final due date"
+msgstr "fecha de vencimiento final"
+
+msgid "principal paid"
+msgstr "capital pagado"
+
+msgid "interest paid"
+msgstr "interés pagado"
+
+msgid "outstanding balance"
+msgstr "saldo pendiente"
+
+msgid "cancellation reason"
+msgstr "motivo de cancelación"
+
+msgid "contract or document"
+msgstr "contrato o documento"
+
+msgid "loans"
+msgstr "créditos"
+
+msgid "installment number"
+msgstr "número de cuota"
+
+msgid "due date"
+msgstr "fecha de vencimiento"
+
+msgid "scheduled amount"
+msgstr "importe programado"
+
+msgid "scheduled principal"
+msgstr "capital programado"
+
+msgid "scheduled interest"
+msgstr "interés programado"
+
+msgid "amount paid"
+msgstr "importe pagado"
+
+msgid "settled on"
+msgstr "fecha de liquidación"
+
+msgid "installment"
+msgstr "cuota"
+
+msgid "installments"
+msgstr "cuotas"
+
+msgid "Ratio frozen when the loan was approved."
+msgstr "Tanto por uno congelado al aprobar el crédito."
+
+msgid "restructured loan"
+msgstr "crédito reestructurado"
+
+msgid "approved by"
+msgstr "aprobado por"
+
+msgid "disbursed by"
+msgstr "desembolsado por"
+
+msgid ""
+"An approved or disbursed loan cannot be freely recalculated. Use an "
+"authorized restructuring instead."
+msgstr ""
+"Un crédito aprobado o desembolsado no puede recalcularse libremente. Usa una"
+" reestructuración autorizada."
+
+msgid "The schedule cannot be rebuilt: the loan already has payments applied."
+msgstr ""
+"No se puede regenerar el calendario: el crédito ya tiene pagos aplicados."
+
+msgid "The customer is restricted. Review their history before approving."
+msgstr "El cliente está restringido. Revisa su historial antes de aprobar."
+
+msgid "Only an approved loan can be disbursed."
+msgstr "Solo se puede desembolsar un crédito aprobado."
+
+msgid "A settled loan cannot be cancelled."
+msgstr "Un crédito liquidado no se puede cancelar."
+
+msgid ""
+"The loan has payments applied. Reverse the payments before cancelling or "
+"register a restructuring."
+msgstr ""
+"El crédito tiene pagos aplicados. Reversa los pagos antes de cancelar o "
+"registra una reestructuración."
+
+msgid "You must state the reason for the cancellation."
+msgstr "Debes indicar el motivo de la cancelación."
+
+msgid "Only a live loan can be restructured."
+msgstr "Solo se reestructura un crédito vigente."
+
+msgid "The loan has no outstanding balance to restructure."
+msgstr "El crédito no tiene saldo pendiente que reestructurar."
+
+msgid "The customer is flagged as RESTRICTED."
+msgstr "El cliente está marcado como RESTRINGIDO."
+
+msgid ""
+"Only a draft or pending loan can be approved (current status: %(status)s)."
+msgstr ""
+"Solo se puede aprobar un crédito en borrador o pendiente (estado actual: "
+"%(status)s)."
+
+msgid "The customer owes %(amount)s MXN."
+msgstr "El cliente tiene %(amount)s MXN de saldo pendiente."
+
+msgid "They have %(count)s unpaid overdue installment(s)."
+msgstr "Tiene %(count)s cuota(s) vencida(s) sin pagar."
+
+msgid "Terms updated and schedule rebuilt."
+msgstr "Condiciones actualizadas y calendario regenerado."
+
+msgid "Edit %(ref)s"
+msgstr "Editar %(ref)s"
+
+msgid "New loan"
+msgstr "Nuevo crédito"
+
+msgid "Loan %(ref)s created."
+msgstr "Crédito %(ref)s creado."
+
+msgid ""
+"A disbursed loan cannot be edited. Use an authorized restructuring or a "
+"payment reversal."
+msgstr ""
+"Un crédito desembolsado no se edita. Usa una reestructuración autorizada o "
+"un reverso de pago."
+
+msgid "Confirm the loan terms"
+msgstr "Confirmar condiciones del crédito"
+
+msgid "Loan %(ref)s approved."
+msgstr "Crédito %(ref)s aprobado."
+
+msgid "Loan %(ref)s disbursed. The schedule is now active."
+msgstr "Crédito %(ref)s desembolsado. El calendario está activo."
+
+msgid "Loan %(ref)s cancelled."
+msgstr "Crédito %(ref)s cancelado."
+
+msgid "Loan restructured. New reference: %(ref)s"
+msgstr "Crédito reestructurado. Nuevo folio: %(ref)s"
+
+msgid "Notifications"
+msgstr "Notificaciones"
+
+msgid "Informational"
+msgstr "Informativa"
+
+msgid "Alert"
+msgstr "Alerta"
+
+msgid "kind"
+msgstr "tipo"
+
+msgid "title"
+msgstr "título"
+
+msgid "message"
+msgstr "mensaje"
+
+msgid "link"
+msgstr "enlace"
+
+msgid "read"
+msgstr "leída"
+
+msgid "notification"
+msgstr "notificación"
+
+msgid "notifications"
+msgstr "notificaciones"
+
+msgid "addressed to"
+msgstr "dirigida a"
+
+msgid "When empty, every user of the business sees it."
+msgstr "Si está vacía, la ven todos los usuarios del negocio."
+
+msgid "Payments"
+msgstr "Pagos"
+
+msgid "Amount received (MXN)"
+msgstr "Importe recibido (MXN)"
+
+msgid "Payment method"
+msgstr "Método de pago"
+
+msgid "Payment date and time"
+msgstr "Fecha y hora del pago"
+
+msgid "Leave empty to use the current date and time."
+msgstr "Deja vacío para usar la fecha y hora actuales."
+
+msgid "Reference"
+msgstr "Referencia"
+
+msgid "I authorize an amount larger than the balance (overpayment)"
+msgstr "Autorizo registrar un importe mayor al saldo (excedente)"
+
+msgid "I confirm this is not a duplicate payment"
+msgstr "Confirmo que no es un pago duplicado"
+
+msgid "Reversal reason"
+msgstr "Motivo del reverso"
+
+msgid "It is recorded in the audit log. The original payment is kept."
+msgstr "Queda registrado en la auditoría. El pago original no se elimina."
+
+msgid "Method"
+msgstr "Método"
+
+msgid "Reference, customer or note"
+msgstr "Folio, cliente o referencia"
+
+msgid "Cash"
+msgstr "Efectivo"
+
+msgid "Bank transfer"
+msgstr "Transferencia"
+
+msgid "Deposit"
+msgstr "Depósito"
+
+msgid "Confirmed"
+msgstr "Confirmado"
+
+msgid "Reversed"
+msgstr "Reversado"
+
+msgid "Customer payment"
+msgstr "Pago del cliente"
+
+msgid "Authorized write-off / discount"
+msgstr "Condonación / descuento autorizado"
+
+msgid "payment date and time"
+msgstr "fecha y hora del pago"
+
+msgid "amount received"
+msgstr "importe recibido"
+
+msgid "amount allocated to installments"
+msgstr "importe aplicado a cuotas"
+
+msgid "unallocated overpayment"
+msgstr "excedente no aplicado"
+
+msgid "payment method"
+msgstr "método de pago"
+
+msgid "transaction reference"
+msgstr "referencia de la transacción"
+
+msgid "idempotency key"
+msgstr "clave de idempotencia"
+
+msgid "reversal reason"
+msgstr "motivo del reverso"
+
+msgid "reversal date"
+msgstr "fecha del reverso"
+
+msgid "payment"
+msgstr "pago"
+
+msgid "payments"
+msgstr "pagos"
+
+msgid "allocated amount"
+msgstr "importe aplicado"
+
+msgid "interest"
+msgstr "interés"
+
+msgid "payment allocation"
+msgstr "aplicación de pago"
+
+msgid "payment allocations"
+msgstr "aplicaciones de pago"
+
+msgid "Only allowed with an explicit authorization when registering."
+msgstr "Solo se permite con autorización explícita al registrar el pago."
+
+msgid "registered by"
+msgstr "registrado por"
+
+msgid "collector"
+msgstr "cobrador"
+
+msgid "Prevents the same form from registering the payment twice."
+msgstr "Evita que un mismo formulario registre el pago dos veces."
+
+msgid "reversed by"
+msgstr "reversado por"
+
+msgid "The payment amount must be greater than zero."
+msgstr "El importe del pago debe ser mayor que cero."
+
+msgid ""
+"An identical payment was registered less than two minutes ago. If these "
+"really are two separate payments, tick the confirmation box."
+msgstr ""
+"Ya existe un pago idéntico registrado hace menos de dos minutos. Si "
+"realmente son dos pagos distintos, marca la casilla de confirmación."
+
+msgid "You must state the reason for the reversal."
+msgstr "Debes indicar el motivo del reverso."
+
+msgid "Only a confirmed payment can be reversed."
+msgstr "Solo se puede reversar un pago confirmado."
+
+msgid "This business does not allow early payoff."
+msgstr "Este negocio no permite la liquidación anticipada."
+
+msgid "The loan has no balance left to settle."
+msgstr "El crédito no tiene saldo por liquidar."
+
+msgid "Payments cannot be registered on a %(status)s loan."
+msgstr "No se pueden registrar pagos en un crédito %(status)s."
+
+msgid ""
+"The amount (%(amount)s MXN) is larger than the outstanding balance "
+"(%(balance)s MXN). Authorize the overpayment or register a payoff."
+msgstr ""
+"El importe (%(amount)s MXN) supera el saldo pendiente del crédito "
+"(%(balance)s MXN). Autoriza el excedente o registra una liquidación."
+
+msgid "Register payment - %(ref)s"
+msgstr "Registrar pago - %(ref)s"
+
+msgid "Payment %(ref)s registered for %(amount)s MXN."
+msgstr "Pago %(ref)s registrado por %(amount)s MXN."
+
+msgid "Unallocated overpayment: %(amount)s MXN."
+msgstr "Excedente no aplicado: %(amount)s MXN."
+
+msgid "Payment %(ref)s reversed."
+msgstr "Pago %(ref)s reversado."
+
+msgid "Loan settled with payment %(ref)s."
+msgstr "Crédito liquidado con el pago %(ref)s."
+
+msgid "Reports"
+msgstr "Reportes"
+
+msgid "Loans granted in the period"
+msgstr "Créditos otorgados por periodo"
+
+msgid "Loans disbursed within the date range."
+msgstr "Créditos desembolsados en el rango de fechas."
+
+msgid "Live and settled loans"
+msgstr "Créditos activos y liquidados"
+
+msgid "Count and balances per loan status."
+msgstr "Conteo y saldos por estado del crédito."
+
+msgid "Loans per business or branch"
+msgstr "Créditos por negocio o sucursal"
+
+msgid "Lending and balance grouped by business."
+msgstr "Colocación y saldo agrupados por negocio."
+
+msgid "Payments in the period"
+msgstr "Pagos del periodo"
+
+msgid "Detail of confirmed payments (daily, weekly or monthly by range)."
+msgstr ""
+"Detalle de pagos confirmados (diario, semanal o mensual según el rango)."
+
+msgid "Cash inflow"
+msgstr "Flujo de entradas de efectivo"
+
+msgid "Money received per month. Write-offs are not included."
+msgstr "Dinero recibido por mes. No incluye condonaciones."
+
+msgid "Live and past-due portfolio"
+msgstr "Cartera vigente y vencida"
+
+msgid "Total, overdue and not-yet-due balance of every live loan."
+msgstr "Saldo total, vencido y por vencer de cada crédito vigente."
+
+msgid "Outstanding balance per customer"
+msgstr "Saldos pendientes por cliente"
+
+msgid "How much each customer owes in total."
+msgstr "Cuánto debe cada cliente en total."
+
+msgid "Contractual and collected interest"
+msgstr "Intereses contractuales y cobrados"
+
+msgid "Comparison between what was agreed and what was actually collected."
+msgstr "Comparación entre lo pactado y lo efectivamente cobrado."
+
+msgid "Principal recovery"
+msgstr "Recuperación de capital"
+
+msgid "Recovery progress loan by loan."
+msgstr "Avance de recuperación crédito por crédito."
+
+msgid "Collector performance"
+msgstr "Desempeño por cobrador"
+
+msgid ""
+"Payments received, assigned portfolio and actions. The amount received is "
+"NOT business profit."
+msgstr ""
+"Pagos recibidos, cartera asignada y gestiones. El monto recibido NO es "
+"utilidad del negocio."
+
+msgid "Payment history"
+msgstr "Historial de pagos"
+
+msgid "Every payment, reversed ones included, ordered by customer."
+msgstr "Todos los pagos, incluidos los reversados, ordenados por cliente."
+
+msgid "Loans with repeated delinquency"
+msgstr "Créditos con atrasos recurrentes"
+
+msgid "Loans with unpaid overdue installments."
+msgstr "Créditos con cuotas vencidas sin pagar."
+
+msgid "Customers with the largest lending volume"
+msgstr "Clientes con mayor volumen de crédito"
+
+msgid "Ranking by historical disbursed principal."
+msgstr "Ranking por capital histórico desembolsado."
+
+msgid "Customer"
+msgstr "Cliente"
+
+msgid "Principal"
+msgstr "Capital"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Installments"
+msgstr "Cuotas"
+
+msgid "Outstanding balance"
+msgstr "Saldo pendiente"
+
+msgid "Disbursed principal"
+msgstr "Capital colocado"
+
+msgid "Contractual interest"
+msgstr "Interés contractual"
+
+msgid "Date"
+msgstr "Fecha"
+
+msgid "Loan"
+msgstr "Crédito"
+
+msgid "Amount"
+msgstr "Importe"
+
+msgid "Allocated"
+msgstr "Aplicado"
+
+msgid "Overpayment"
+msgstr "Excedente"
+
+msgid "Kind"
+msgstr "Tipo"
+
+msgid "Registered by"
+msgstr "Registrado por"
+
+msgid "Month"
+msgstr "Mes"
+
+msgid "Total received"
+msgstr "Total recibido"
+
+msgid "Total balance"
+msgstr "Saldo total"
+
+msgid "Overdue balance"
+msgstr "Saldo vencido"
+
+msgid "Not yet due"
+msgstr "Por vencer"
+
+msgid "Days past due"
+msgstr "Días de atraso"
+
+msgid "As of"
+msgstr "Fecha de corte"
+
+msgid "Phone"
+msgstr "Teléfono"
+
+msgid "Live loans"
+msgstr "Créditos vigentes"
+
+msgid "Principal lent"
+msgstr "Capital prestado"
+
+msgid "Principal recovered"
+msgstr "Capital recuperado"
+
+msgid "Interest collected"
+msgstr "Interés cobrado"
+
+msgid "Interest pending"
+msgstr "Interés pendiente"
+
+msgid "% paid"
+msgstr "% pagado"
+
+msgid "Payments received"
+msgstr "Pagos recibidos"
+
+msgid "No. of payments"
+msgstr "No. de pagos"
+
+msgid "Assigned portfolio"
+msgstr "Cartera asignada"
+
+msgid "Actions"
+msgstr "Gestiones"
+
+msgid "Promises"
+msgstr "Promesas"
+
+msgid "Kept"
+msgstr "Cumplidas"
+
+msgid "Payment reference"
+msgstr "Folio del pago"
+
+msgid "Overdue installments"
+msgstr "Cuotas vencidas"
+
+msgid "Historical principal"
+msgstr "Capital histórico"
+
+msgid "Generated on %(stamp)s - Currency: MXN"
+msgstr "Generado el %(stamp)s - Moneda: MXN"
+
+msgid ""
+"PDF export is not implemented yet. The architecture already allows adding it"
+" here without touching the views or the generators."
+msgstr ""
+"La exportación a PDF aún no está implementada. La arquitectura ya permite "
+"agregarla aquí sin tocar las vistas ni los generadores."
+
+msgid "Loan status"
+msgstr "Estado del crédito"
+
+msgid "Unsupported export format."
+msgstr "Formato de exportación no soportado."
+
+msgid "Credit system"
+msgstr "Sistema de créditos"
+
+msgid "Users and permissions"
+msgstr "Usuarios y permisos"
+
+msgid "Personal details"
+msgstr "Datos de la persona"
+
+msgid "Access"
+msgstr "Acceso"
+
+msgid "Role and businesses"
+msgstr "Rol y negocios"
+
+msgid "New password"
+msgstr "Nueva contraseña"
+
+msgid "Confirm password"
+msgstr "Confirmar contraseña"
+
+msgid "Username"
+msgstr "Usuario"
+
+msgid "Password"
+msgstr "Contraseña"
+
+msgid ""
+"Select at least one business. Without an authorized business the user cannot"
+" see any data."
+msgstr ""
+"Selecciona al menos un negocio. Sin negocio autorizado el usuario no podrá "
+"ver información."
+
+msgid "The passwords do not match."
+msgstr "Las contraseñas no coinciden."
+
+msgid "The password must be at least 8 characters long."
+msgstr "La contraseña debe tener al menos 8 caracteres."
+
+msgid "Super administrator"
+msgstr "Superadministrador"
+
+msgid "Business administrator"
+msgstr "Administrador del negocio"
+
+msgid "Manager or supervisor"
+msgstr "Gerente o supervisor"
+
+msgid "Read-only user"
+msgstr "Usuario de consulta"
+
+msgid "role"
+msgstr "rol"
+
+msgid "users"
+msgstr "usuarios"
+
+msgid "authorized businesses"
+msgstr "negocios autorizados"
+
+msgid "Businesses or branches this user may operate on."
+msgstr "Negocios o sucursales sobre los que este usuario puede operar."
+
+msgid "You do not have access to this business."
+msgstr "No tienes acceso a este negocio."
+
+msgid "You are not authorized to: %(action)s"
+msgstr "No tienes autorización para: %(action)s"
+
+msgid "Users"
+msgstr "Usuarios"
+
+msgid "New user"
+msgstr "Nuevo usuario"
+
+msgid "User created successfully."
+msgstr "Usuario creado correctamente."
+
+msgid "User updated."
+msgstr "Usuario actualizado."
+
+msgid "Profile updated."
+msgstr "Perfil actualizado."
+
+msgid "Your password was updated."
+msgstr "Tu contraseña fue actualizada."
+
+msgid "You cannot modify this user."
+msgstr "No puedes modificar este usuario."
+
+msgid "Password for %(name)s updated."
+msgstr "Contraseña de %(name)s actualizada."
+
+msgid "Access denied"
+msgstr "Acceso denegado"
+
+msgid "You are not authorized to perform this operation"
+msgstr "No tienes autorización para esta operación"
+
+msgid "Back to the dashboard"
+msgstr "Volver al dashboard"
+
+msgid "Sign in"
+msgstr "Entrar"
+
+msgid "Your role does not allow viewing or changing this information."
+msgstr "Tu rol no permite ver o modificar esta información."
+
+msgid "Page not found"
+msgstr "Página no encontrada"
+
+msgid "The resource you are looking for does not exist or was moved."
+msgstr "El recurso que buscas no existe o fue movido."
+
+msgid "Credit System"
+msgstr "Sistema de Créditos"
+
+msgid "Toggle menu"
+msgstr "Alternar menú"
+
+msgid "Search a customer by name or phone..."
+msgstr "Buscar cliente por nombre o teléfono..."
+
+msgid "Search customer"
+msgstr "Buscar cliente"
+
+msgid "No new notifications."
+msgstr "Sin notificaciones nuevas."
+
+msgid "See all"
+msgstr "Ver todas"
+
+msgid "My profile"
+msgstr "Mi perfil"
+
+msgid "Change password"
+msgstr "Cambiar contraseña"
+
+msgid "Sign out"
+msgstr "Cerrar sesión"
+
+msgid "Close"
+msgstr "Cerrar"
+
+msgid "Immutable record of the critical operations of the system."
+msgstr "Bitácora inmutable de las operaciones críticas del sistema."
+
+msgid "Description, reference or user"
+msgstr "Descripción, folio o usuario"
+
+msgid "Action"
+msgstr "Acción"
+
+msgid "Filter"
+msgstr "Filtrar"
+
+msgid "User"
+msgstr "Usuario"
+
+msgid "Object"
+msgstr "Objeto"
+
+msgid "Description"
+msgstr "Descripción"
+
+msgid "system"
+msgstr "sistema"
+
+msgid "No audit entries."
+msgstr "Sin registros de auditoría."
+
+msgid "Apply"
+msgstr "Aplicar"
+
+msgid "Details"
+msgstr "Ficha"
+
+msgid "Money lent out"
+msgstr "Dinero prestado"
+
+msgid "Agreed"
+msgstr "Pactado"
+
+msgid "Outstanding portfolio"
+msgstr "Cartera pendiente"
+
+msgid "Overdue portfolio"
+msgstr "Cartera vencida"
+
+msgid "Recovery rate"
+msgstr "% de recuperación"
+
+msgid "Overdue portfolio rate"
+msgstr "% cartera vencida"
+
+msgid "Dashboard - %(name)s"
+msgstr "Dashboard - %(name)s"
+
+msgid "Business dashboard"
+msgstr "Dashboard del negocio"
+
+msgid "Edit"
+msgstr "Editar"
+
+msgid "The financial history is kept. Confirm the status change?"
+msgstr "El historial financiero se conserva. ¿Confirmas el cambio de estado?"
+
+msgid "Deactivate"
+msgstr "Desactivar"
+
+msgid "Activate"
+msgstr "Activar"
+
+msgid "Details and configuration"
+msgstr "Datos y configuración"
+
+msgid "Email"
+msgstr "Correo"
+
+msgid "City / State"
+msgstr "Ciudad / Estado"
+
+msgid "In charge"
+msgstr "Responsable"
+
+msgid "Rate"
+msgstr "Tasa"
+
+msgid "Rate period"
+msgstr "Periodo de la tasa"
+
+msgid "Grace days"
+msgstr "Días de gracia"
+
+msgid "Late fee"
+msgstr "Cargo moratorio"
+
+msgid "daily"
+msgstr "diario"
+
+msgid "Not applied"
+msgstr "No aplica"
+
+msgid "Early payoff"
+msgstr "Liquidación anticipada"
+
+msgid "Allowed"
+msgstr "Permitida"
+
+msgid "Not allowed"
+msgstr "No permitida"
+
+msgid "Recent loans"
+msgstr "Créditos recientes"
+
+msgid "Balance"
+msgstr "Saldo"
+
+msgid "Authorized users"
+msgstr "Usuarios autorizados"
+
+msgid "No users assigned."
+msgstr "Sin usuarios asignados."
+
+msgid "Total collected"
+msgstr "Total recaudado"
+
+msgid "Settled loans"
+msgstr "Créditos liquidados"
+
+msgid "This business has no loans yet."
+msgstr "Este negocio aún no tiene créditos."
+
+msgid "Save"
+msgstr "Guardar"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Clear"
+msgstr "Limpiar"
+
+msgid "City"
+msgstr "Ciudad"
+
+msgid "You have no businesses registered yet."
+msgstr "Aún no tienes negocios registrados."
+
+msgid "Register the first business"
+msgstr "Registrar el primer negocio"
+
+msgid "Promised"
+msgstr "Prometido"
+
+msgid "Promise date"
+msgstr "Promesa"
+
+msgid "Next contact"
+msgstr "Próximo contacto"
+
+msgid "No collection actions recorded."
+msgstr "Sin gestiones registradas."
+
+msgid "Refresh past-due statuses"
+msgstr "Actualizar estados de mora"
+
+msgid "Due today"
+msgstr "Vencen hoy"
+
+msgid "Upcoming"
+msgstr "Próximas"
+
+msgid "Installment"
+msgstr "Cuota"
+
+msgid "Collect"
+msgstr "Cobrar"
+
+msgid "Days"
+msgstr "Días"
+
+msgid "Last action"
+msgstr "Última gestión"
+
+msgid "No actions"
+msgstr "Sin gestiones"
+
+msgid "Log action"
+msgstr "Gestionar"
+
+msgid "Was due"
+msgstr "Venció"
+
+msgid "Installment balance"
+msgstr "Saldo cuota"
+
+msgid "Due"
+msgstr "Vence"
+
+msgid "Scheduled installments"
+msgstr "Cuotas programadas"
+
+msgid "Upcoming (7 days)"
+msgstr "Próximas (7 días)"
+
+msgid "Past-due loans"
+msgstr "Créditos en mora"
+
+msgid "Customers with several loans"
+msgstr "Clientes con varios créditos"
+
+msgid "Nothing scheduled for today."
+msgstr "Nada programado para hoy."
+
+msgid "No past-due loans."
+msgstr "Sin créditos en mora."
+
+msgid "No overdue installments."
+msgstr "No hay cuotas vencidas."
+
+msgid "Nothing due in the next 7 days."
+msgstr "Sin vencimientos en los próximos 7 días."
+
+msgid "Log a collection action"
+msgstr "Registrar gestión de cobranza"
+
+msgid "Save action"
+msgstr "Guardar gestión"
+
+msgid "Back"
+msgstr "Volver"
+
+msgid "Situation"
+msgstr "Situación"
+
+msgid "Latest actions"
+msgstr "Últimas gestiones"
+
+msgid "No previous actions."
+msgstr "Sin gestiones previas."
+
+msgid "Collections for today"
+msgstr "Cobros de hoy"
+
+msgid "Log"
+msgstr "Gestión"
+
+msgid "No overdue installments. Well done."
+msgstr "Sin atrasos. Excelente."
+
+msgid "Next 3 days"
+msgstr "Próximos 3 días"
+
+msgid "Nothing due soon."
+msgstr "Sin vencimientos próximos."
+
+msgid "You have no collections scheduled for today."
+msgstr "No tienes cobros programados para hoy."
+
+msgid "There is nothing to show yet."
+msgstr "Todavía no hay información para mostrar."
+
+msgid "Create the first one"
+msgstr "Crear el primero"
+
+msgid "Businesses"
+msgstr "Negocios"
+
+msgid "My portfolio"
+msgstr "Mi cartera"
+
+msgid "Settings"
+msgstr "Configuración"
+
+msgid "Pagination"
+msgstr "Paginación"
+
+msgid "Previous"
+msgstr "Anterior"
+
+msgid "Next"
+msgstr "Siguiente"
+
+msgid "Page %(number)s of %(total)s (%(counter)s record)"
+msgid_plural "Page %(number)s of %(total)s (%(counter)s records)"
+msgstr[0] "Página %(number)s de %(total)s (%(counter)s registro)"
+msgstr[1] "Página %(number)s de %(total)s (%(counter)s registros)"
+
+msgid "Customer details"
+msgstr "Datos del cliente"
+
+msgid "Alternate"
+msgstr "Alterno"
+
+msgid "Postal code"
+msgstr "CP"
+
+msgid "Occupation"
+msgstr "Ocupación"
+
+msgid "CURP and RFC hidden: your role has no access to sensitive data."
+msgstr "CURP y RFC ocultos: tu rol no tiene acceso a datos sensibles."
+
+msgid "References"
+msgstr "Referencias"
+
+msgid "Loan history"
+msgstr "Historial de créditos"
+
+msgid "Total borrowed"
+msgstr "Total solicitado"
+
+msgid "Total paid"
+msgstr "Total pagado"
+
+msgid "Punctuality"
+msgstr "Puntualidad"
+
+msgid "Installments paid on time"
+msgstr "Cuotas pagadas a tiempo"
+
+msgid "Restructurings"
+msgstr "Reestructuraciones"
+
+msgid "This customer has no loans yet."
+msgstr "Este cliente aún no tiene créditos."
+
+msgid "No payments recorded."
+msgstr "Sin pagos registrados."
+
+msgid "Personal references (optional)"
+msgstr "Referencias personales (opcional)"
+
+msgid "Save the customer and edit them again to add more references."
+msgstr "Guarda el cliente y vuelve a editarlo para agregar más referencias."
+
+msgid "Save customer"
+msgstr "Guardar cliente"
+
+msgid "Code"
+msgstr "Código"
+
+msgid "No customers match the filter."
+msgstr "No hay clientes que coincidan con el filtro."
+
+msgid "Register customer"
+msgstr "Registrar cliente"
+
+msgid "all businesses"
+msgstr "todos los negocios"
+
+msgid "All businesses"
+msgstr "Todos los negocios"
+
+msgid "Scheduled vs. collected (last 14 days)"
+msgstr "Programado vs. cobrado (últimos 14 días)"
+
+msgid "Portfolio composition"
+msgstr "Composición de la cartera"
+
+msgid "A. Customers who must pay today"
+msgstr "A. Clientes que deben pagar hoy"
+
+msgid "View portfolio"
+msgstr "Ver cartera"
+
+msgid "B. Customers past due"
+msgstr "B. Clientes en mora"
+
+msgid "Collections board"
+msgstr "Tablero de cobranza"
+
+msgid "C. Customers who borrowed the most"
+msgstr "C. Clientes que más crédito han solicitado"
+
+msgid "By amount"
+msgstr "Por monto"
+
+msgid "By count"
+msgstr "Por número"
+
+msgid "No data in the period."
+msgstr "Sin datos en el periodo."
+
+msgid "D. Customers who paid the most"
+msgstr "D. Clientes que más han pagado"
+
+msgid "Period"
+msgstr "Periodo"
+
+msgid "Historical"
+msgstr "Histórico"
+
+msgid "No payments in the period."
+msgstr "Sin pagos en el periodo."
+
+msgid "E. Collector performance"
+msgstr "E. Desempeño de cobradores"
+
+msgid "The amount received is not profit: it includes principal and interest."
+msgstr "El monto recibido no es utilidad: incluye capital e interés."
+
+msgid "F. Recent activity"
+msgstr "F. Actividad reciente"
+
+msgid "New customers"
+msgstr "Clientes nuevos"
+
+msgid "No records."
+msgstr "Sin registros."
+
+msgid "Registered loans"
+msgstr "Créditos registrados"
+
+msgid "Disbursements"
+msgstr "Desembolsos"
+
+msgid "Scheduled"
+msgstr "Programado"
+
+msgid "Collected"
+msgstr "Cobrado"
+
+msgid "Money lent in the period"
+msgstr "Dinero prestado en el periodo"
+
+msgid "Agreed, not necessarily collected"
+msgstr "Pactado, no necesariamente cobrado"
+
+msgid "Confirmed payments in the period"
+msgstr "Pagos confirmados del periodo"
+
+msgid "Left to collect on live loans"
+msgstr "Por cobrar de créditos vigentes"
+
+msgid "Installments already past due"
+msgstr "Cuotas con fecha ya vencida"
+
+msgid "Active customers"
+msgstr "Clientes activos"
+
+msgid "With at least one live loan"
+msgstr "Con al menos un crédito vigente"
+
+msgid "Scheduled today"
+msgstr "Programado hoy"
+
+msgid "Collected today"
+msgstr "Recibido hoy"
+
+msgid "Collected / contractual total"
+msgstr "Recaudado / total contractual"
+
+msgid "Overdue / outstanding balance"
+msgstr "Saldo vencido / saldo pendiente"
+
+msgid "No installments scheduled for today."
+msgstr "No hay cuotas programadas para hoy."
+
+msgid "No past-due loans. Well done."
+msgstr "Ningún crédito en mora. Buen trabajo."
+
+msgid "No collectors registered."
+msgstr "No hay cobradores registrados."
+
+msgid "Period %(start)s - %(end)s"
+msgstr "Periodo %(start)s - %(end)s"
+
+msgid ""
+"Cancelling keeps the whole history. It is only possible while the loan has "
+"no payments applied; if it already received payments, reverse them first or "
+"use a restructuring."
+msgstr ""
+"La cancelación conserva todo el historial. Solo es posible si el crédito no "
+"tiene pagos aplicados; si ya recibió pagos, primero revérsalos o usa una "
+"reestructuración."
+
+msgid "Confirm the cancellation of this loan?"
+msgstr "¿Confirmas la cancelación del crédito?"
+
+msgid "Cancel loan"
+msgstr "Cancelar crédito"
+
+msgid "Cancel %(ref)s"
+msgstr "Cancelar %(ref)s"
+
+msgid "Review before granting:"
+msgstr "Revisa antes de otorgar:"
+
+msgid "Terms"
+msgstr "Condiciones"
+
+msgid "Total interest"
+msgstr "Interés total"
+
+msgid "Total payable"
+msgstr "Total a pagar"
+
+msgid "Installment amount"
+msgstr "Importe por cuota"
+
+msgid "Last installment"
+msgstr "Última cuota"
+
+msgid "First payment"
+msgstr "Primer pago"
+
+msgid "Final due date"
+msgstr "Vencimiento final"
+
+msgid "Customer history"
+msgstr "Historial del cliente"
+
+msgid "Historical punctuality"
+msgstr "Puntualidad histórica"
+
+msgid ""
+"The system does not approve or reject automatically: the decision is yours."
+msgstr ""
+"El sistema no aprueba ni rechaza automáticamente: la decisión es tuya."
+
+msgid "Proposed schedule"
+msgstr "Calendario propuesto"
+
+msgid "Confirm and register the loan"
+msgstr "Confirmar y registrar crédito"
+
+msgid "Change the terms"
+msgstr "Corregir condiciones"
+
+msgid "Approving freezes the rate and builds the final schedule. Continue?"
+msgstr ""
+"Al aprobar se congela la tasa y se genera el calendario definitivo. "
+"¿Continuar?"
+
+msgid "Approve"
+msgstr "Aprobar"
+
+msgid "Confirm the money was handed to the customer?"
+msgstr "¿Confirmas la entrega del dinero al cliente?"
+
+msgid "Disburse"
+msgstr "Desembolsar"
+
+msgid "Register payment"
+msgstr "Registrar pago"
+
+msgid "Pay off"
+msgstr "Liquidar"
+
+msgid "Restructure"
+msgstr "Reestructurar"
+
+msgid ""
+"This loan was already disbursed: its terms cannot be edited. Any adjustment "
+"is made with an audited payment reversal or an authorized restructuring."
+msgstr ""
+"Este crédito ya fue desembolsado: sus condiciones no se editan. Cualquier "
+"ajuste se hace con un reverso de pago auditado o una reestructuración "
+"autorizada."
+
+msgid "Approved by"
+msgstr "Aprobado por"
+
+msgid "View contract"
+msgstr "Ver contrato"
+
+msgid "Payment schedule"
+msgstr "Calendario de pagos"
+
+msgid "See full schedule"
+msgstr "Ver completo"
+
+msgid "Loan payments"
+msgstr "Pagos del crédito"
+
+msgid "The schedule is built when the loan is registered."
+msgstr "El calendario se genera al registrar el crédito."
+
+msgid "No payments recorded yet."
+msgstr "Aún no hay pagos registrados."
+
+msgid "restructuring of %(ref)s"
+msgstr "reestructuración de %(ref)s"
+
+msgid "Continue and review the terms"
+msgstr "Continuar y revisar condiciones"
+
+msgid "Preview"
+msgstr "Previsualización"
+
+msgid ""
+"This preview is informational. The server recomputes the interest, the total"
+" and the schedule when the loan is saved."
+msgstr ""
+"Esta previsualización es informativa. El servidor vuelve a calcular el "
+"interés, el total y el calendario al guardar el crédito."
+
+msgid "No loans match the filter."
+msgstr "No hay créditos con ese filtro."
+
+msgid "Register loan"
+msgstr "Registrar crédito"
+
+msgid "Confirm the restructuring?"
+msgstr "¿Confirmas la reestructuración?"
+
+msgid "Current loan"
+msgstr "Crédito actual"
+
+msgid "Original principal"
+msgstr "Capital original"
+
+msgid "Contractual total"
+msgstr "Total contractual"
+
+msgid "Balance to restructure"
+msgstr "Saldo a reestructurar"
+
+msgid "Restructure %(ref)s"
+msgstr "Reestructurar %(ref)s"
+
+msgid ""
+"Restructuring closes this loan (it stays as restructured, with its history "
+"intact) and creates a new one for the outstanding balance of %(balance)s "
+"MXN. The operation is recorded in the audit log."
+msgstr ""
+"La reestructuración cierra este crédito (queda como reestructurado, con su "
+"historial intacto) y crea uno nuevo por el saldo pendiente de %(balance)s "
+"MXN. La operación queda registrada en auditoría."
+
+msgid "Back to the loan"
+msgstr "Volver al crédito"
+
+msgid "Print"
+msgstr "Imprimir"
+
+msgid "Due date"
+msgstr "Vencimiento"
+
+msgid "Schedule of %(ref)s"
+msgstr "Calendario de %(ref)s"
+
+msgid "Mark all as read"
+msgstr "Marcar todas como leídas"
+
+msgid "Title"
+msgstr "Título"
+
+msgid "Message"
+msgstr "Mensaje"
+
+msgid "Read"
+msgstr "Leída"
+
+msgid "New"
+msgstr "Nueva"
+
+msgid "Open"
+msgstr "Abrir"
+
+msgid "No notifications."
+msgstr "Sin notificaciones."
+
+msgid "Reverse"
+msgstr "Reversar"
+
+msgid "View loan"
+msgstr "Ver crédito"
+
+msgid "Receipt"
+msgstr "Comprobante"
+
+msgid "Payment allocation"
+msgstr "Distribución del pago"
+
+msgid "This payment was not applied to any installment."
+msgstr "Este pago no se aplicó a ninguna cuota."
+
+msgid ""
+"This allocation makes it possible to rebuild the loan balance at any time."
+msgstr ""
+"Esta distribución permite reconstruir el saldo del crédito en cualquier "
+"momento."
+
+msgid "Payment %(ref)s"
+msgstr "Pago %(ref)s"
+
+msgid ""
+"Payment reversed on %(date)s by %(author)s. Reason: %(reason)s. The original"
+" record is kept for auditing."
+msgstr ""
+"Pago reversado el %(date)s por %(author)s. Motivo: %(reason)s. El registro "
+"original se conserva para auditoría."
+
+msgid "Confirmed total with the current filters"
+msgstr "Total confirmado con los filtros actuales"
+
+msgid "No payments match the filters."
+msgstr "No hay pagos con esos filtros."
+
+msgid "Quote"
+msgstr "Cálculo"
+
+msgid "Contractual balance"
+msgstr "Saldo contractual"
+
+msgid "Unearned interest"
+msgstr "Interés no devengado"
+
+msgid "Authorized discount"
+msgstr "Descuento autorizado"
+
+msgid "Amount to receive today"
+msgstr "Importe a recibir hoy"
+
+msgid ""
+"The discount is recorded as an audited write-off, not as money received. "
+"With a discount of 0 the customer pays the full contractual balance."
+msgstr ""
+"El descuento se registra como una condonación auditada, no como dinero "
+"recibido. Con descuento 0 el cliente paga el saldo contractual completo."
+
+msgid "Confirm the payoff of this loan?"
+msgstr "¿Confirmas la liquidación del crédito?"
+
+msgid "Settle the loan"
+msgstr "Liquidar crédito"
+
+msgid "Payment details"
+msgstr "Datos del abono"
+
+msgid "Loan situation"
+msgstr "Situación del crédito"
+
+msgid ""
+"The payment is applied first to the oldest overdue installments and, within "
+"each installment, first to interest and then to principal."
+msgstr ""
+"El pago se aplica primero a las cuotas vencidas más antiguas y, dentro de "
+"cada cuota, primero al interés y después al capital."
+
+msgid "Next installment (%(number)s)"
+msgstr "Próxima cuota (%(number)s)"
+
+msgid ""
+"The payment is not deleted: it is marked as reversed, with its reason and "
+"author, and the loan balance is recomputed from scratch."
+msgstr ""
+"El pago no se elimina: queda marcado como reversado, con su motivo y su "
+"autor, y el saldo del crédito se recalcula desde cero."
+
+msgid "Confirm the reversal of this payment?"
+msgstr "¿Confirmas el reverso de este pago?"
+
+msgid "Reverse payment"
+msgstr "Reversar pago"
+
+msgid "Reverse payment %(ref)s"
+msgstr "Reversar pago %(ref)s"
+
+msgid ""
+"Every report uses real data and respects your permissions and authorized "
+"businesses."
+msgstr ""
+"Todos los reportes usan datos reales y respetan tus permisos y negocios "
+"autorizados."
+
+msgid "Catalog"
+msgstr "Catálogo"
+
+msgid "Apply filters"
+msgstr "Aplicar filtros"
+
+msgid "No data for the selected filters."
+msgstr "Sin datos para los filtros seleccionados."
+
+msgid "%(counter)s record"
+msgid_plural "%(counter)s records"
+msgstr[0] "%(counter)s registro"
+msgstr[1] "%(counter)s registros"
+
+msgid "Showing the first %(limit)s. Export to see everything."
+msgstr "Se muestran los primeros %(limit)s. Exporta para ver todo."
+
+msgid "Role"
+msgstr "Rol"
+
+msgid "Assigned customers"
+msgstr "Clientes asignados"
+
+msgid "Assigned loans"
+msgstr "Créditos asignados"
+
+msgid "Created"
+msgstr "Alta"
+
+msgid "Yes,No"
+msgstr "Sí,No"
+
+msgid "Name or username"
+msgstr "Nombre o usuario"
+
+msgid "Name"
+msgstr "Nombre"
+
+msgid "Not assigned"
+msgstr "Sin asignar"
+
+msgid "View"
+msgstr "Ver"
+
+msgid "There are no users."
+msgstr "No hay usuarios."
+
+msgid "Loan, payment and collection management (MXN)"
+msgstr "Administración de préstamos, pagos y cobranza (MXN)"
+
+msgid "Wrong username or password."
+msgstr "Usuario o contraseña incorrectos."
+
+msgid "all"
+msgstr "todos"

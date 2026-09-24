@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{{ report.name }}{% endblock %}
+{% block subheading %}<p class="text-secondary small mb-0">{{ report.description }}</p>{% endblock %}
+{% block actions %}
+  <a class="btn btn-sm btn-outline-soft" href="?{{ querystring }}&format=excel"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+  <a class="btn btn-sm btn-outline-soft" href="?{{ querystring }}&format=csv"><i class="bi bi-filetype-csv"></i> CSV</a>
+  <a class="btn btn-sm btn-outline-soft" href="{% url 'reports:catalog' %}">{% trans "Catalog" %}</a>
+{% endblock %}
+{% block content %}
+<form class="filters" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-2">{{ form.business.label_tag }}{{ form.business }}</div>
+    <div class="col-md-2">{{ form.start.label_tag }}{{ form.start }}</div>
+    <div class="col-md-2">{{ form.end.label_tag }}{{ form.end }}</div>
+    <div class="col-md-2">{{ form.status.label_tag }}{{ form.status }}</div>
+    <div class="col-md-2">{{ form.collector.label_tag }}{{ form.collector }}</div>
+    <div class="col-md-2">{{ form.method.label_tag }}{{ form.method }}</div>
+  </div>
+  <div class="mt-2"><button class="btn btn-primary btn-sm">{% trans "Apply filters" %}</button></div>
+</form>
+
+<div class="card-panel">
+  <div class="card-panel-header">
+    <h2>{% blocktrans count counter=row_count %}{{ counter }} record{% plural %}{{ counter }} records{% endblocktrans %}</h2>
+    {% if row_count > limit %}<span class="small text-secondary">{% blocktrans %}Showing the first {{ limit }}. Export to see everything.{% endblocktrans %}</span>{% endif %}
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr>{% for key, label in report.columns %}<th>{{ label }}</th>{% endfor %}</tr></thead>
+      <tbody>
+      {% for row in rows %}
+        <tr>{% for key, label in report.columns %}<td>{{ row|get_item:key|default_if_none:"-" }}</td>{% endfor %}</tr>
+      {% empty %}
+        <tr><td colspan="{{ report.columns|length }}">{% include "components/empty_state.html" with message=_("No data for the selected filters.") icon="bi-bar-chart" %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

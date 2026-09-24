@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{% blocktrans with ref=loan.reference %}Schedule of {{ ref }}{% endblocktrans %}{% endblock %}
+{% block actions %}<a class="btn btn-sm btn-outline-soft" href="{{ loan.get_absolute_url }}">{% trans "Back to the loan" %}</a>
+<button class="btn btn-sm btn-outline-soft" onclick="window.print()">{% trans "Print" %}</button>{% endblock %}
+{% block content %}
+<div class="card-panel">
+  <div class="card-panel-header">
+    <h2>{{ loan.customer }} &middot; {{ loan.get_payment_frequency_display }} &middot; {{ loan.installment_count }}</h2>
+    <span class="small text-secondary">{% trans "Contractual total" %} {{ loan.total_payable|mxn }}</span>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>#</th><th>{% trans "Due date" %}</th><th class="num">{% trans "Principal" %}</th>
+        <th class="num">{% trans "Interest" %}</th><th class="num">{% trans "Amount" %}</th>
+        <th class="num">{% trans "Paid" %}</th><th class="num">{% trans "Balance" %}</th>
+        <th>{% trans "Status" %}</th><th class="num">{% trans "Past due" %}</th></tr></thead>
+      <tbody>
+      {% for installment in installments %}
+        <tr><td>{{ installment.number }}</td><td>{{ installment.due_date|date:"d/m/Y" }}</td>
+          <td class="num">{{ installment.scheduled_principal|mxn }}</td>
+          <td class="num">{{ installment.scheduled_interest|mxn }}</td>
+          <td class="num">{{ installment.scheduled_amount|mxn }}</td>
+          <td class="num">{{ installment.amount_paid|mxn }}</td>
+          <td class="num">{{ installment.balance|mxn }}</td>
+          <td><span class="badge text-bg-{{ installment.status|badge }} status-badge">{{ installment.get_status_display }}</span></td>
+          <td class="num">{% if installment.days_past_due %}{{ installment.days_past_due }} d{% else %}-{% endif %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

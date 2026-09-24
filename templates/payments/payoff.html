@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{% trans "Early payoff" %}{% endblock %}
+{% block subheading %}<p class="text-secondary small mb-0">{{ loan.reference }} &middot; {{ loan.customer }}</p>{% endblock %}
+{% block content %}
+<div class="row g-3"><div class="col-lg-6">
+  {% if not quote.allowed %}
+    <div class="alert alert-danger">{% trans "This business does not allow early payoff." %}</div>
+  {% endif %}
+  <div class="card-panel mb-3"><div class="card-panel-header"><h2>{% trans "Quote" %}</h2></div>
+    <div class="card-panel-body"><dl class="row mb-0">
+      <dt class="col-7">{% trans "Contractual balance" %}</dt><dd class="col-5 text-end">{{ quote.contractual_balance|mxn }}</dd>
+      <dt class="col-7">{% trans "Unearned interest" %}</dt><dd class="col-5 text-end">{{ quote.unearned_interest|mxn }}</dd>
+      <dt class="col-7">{% trans "Authorized discount" %}</dt><dd class="col-5 text-end">- {{ quote.discount|mxn }}</dd>
+      <dt class="col-7 fw-semibold">{% trans "Amount to receive today" %}</dt><dd class="col-5 text-end fw-semibold">{{ quote.payoff_amount|mxn }}</dd>
+    </dl>
+    <p class="form-hint mt-3 mb-0">
+      {% trans "The discount is recorded as an audited write-off, not as money received. With a discount of 0 the customer pays the full contractual balance." %}
+    </p>
+    </div>
+  </div>
+  {% if quote.allowed %}
+  <div class="card-panel"><div class="card-panel-body">
+    <form method="post" data-submit-once data-confirm="{% trans 'Confirm the payoff of this loan?' %}">
+      {% csrf_token %}
+      {% include "components/form.html" %}
+      <button class="btn btn-success" type="submit">{% trans "Settle the loan" %}</button>
+      <a class="btn btn-outline-soft" href="{{ loan.get_absolute_url }}">{% trans "Back" %}</a>
+    </form>
+  </div></div>
+  {% endif %}
+</div></div>
+{% endblock %}

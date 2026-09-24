@@ -1,0 +1,48 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{% trans "Loans" %}{% endblock %}
+{% block actions %}
+  {% if user_permissions.create_loan %}
+    <a class="btn btn-primary btn-sm" href="{% url 'loans:create' %}"><i class="bi bi-plus-lg"></i> {% trans "New loan" %}</a>
+  {% endif %}
+{% endblock %}
+{% block content %}
+<form class="filters" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-3">{{ filter_form.q.label_tag }}{{ filter_form.q }}</div>
+    <div class="col-md-2">{{ filter_form.business.label_tag }}{{ filter_form.business }}</div>
+    <div class="col-md-2">{{ filter_form.status.label_tag }}{{ filter_form.status }}</div>
+    <div class="col-md-2">{{ filter_form.collector.label_tag }}{{ filter_form.collector }}</div>
+    <div class="col-md-1">{{ filter_form.start.label_tag }}{{ filter_form.start }}</div>
+    <div class="col-md-1">{{ filter_form.end.label_tag }}{{ filter_form.end }}</div>
+    <div class="col-md-1 d-grid"><button class="btn btn-primary btn-sm">{% trans "Filter" %}</button></div>
+  </div>
+</form>
+<div class="card-panel">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>{% trans "Reference" %}</th><th>{% trans "Customer" %}</th><th>{% trans "Disbursed" %}</th>
+        <th class="num">{% trans "Principal" %}</th><th class="num">{% trans "Interest" %}</th>
+        <th class="num">{% trans "Total" %}</th><th class="num">{% trans "Balance" %}</th>
+        <th class="num">{% trans "Past due" %}</th><th>{% trans "Status" %}</th></tr></thead>
+      <tbody>
+      {% for loan in loans %}
+        <tr>
+          <td><a href="{{ loan.get_absolute_url }}" class="fw-semibold">{{ loan.reference }}</a></td>
+          <td>{{ loan.customer }}<span class="d-block text-secondary small">{{ loan.business.trade_name }}</span></td>
+          <td>{{ loan.disbursement_date|date:"d/m/Y"|default:"-" }}</td>
+          <td class="num">{{ loan.principal|mxn }}</td>
+          <td class="num">{{ loan.total_interest|mxn }}</td>
+          <td class="num">{{ loan.total_payable|mxn }}</td>
+          <td class="num fw-semibold">{{ loan.outstanding_balance|mxn }}</td>
+          <td class="num">{% if loan.days_past_due %}<span class="text-danger">{{ loan.days_past_due }} d</span>{% else %}-{% endif %}</td>
+          <td><span class="badge text-bg-{{ loan.status|badge }} status-badge">{{ loan.get_status_display }}</span></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="9">{% include "components/empty_state.html" with message=_("No loans match the filter.") icon="bi-file-earmark-text" action_url="/loans/new/" action_label=_("Register loan") %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "components/pagination.html" %}
+{% endblock %}

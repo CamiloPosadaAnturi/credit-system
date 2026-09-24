@@ -1,98 +1,101 @@
-"""Mixins de vistas: autenticacion, permisos por rol y aislamiento por negocio."""
+"""View mixins: authentication, role permissions and per-business isolation."""
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.utils.translation import gettext_lazy as _
 
-from apps.usuarios import permisos
+from apps.users import permissions
 
 
-class AccionRequeridaMixin(LoginRequiredMixin):
-    """Exige que el usuario pueda ejecutar ``accion`` (matriz de permisos)."""
+class ActionRequiredMixin(LoginRequiredMixin):
+    """Require the user to be allowed to run ``action`` (permission matrix)."""
 
-    accion: str | None = None
+    action: str | None = None
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return super().dispatch(request, *args, **kwargs)
-        if self.accion and not permisos.puede(request.user, self.accion):
-            raise PermissionDenied("No tienes autorizacion para esta operacion.")
+        if self.action and not permissions.can(request.user, self.action):
+            raise PermissionDenied(_("You are not allowed to perform this operation."))
         return super().dispatch(request, *args, **kwargs)
 
 
-class NegocioScopedMixin:
-    """Restringe el queryset a los negocios autorizados del usuario.
+class BusinessScopedMixin:
+    """Restrict the queryset to the businesses the user is allowed to see.
 
-    ``campo_negocio`` es la ruta ORM hacia el negocio desde el modelo
-    de la vista (por ejemplo ``"credito__negocio"``).
+    ``business_field`` is the ORM path to the business from the view's model
+    (for example ``"loan__business"``).
     """
 
-    campo_negocio: str = "negocio"
-    campo_cobrador: str | None = None
+    business_field: str = "business"
+    collector_field: str | None = None
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        qs = permisos.filtrar_por_negocio(qs, self.request.user, self.campo_negocio)
-        if self.campo_cobrador:
-            qs = permisos.filtrar_cartera_cobrador(qs, self.request.user, self.campo_cobrador)
-        return qs
+        queryset = super().get_queryset()
+        queryset = permissions.filter_by_business(
+            queryset, self.request.user, self.business_field)
+        if self.collector_field:
+            queryset = permissions.filter_collector_portfolio(
+                queryset, self.request.user, self.collector_field)
+        return queryset
 
 
-class NegocioActivoMixin:
-    """Expone el negocio seleccionado en la barra superior (parametro ?negocio=)."""
+class SelectedBusinessMixin:
+    """Expose the business selected through the ``?business=`` parameter."""
 
-    def get_negocio_seleccionado(self):
-        negocios = permisos.negocios_permitidos(self.request.user)
-        valor = self.request.GET.get("negocio")
-        if valor:
-            return negocios.filter(pk=valor).first()
+    def get_selected_business(self):
+        businesses = permissions.allowed_businesses(self.request.user)
+        value = self.request.GET.get("business")
+        if value:
+            return businesses.filter(pk=value).first()
         return None
 
     def get_context_data(self, **kwargs):
-        contexto = super().get_context_data(**kwargs)
-        contexto["negocio_seleccionado"] = self.get_negocio_seleccionado()
-        contexto["negocios_disponibles"] = permisos.negocios_permitidos(self.request.user)
-        return contexto
+        context = super().get_context_data(**kwargs)
+        context["selected_business"] = self.get_selected_business()
+        context["available_businesses"] = permissions.allowed_businesses(self.request.user)
+        return context
 
 
-class BusquedaMixin:
-    """Busqueda simple por ?q= sobre ``campos_busqueda``."""
+class SearchMixin:
+    """Simple ``?q=`` search over ``search_fields``."""
 
-    campos_busqueda: list[str] = []
+    search_fields: list[str] = []
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        termino = (self.request.GET.get("q") or "").strip()
-        if termino and self.campos_busqueda:
+        queryset = super().get_queryset()
+        term = (self.request.GET.get("q") or "").strip()
+        if term and self.search_fields:
             from django.db.models import Q
 
-            filtro = Q()
-            for campo in self.campos_busqueda:
-                filtro |= Q(**{f"{campo}__icontains": termino})
-            qs = qs.filter(filtro)
-        return qs
+            lookup = Q()
+            for field in self.search_fields:
+                lookup |= Q(**{f"{field}__icontains": term})
+            queryset = queryset.filter(lookup)
+        return queryset
 
     def get_context_data(self, **kwargs):
-        contexto = super().get_context_data(**kwargs)
-        contexto["q"] = self.request.GET.get("q", "")
-        contexto["querystring"] = self.querystring_sin_pagina()
-        return contexto
+        context = super().get_context_data(**kwargs)
+        context["q"] = self.request.GET.get("q", "")
+        context["querystring"] = self.querystring_without_page()
+        return context
 
-    def querystring_sin_pagina(self) -> str:
-        parametros = self.request.GET.copy()
-        parametros.pop("page", None)
-        return parametros.urlencode()
+    def querystring_without_page(self) -> str:
+        parameters = self.request.GET.copy()
+        parameters.pop("page", None)
+        return parameters.urlencode()
 
 
 class AuditableMixin:
-    """Guarda quien crea y quien modifica el registro."""
+    """Store who created and who last updated the record."""
 
     def form_valid(self, form):
         if not form.instance.pk:
-            form.instance.creado_por = self.request.user
-        form.instance.actualizado_por = self.request.user
+            form.instance.created_by = self.request.user
+        form.instance.updated_by = self.request.user
         return super().form_valid(form)
 
 
-def exigir_acceso_a_negocio(usuario, negocio) -> None:
-    if negocio is None:
-        raise PermissionDenied("Operacion sin negocio asociado.")
-    permisos.exigir_negocio(usuario, negocio)
+def require_business_access(user, business) -> None:
+    if business is None:
+        raise PermissionDenied(_("Operation without an associated business."))
+    permissions.require_business(user, business)

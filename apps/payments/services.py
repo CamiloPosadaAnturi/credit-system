@@ -142,7 +142,9 @@ def register_payment(
 
     log(
         AuditAction.PAYMENT,
-        f"Payment {payment.reference} of {amount} MXN applied to {loan.reference}",
+        _("Payment %(reference)s of %(amount)s MXN applied to %(loan)s") % {
+            "reference": payment.reference, "amount": amount, "loan": loan.reference,
+        },
         target=payment, user=user, business=loan.business,
         data={"loan": loan.reference, "amount": str(amount),
               "allocated": str(allocated), "overpayment": str(overpayment),
@@ -224,7 +226,9 @@ def reverse_payment(payment: Payment, user, reason: str) -> Payment:
 
     log(
         AuditAction.REVERSAL,
-        f"Payment {payment.reference} reversed ({payment.amount} MXN): {reason}",
+        _("Payment %(reference)s reversed (%(amount)s MXN): %(reason)s") % {
+            "reference": payment.reference, "amount": payment.amount, "reason": reason,
+        },
         target=payment, user=user, business=payment.business,
         data={"loan": loan.reference, "amount": str(payment.amount), "reason": reason},
     )
@@ -281,7 +285,7 @@ def settle_early(
         user=user,
         method=method,
         external_reference=external_reference,
-        notes=notes or "Early payoff",
+        notes=notes or _("Early payoff"),
         idempotency_key=idempotency_key,
         force_duplicate=True,
     )
@@ -293,8 +297,8 @@ def settle_early(
             user=user,
             method=PaymentMethod.OTHER,
             kind=PaymentKind.WRITE_OFF,
-            notes=(f"Authorized write-off for the early payoff of "
-                   f"{loan.reference} (discount on unearned interest)"),
+            notes=_("Authorized write-off for the early payoff of %(reference)s "
+                    "(discount on unearned interest)") % {"reference": loan.reference},
             force_duplicate=True,
         )
     return payment
@@ -309,7 +313,9 @@ def _notify_if_settled(loan: Loan) -> None:
 
         create_notification(
             business=loan.business,
-            title=f"Loan {loan.reference} settled",
-            message=f"{loan.customer} settled their loan of {loan.principal} MXN.",
+            title=_("Loan %(reference)s settled") % {"reference": loan.reference},
+            message=_("%(customer)s settled their loan of %(amount)s MXN.") % {
+                "customer": loan.customer, "amount": loan.principal,
+            },
             url=loan.get_absolute_url(),
         )

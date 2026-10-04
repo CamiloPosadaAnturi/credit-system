@@ -128,8 +128,10 @@ class LogCollectionActionView(ActionRequiredMixin, View):
             action.save()
             log(
                 AuditAction.COLLECTION,
-                f"Collection action ({action.get_action_type_display()}) "
-                f"on {loan.reference}",
+                _("Collection action (%(type)s) on %(reference)s") % {
+                    "type": action.get_action_type_display(),
+                    "reference": loan.reference,
+                },
                 target=action, user=request.user, business=loan.business,
                 data={"outcome": action.outcome,
                       "promised_amount": str(action.promised_amount)},

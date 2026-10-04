@@ -34,9 +34,10 @@ NAMES = [
     ("Lucia", "Cabrera", "Fuentes"), ("Raul", "Espinoza", "Montes"),
     ("Monica", "Silva", "Herrera"), ("Javier", "Duran", "Peralta"),
 ]
-OCCUPATIONS = ["Shopkeeper", "Taxi driver", "Hairdresser", "Street vendor",
-               "Seamstress", "Carpenter", "Housekeeper", "Grocer",
-               "Mechanic", "Baker"]
+# Values stored in the database and shown in the UI, so they are in Spanish.
+OCCUPATIONS = ["Comerciante", "Taxista", "Estilista", "Vendedor ambulante",
+               "Costurera", "Carpintero", "Trabajadora del hogar", "Abarrotero",
+               "Mecánico", "Panadero"]
 CITIES = [("Guadalajara", "JAL"), ("Monterrey", "NL"), ("Puebla", "PUE"),
           ("Leon", "GTO"), ("Merida", "YUC")]
 
@@ -70,7 +71,7 @@ class Command(BaseCommand):
             address="Av. Ficticia 100", city="Guadalajara", state="JAL",
             interest_rate=Decimal("0.4000"), installment_count=4,
             payment_frequency="weekly", grace_days=1,
-            notes="Demo business. Fictitious data.",
+            notes="Negocio de demostración. Datos ficticios.",
         )
         second_business = Business.objects.create(
             trade_name="[DEMO] Sucursal Norte",
@@ -79,7 +80,7 @@ class Command(BaseCommand):
             payment_frequency="biweekly", grace_days=3,
             allows_early_payoff=True,
             early_payoff_discount=Decimal("0.2000"),
-            notes="Demo branch. Fictitious data.",
+            notes="Sucursal de demostración. Datos ficticios.",
         )
 
         admin = self._user("demo_admin", Role.ADMIN, "Alma", "Administradora",
@@ -110,12 +111,12 @@ class Command(BaseCommand):
                 postal_code=f"{random.randint(10000, 99999)}",
                 collector=collector,
                 status=CustomerStatus.RESTRICTED if index == 19 else CustomerStatus.ACTIVE,
-                notes="Demo customer (fictitious data).",
+                notes="Cliente de demostración (datos ficticios).",
                 created_by=admin,
             )
             PersonalReference.objects.create(
-                customer=customer, name="Demo Reference",
-                relationship=random.choice(["Brother", "Neighbour", "Friend", "Cousin"]),
+                customer=customer, name="Referencia de demostración",
+                relationship=random.choice(["Hermano", "Vecino", "Amigo", "Primo"]),
                 phone=f"55{random.randint(10000000, 99999999)}")
             customers.append(customer)
 
@@ -172,7 +173,7 @@ class Command(BaseCommand):
                 promised_amount=Decimal(random.choice([0, 350, 700])),
                 promise_date=today + dt.timedelta(days=3),
                 next_contact_date=today + dt.timedelta(days=1),
-                notes="Demo collection action.")
+                notes="Acción de cobranza de demostración.")
             created["past_due"] += 1
 
         # --- Loans pending approval -------------------------------------------
@@ -184,7 +185,7 @@ class Command(BaseCommand):
                 frequency=customer.business.payment_frequency,
                 first_payment_date=today + dt.timedelta(days=7), user=manager,
                 collector=customer.collector,
-                notes="Demo application pending approval.")
+                notes="Solicitud de demostración pendiente de aprobación.")
             created["pending"] += 1
 
         self.stdout.write(self.style.SUCCESS("Demo data loaded:"))
@@ -219,7 +220,7 @@ class Command(BaseCommand):
             first_payment_date=first_payment_date, user=user,
             collector=customer.collector,
             application_date=first_payment_date - dt.timedelta(days=1),
-            notes="Demo loan.")
+            notes="Crédito de demostración.")
         loan_services.approve_loan(loan, user,
                                    date=first_payment_date - dt.timedelta(days=1))
         loan.refresh_from_db()

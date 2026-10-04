@@ -117,6 +117,10 @@ Luego `python manage.py migrate`. Si la contrasena tiene `@`, `:`, `/`, `#` o
 | Cambiar un texto del espanol | Edita `locale/es/LC_MESSAGES/django.po` y ejecuta `python scripts/compile_messages.py` |
 | Agregar textos nuevos al catalogo | `python scripts/extract_messages.py es`, traduce, y compila |
 
+El idioma lo fija **solo** `DJANGO_LANGUAGE_CODE`: la app no sigue el idioma
+del navegador (no se usa `LocaleMiddleware`), asi que un navegador en ingles
+tambien ve la interfaz en espanol.
+
 Los scripts de `scripts/` usan `polib` (`pip install polib`) y **no requieren
 instalar las herramientas gettext**, que en Windows son un estorbo. Si prefieres
 las de Django, `makemessages` y `compilemessages` funcionan igual.

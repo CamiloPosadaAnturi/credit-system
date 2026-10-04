@@ -119,7 +119,9 @@ def create_loan(
     generate_schedule(loan)
     log(
         AuditAction.CREATE,
-        f"Loan {loan.reference} created for {customer} for {money(principal)} MXN",
+        _("Loan %(reference)s created for %(customer)s for %(amount)s MXN") % {
+            "reference": loan.reference, "customer": customer, "amount": money(principal),
+        },
         target=loan, user=user, business=business,
         data={"principal": str(loan.principal), "interest": str(interest),
               "total": str(total), "installments": installment_count},
@@ -195,7 +197,9 @@ def approve_loan(loan: Loan, user, date: dt.date | None = None) -> Loan:
     generate_schedule(loan)
     log(
         AuditAction.APPROVE,
-        f"Loan {loan.reference} approved (total {loan.total_payable} MXN)",
+        _("Loan %(reference)s approved (total %(total)s MXN)") % {
+            "reference": loan.reference, "total": loan.total_payable,
+        },
         target=loan, user=user,
         data={"rate": str(loan.interest_rate), "mode": loan.interest_mode,
               "interest": str(loan.total_interest)},
@@ -216,7 +220,9 @@ def disburse_loan(loan: Loan, user, date: dt.date | None = None) -> Loan:
     refresh_status(loan)
     log(
         AuditAction.DISBURSE,
-        f"Loan {loan.reference} disbursed for {loan.principal} MXN",
+        _("Loan %(reference)s disbursed for %(amount)s MXN") % {
+            "reference": loan.reference, "amount": loan.principal,
+        },
         target=loan, user=user,
         data={"disbursement_date": str(loan.disbursement_date)},
     )
@@ -242,7 +248,10 @@ def cancel_loan(loan: Loan, user, reason: str) -> Loan:
     loan.save()
     loan.installments.update(status=InstallmentStatus.PENDING)
     log(
-        AuditAction.CANCEL, f"Loan {loan.reference} cancelled: {reason}",
+        AuditAction.CANCEL,
+        _("Loan %(reference)s cancelled: %(reason)s") % {
+            "reference": loan.reference, "reason": reason,
+        },
         target=loan, user=user,
     )
     return loan
@@ -284,7 +293,7 @@ def restructure_loan(
         interest_mode=interest_mode or loan.interest_mode,
         interest_rate=interest_rate if interest_rate is not None else loan.interest_rate,
         rate_period=loan.rate_period,
-        notes=notes or f"Restructuring of {loan.reference}",
+        notes=notes or _("Restructuring of %(reference)s") % {"reference": loan.reference},
         status=LoanStatus.APPROVED,
     )
     new_loan.original_loan = loan
@@ -300,8 +309,10 @@ def restructure_loan(
     loan.save(update_fields=["status", "outstanding_balance", "updated_by", "updated_at"])
     log(
         AuditAction.RESTRUCTURE,
-        f"Loan {loan.reference} restructured into {new_loan.reference} "
-        f"for {balance} MXN",
+        _("Loan %(reference)s restructured into %(new_reference)s for %(amount)s MXN") % {
+            "reference": loan.reference, "new_reference": new_loan.reference,
+            "amount": balance,
+        },
         target=loan, user=user,
         data={"restructured_balance": str(balance), "new_reference": new_loan.reference},
     )
@@ -401,7 +412,10 @@ def refresh_status(loan: Loan) -> str:
         if new_status == LoanStatus.SETTLED:
             log(
                 AuditAction.UPDATE,
-                f"Loan {loan.reference} settled (previous status: {previous})",
+                _("Loan %(reference)s settled (previous status: %(previous)s)") % {
+                    "reference": loan.reference,
+                    "previous": dict(LoanStatus.choices).get(previous, previous),
+                },
                 target=loan,
             )
     return loan.status

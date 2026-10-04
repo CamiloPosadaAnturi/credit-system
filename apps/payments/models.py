@@ -174,5 +174,8 @@ class PaymentAllocation(models.Model):
         ]
 
     def __str__(self) -> str:
-        return (f"{self.payment.reference} -> installment "
-                f"{self.installment.number}: {self.amount}")
+        return _("%(payment)s -> installment %(number)s: %(amount)s") % {
+            "payment": self.payment.reference,
+            "number": self.installment.number,
+            "amount": self.amount,
+        }

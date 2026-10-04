@@ -50,7 +50,6 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -115,6 +114,9 @@ LOGOUT_REDIRECT_URL = "users:login"
 # --- Internationalization ------------------------------------------------
 # Source strings are written in English; locale/es holds the Spanish
 # translation that the UI actually shows by default.
+# LocaleMiddleware is intentionally NOT installed: the interface language is
+# fixed by DJANGO_LANGUAGE_CODE and does not follow the browser's
+# Accept-Language header (otherwise an English browser shows English).
 LANGUAGE_CODE = env("DJANGO_LANGUAGE_CODE")
 TIME_ZONE = env("DJANGO_TIME_ZONE")
 USE_I18N = True
@@ -123,7 +125,7 @@ USE_THOUSAND_SEPARATOR = True
 LOCALE_PATHS = [BASE_DIR / "locale"]
 
 LANGUAGES = [
-    ("es", "Espanol"),
+    ("es", "Español"),
     ("en", "English"),
 ]
 

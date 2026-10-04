@@ -65,7 +65,9 @@ class ReportView(ActionRequiredMixin, View):
             return redirect("reports:detail", key=report.key)
         log(
             AuditAction.EXPORT,
-            f"Exported the report '{report.name}' as {export_format}",
+            _("Exported the report '%(name)s' as %(format)s") % {
+                "name": report.name, "format": export_format,
+            },
             user=request.user,
             business=filters.get("business"),
             data={"rows": len(rows), "filters": {

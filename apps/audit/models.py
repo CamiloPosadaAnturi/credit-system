@@ -3,7 +3,9 @@
 Audit records are immutable: they are appended, never edited or deleted
 from the application.
 """
+from django.apps import apps
 from django.db import models
+from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 
 
@@ -47,6 +49,18 @@ class AuditLog(models.Model):
             models.Index(fields=["model_name", "object_id"]),
             models.Index(fields=["action", "-created_at"]),
         ]
+
+    @property
+    def model_label(self) -> str:
+        """Translated name of the audited model.
+
+        ``model_name`` stores the class name (``Loan``, ``Payment``...) so the
+        data stays language independent; the UI shows the verbose name.
+        """
+        for model in apps.get_models():
+            if model.__name__ == self.model_name:
+                return capfirst(model._meta.verbose_name)
+        return self.model_name
 
     def __str__(self) -> str:
         return (f"{self.created_at:%Y-%m-%d %H:%M} {self.get_action_display()} - "

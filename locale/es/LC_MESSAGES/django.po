@@ -39,7 +39,7 @@ msgid "Payment reversal"
 msgstr "Reverso de pago"
 
 msgid "Collection action"
-msgstr "gestión de cobranza"
+msgstr "Gestión de cobranza"
 
 msgid "System access"
 msgstr "Acceso al sistema"
@@ -537,7 +537,7 @@ msgid "The customer is now %(status)s."
 msgstr "El cliente quedó como %(status)s."
 
 msgid "Dashboard"
-msgstr "Dashboard"
+msgstr "Panel"
 
 msgid "Loans"
 msgstr "Créditos"
@@ -1438,10 +1438,10 @@ msgid "Overdue portfolio rate"
 msgstr "% cartera vencida"
 
 msgid "Dashboard - %(name)s"
-msgstr "Dashboard - %(name)s"
+msgstr "Panel - %(name)s"
 
 msgid "Business dashboard"
-msgstr "Dashboard del negocio"
+msgstr "Panel del negocio"
 
 msgid "Edit"
 msgstr "Editar"
@@ -2205,3 +2205,54 @@ msgstr "Usuario o contraseña incorrectos."
 
 msgid "all"
 msgstr "todos"
+
+msgid "Collection action (%(type)s) on %(reference)s"
+msgstr "Gestión de cobranza (%(type)s) del crédito %(reference)s"
+
+msgid "Loan %(reference)s created for %(customer)s for %(amount)s MXN"
+msgstr "Crédito %(reference)s creado para %(customer)s por %(amount)s MXN"
+
+msgid "Loan %(reference)s approved (total %(total)s MXN)"
+msgstr "Crédito %(reference)s aprobado (total %(total)s MXN)"
+
+msgid "Loan %(reference)s disbursed for %(amount)s MXN"
+msgstr "Crédito %(reference)s desembolsado por %(amount)s MXN"
+
+msgid "Loan %(reference)s cancelled: %(reason)s"
+msgstr "Crédito %(reference)s cancelado: %(reason)s"
+
+msgid ""
+"Loan %(reference)s restructured into %(new_reference)s for %(amount)s MXN"
+msgstr ""
+"Crédito %(reference)s reestructurado en %(new_reference)s por %(amount)s MXN"
+
+msgid "Restructuring of %(reference)s"
+msgstr "Reestructuración de %(reference)s"
+
+msgid "Loan %(reference)s settled (previous status: %(previous)s)"
+msgstr "Crédito %(reference)s liquidado (estado anterior: %(previous)s)"
+
+msgid "%(payment)s -> installment %(number)s: %(amount)s"
+msgstr "%(payment)s -> cuota %(number)s: %(amount)s"
+
+msgid "Payment %(reference)s of %(amount)s MXN applied to %(loan)s"
+msgstr "Pago %(reference)s de %(amount)s MXN aplicado al crédito %(loan)s"
+
+msgid "Payment %(reference)s reversed (%(amount)s MXN): %(reason)s"
+msgstr "Pago %(reference)s reversado (%(amount)s MXN): %(reason)s"
+
+msgid ""
+"Authorized write-off for the early payoff of %(reference)s (discount on "
+"unearned interest)"
+msgstr ""
+"Condonación autorizada por la liquidación anticipada de %(reference)s "
+"(descuento sobre intereses no devengados)"
+
+msgid "Loan %(reference)s settled"
+msgstr "Crédito %(reference)s liquidado"
+
+msgid "%(customer)s settled their loan of %(amount)s MXN."
+msgstr "%(customer)s liquidó su crédito de %(amount)s MXN."
+
+msgid "Exported the report '%(name)s' as %(format)s"
+msgstr "Se exportó el reporte '%(name)s' en formato %(format)s"

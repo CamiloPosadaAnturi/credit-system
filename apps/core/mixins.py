@@ -39,23 +39,6 @@ class BusinessScopedMixin:
         return queryset
 
 
-class SelectedBusinessMixin:
-    """Expose the business selected through the ``?business=`` parameter."""
-
-    def get_selected_business(self):
-        businesses = permissions.allowed_businesses(self.request.user)
-        value = self.request.GET.get("business")
-        if value:
-            return businesses.filter(pk=value).first()
-        return None
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["selected_business"] = self.get_selected_business()
-        context["available_businesses"] = permissions.allowed_businesses(self.request.user)
-        return context
-
-
 class SearchMixin:
     """Simple ``?q=`` search over ``search_fields``."""
 

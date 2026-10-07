@@ -1,8 +1,7 @@
 {% extends "base.html" %}{% load i18n formatting %}
 {% block heading %}{{ customer.full_name }}{% endblock %}
 {% block subheading %}
-<p class="text-secondary small mb-0">{{ customer.code }} &middot; {{ customer.business }}
-  &middot; <span class="badge text-bg-{{ customer.status|badge }} status-badge">{{ customer.get_status_display }}</span></p>
+<p class="text-secondary small mb-0">{% if customer.code %}{{ customer.code }} &middot; {% endif %}<span class="badge text-bg-{{ customer.status|badge }} status-badge">{{ customer.get_status_display }}</span></p>
 {% endblock %}
 {% block actions %}
   {% if user_permissions.create_loan %}

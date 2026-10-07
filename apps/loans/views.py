@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.generic import DetailView, ListView, UpdateView, View
 
+from apps.businesses.models import Business
 from apps.core.dates import today_local
 from apps.core.errors import BusinessRuleError
 from apps.core.mixins import ActionRequiredMixin, SearchMixin
@@ -28,7 +29,7 @@ class LoanBaseMixin(LoginRequiredMixin):
     model = Loan
 
     def get_queryset(self):
-        queryset = Loan.objects.select_related("customer", "business", "collector")
+        queryset = Loan.objects.select_related("customer", "collector")
         queryset = permissions.filter_by_business(queryset, self.request.user)
         return permissions.filter_collector_portfolio(queryset, self.request.user)
 
@@ -45,8 +46,6 @@ class LoanListView(LoanBaseMixin, SearchMixin, ListView):
         self.filter_form = LoanFilterForm(self.request.GET or None, user=self.request.user)
         if self.filter_form.is_valid():
             data = self.filter_form.cleaned_data
-            if data.get("business"):
-                queryset = queryset.filter(business=data["business"])
             if data.get("status"):
                 queryset = queryset.filter(status=data["status"])
             if data.get("collector"):
@@ -104,7 +103,13 @@ class LoanCreateView(ActionRequiredMixin, View):
     template_name = "loans/form.html"
 
     def get(self, request):
-        initial = {"application_date": today_local(), "first_payment_date": today_local()}
+        business = Business.objects.current()
+        initial = {"application_date": today_local(), "first_payment_date": today_local(),
+                   "interest_mode": business.interest_mode,
+                   "interest_rate": business.interest_rate,
+                   "rate_period": business.rate_period,
+                   "payment_frequency": business.payment_frequency,
+                   "installment_count": business.installment_count}
         customer_id = request.GET.get("customer")
         if customer_id:
             from apps.customers.models import Customer
@@ -113,13 +118,7 @@ class LoanCreateView(ActionRequiredMixin, View):
                 permissions.filter_by_business(Customer.objects.all(), request.user),
                 pk=customer_id,
             )
-            initial.update({"customer": customer.pk, "business": customer.business_id,
-                            "collector": customer.collector_id,
-                            "interest_mode": customer.business.interest_mode,
-                            "interest_rate": customer.business.interest_rate,
-                            "rate_period": customer.business.rate_period,
-                            "payment_frequency": customer.business.payment_frequency,
-                            "installment_count": customer.business.installment_count})
+            initial.update({"customer": customer.pk, "collector": customer.collector_id})
         form = LoanForm(initial=initial, user=request.user)
         return render(request, self.template_name,
                       {"form": form, "title": _("New loan")})
@@ -131,7 +130,6 @@ class LoanCreateView(ActionRequiredMixin, View):
                           {"form": form, "title": _("New loan")})
 
         data = form.cleaned_data
-        permissions.require_business(request.user, data["business"])
         simulation = simulate(
             principal=data["principal"],
             mode=data["interest_mode"],
@@ -154,7 +152,7 @@ class LoanCreateView(ActionRequiredMixin, View):
         try:
             loan = services.create_loan(
                 customer=data["customer"],
-                business=data["business"],
+                business=data["customer"].business,
                 principal=data["principal"],
                 installment_count=data["installment_count"],
                 frequency=data["payment_frequency"],

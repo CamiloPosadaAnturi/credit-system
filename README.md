@@ -19,7 +19,7 @@ Construida con **Django 5 + PostgreSQL + Bootstrap 5 + Chart.js**, con moneda
 
 ## 1. Que hace
 
-- **Businesses (negocios / sucursales)**: CRUD, configuracion de intereses y mora, dashboard propio, aislamiento total de la informacion entre negocios.
+- **Configuracion del negocio**: el sistema opera un solo negocio. En *Configuracion* se editan sus datos y reglas comerciales (tasa de interes, frecuencia, dias de gracia, mora y liquidacion anticipada). Clientes, creditos y pagos se asignan solos a ese negocio.
 - **Users (usuarios y permisos)**: modelo propio con 5 roles (superadministrador, administrador, gerente, cobrador, consulta), validados en las vistas **y** en el ORM.
 - **Customers (clientes)**: CRUD, referencias, historial crediticio, puntualidad de pago, datos sensibles (CURP/RFC) restringidos por rol.
 - **Loans (creditos)**: folio unico, estados, interes configurable congelado por credito, calendario automatico, cancelacion y reestructuracion auditadas.
@@ -129,16 +129,16 @@ las de Django, `makemessages` y `compilemessages` funcionan igual.
 
 ## 4. Usuarios de demostracion
 
-`python manage.py load_demo_data` crea 2 negocios, 20 clientes ficticios,
+`python manage.py load_demo_data` usa el negocio configurado (si la base esta vacia lo crea con datos de demostracion), 20 clientes ficticios,
 creditos liquidados / activos / en mora / pendientes, pagos completos y
 parciales, y estos usuarios (contrasena `Demo12345`):
 
 | Usuario | Rol | Ve |
 |---|---|---|
-| `demo_admin` | Administrador | Los dos negocios, todas las operaciones |
-| `demo_manager` | Gerente | Negocio 1, reportes, sin aprobar creditos |
-| `demo_collector` | Cobrador | Solo su cartera del negocio 1 |
-| `demo_collector2` | Cobradora | Solo su cartera del negocio 2 |
+| `demo_admin` | Administrador | Todas las operaciones y la configuracion |
+| `demo_manager` | Gerente | Reportes, sin aprobar creditos |
+| `demo_collector` | Cobrador | Solo su cartera |
+| `demo_collector2` | Cobradora | Solo su cartera |
 
 Todos los datos son inventados.
 
@@ -146,8 +146,8 @@ Todos los datos son inventados.
 
 ## 5. Como probar las funcionalidades
 
-1. **Alta de negocio**: *Negocios -> Nuevo negocio*. Define la tasa (0.40 = 40 %, es decir 400 por cada 1,000) y la frecuencia predeterminada.
-2. **Alta de cliente**: *Clientes -> Nuevo cliente*, asigna negocio y cobrador.
+1. **Configuracion**: *Configuracion -> Editar*. Define la tasa (0.40 = 40 %, es decir 400 por cada 1,000) y la frecuencia predeterminada.
+2. **Alta de cliente**: *Clientes -> Nuevo cliente*, asigna el cobrador.
 3. **Nuevo credito**: desde la ficha del cliente o *Creditos -> Nuevo credito*. El sistema muestra una **pantalla de confirmacion** con interes, total, cuota y calendario antes de guardar nada.
 4. **Aprobar y desembolsar**: en la ficha del credito. Al aprobar se congela la tasa; al desembolsar empieza a contar el calendario.
 5. **Registrar un pago**: boton *Registrar pago*. Prueba un abono parcial y observa la cuota en estado `Parcial`.
@@ -166,10 +166,10 @@ Todos los datos son inventados.
 python manage.py test apps --settings=config.settings.test
 ```
 
-La suite (99 pruebas) cubre: interes por cada $1,000, total a pagar, generacion
+La suite (105 pruebas) cubre: interes por cada $1,000, total a pagar, generacion
 y redondeo de cuotas, frecuencias y fin de mes, abonos parciales, aplicacion a
 cuotas vencidas, separacion capital/interes, liquidacion anticipada, pagos
-duplicados, excedentes, reversos, deteccion de mora, permisos entre negocios,
+duplicados, excedentes, reversos, deteccion de mora, modo de negocio unico,
 acceso de cobradores, creditos cancelados y reestructurados, datos de
 demostracion y los flujos completos de credito a liquidacion.
 
@@ -196,7 +196,7 @@ credit-system/
 ├── apps/
 │   ├── core/              politica monetaria, fechas, validadores, mixins, factories
 │   ├── users/             usuario personalizado + matriz de permisos
-│   ├── businesses/        negocios/sucursales y su configuracion
+│   ├── businesses/        configuracion del negocio (unico)
 │   ├── customers/         clientes, referencias, historial
 │   ├── loans/             creditos, cuotas, calculos y servicios
 │   ├── payments/          pagos, aplicaciones, reversos, liquidacion
@@ -230,7 +230,7 @@ Las vistas **no calculan dinero**: siempre llaman a estos servicios.
 
 | Codigo | Interfaz |
 |---|---|
-| `Business` | Negocio / sucursal |
+| `Business` | Negocio (configuracion) |
 | `Customer` | Cliente |
 | `Loan` / `reference` / `principal` | Credito / folio / capital |
 | `Installment` / `due_date` | Cuota / fecha de vencimiento |
@@ -247,7 +247,7 @@ Las vistas **no calculan dinero**: siempre llaman a estos servicios.
 
 - CSRF activo en todos los formularios; validacion siempre en el servidor.
 - Permisos por rol comprobados en las vistas y en cada consulta al ORM.
-- Aislamiento por negocio: un usuario solo consulta lo de sus negocios autorizados.
+- Un administrador no puede ver ni modificar a los superadministradores.
 - CURP y RFC visibles solo para roles con `view_sensitive_data`.
 - Importes positivos garantizados por validadores y por `CheckConstraint` en la base.
 - Folios unicos y restricciones de integridad en la base de datos.

@@ -2256,3 +2256,31 @@ msgstr "%(customer)s liquidó su crédito de %(amount)s MXN."
 
 msgid "Exported the report '%(name)s' as %(format)s"
 msgstr "Se exportó el reporte '%(name)s' en formato %(format)s"
+
+msgid "My business"
+msgstr "Mi negocio"
+
+msgid "Settings updated successfully."
+msgstr "Configuración actualizada correctamente."
+
+msgid "Edit settings"
+msgstr "Editar configuración"
+
+msgid "Administration"
+msgstr "Administración"
+
+msgid "Trade name"
+msgstr "Nombre comercial"
+
+msgid "Legal name"
+msgstr "Razón social"
+
+msgid ""
+"New loans take these rules as defaults. Loans already created keep the rule "
+"they were granted with."
+msgstr ""
+"Los créditos nuevos toman estas reglas como valores predeterminados. Los "
+"créditos ya creados conservan la regla con la que se otorgaron."
+
+msgid "Every report uses real data and respects your permissions."
+msgstr "Todos los reportes usan datos reales y respetan tus permisos."

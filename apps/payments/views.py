@@ -25,7 +25,7 @@ class PaymentBaseMixin(LoginRequiredMixin):
 
     def get_queryset(self):
         queryset = Payment.objects.select_related(
-            "loan", "customer", "business", "received_by", "collector")
+            "loan", "customer", "received_by", "collector")
         queryset = permissions.filter_by_business(queryset, self.request.user)
         return permissions.filter_collector_portfolio(queryset, self.request.user)
 
@@ -43,8 +43,6 @@ class PaymentListView(PaymentBaseMixin, SearchMixin, ListView):
             self.request.GET or None, user=self.request.user)
         if self.filter_form.is_valid():
             data = self.filter_form.cleaned_data
-            if data.get("business"):
-                queryset = queryset.filter(business=data["business"])
             if data.get("method"):
                 queryset = queryset.filter(method=data["method"])
             if data.get("status"):

@@ -1,8 +1,8 @@
 from apps.users import permissions
 
 
-def user_businesses(request):
-    """Expose the user's businesses and permissions to every template.
+def user_permissions(request):
+    """Expose the user's permissions to every template.
 
     ``user_permissions`` is a {action: bool} dict so templates can hide menu
     entries. Hiding is NOT a replacement for server-side checks: every view
@@ -12,7 +12,6 @@ def user_businesses(request):
     if not user or not user.is_authenticated:
         return {}
     return {
-        "user_businesses": permissions.allowed_businesses(user).active(),
         "user_permissions": {
             action: permissions.can(user, action) for action in permissions.MATRIX
         },

@@ -5,7 +5,6 @@ from apps.core.choices import InterestMode, PaymentFrequency
 from apps.core.forms import BootstrapFormMixin
 from apps.customers.models import Customer
 from apps.loans.models import Loan, LoanStatus
-from apps.users import permissions
 from apps.users.models import Role, User
 
 
@@ -19,7 +18,7 @@ class LoanForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = Loan
         fields = [
-            "business", "customer", "collector", "application_date", "principal",
+            "customer", "collector", "application_date", "principal",
             "interest_mode", "interest_rate", "rate_period",
             "payment_frequency", "custom_days", "installment_count",
             "first_payment_date", "notes", "contract",
@@ -33,7 +32,7 @@ class LoanForm(BootstrapFormMixin, forms.ModelForm):
         }
 
     SECTIONS = [
-        (_("Application"), ["business", "customer", "collector", "application_date"]),
+        (_("Application"), ["customer", "collector", "application_date"]),
         (_("Financial terms"), ["principal", "interest_mode", "interest_rate",
                                 "rate_period"]),
         (_("Schedule"), ["payment_frequency", "installment_count", "custom_days",
@@ -44,17 +43,8 @@ class LoanForm(BootstrapFormMixin, forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
-        businesses = permissions.allowed_businesses(user) if user else None
-        if businesses is not None:
-            self.fields["business"].queryset = businesses.active()
-            self.fields["customer"].queryset = (
-                Customer.objects.filter(business__in=businesses).active()
-                .select_related("business")
-            )
-            self.fields["collector"].queryset = (
-                User.objects.filter(role=Role.COLLECTOR, businesses__in=businesses)
-                .distinct()
-            )
+        self.fields["customer"].queryset = Customer.objects.active()
+        self.fields["collector"].queryset = User.objects.collectors()
         self.fields["custom_days"].help_text = _("Only for the custom frequency.")
         self.fields["interest_rate"].help_text = _(
             "Ratio. 0.40 = 40% (400 MXN per 1,000 MXN lent)."
@@ -63,16 +53,11 @@ class LoanForm(BootstrapFormMixin, forms.ModelForm):
 
     def clean(self):
         data = super().clean()
-        business = data.get("business")
-        customer = data.get("customer")
         frequency = data.get("payment_frequency")
         custom_days = data.get("custom_days")
         principal = data.get("principal")
         installments = data.get("installment_count")
 
-        if business and customer and customer.business_id != business.pk:
-            self.add_error("customer",
-                           _("The customer does not belong to the selected business."))
         if frequency == PaymentFrequency.CUSTOM and not custom_days:
             self.add_error("custom_days",
                            _("State how many days apart the installments fall."))
@@ -91,9 +76,6 @@ class LoanFilterForm(forms.Form):
         label=_("Search"), required=False,
         widget=forms.TextInput(attrs={"class": "form-control",
                                       "placeholder": _("Reference or customer")}))
-    business = forms.ModelChoiceField(
-        label=_("Business"), required=False, queryset=None, empty_label=_("All"),
-        widget=forms.Select(attrs={"class": "form-select"}))
     status = forms.ChoiceField(
         label=_("Status"), required=False,
         choices=[("", _("All"))] + list(LoanStatus.choices),
@@ -110,12 +92,7 @@ class LoanFilterForm(forms.Form):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        businesses = permissions.allowed_businesses(user) if user else None
-        self.fields["business"].queryset = businesses
-        self.fields["collector"].queryset = (
-            User.objects.filter(role=Role.COLLECTOR, businesses__in=businesses).distinct()
-            if businesses is not None else User.objects.collectors()
-        )
+        self.fields["collector"].queryset = User.objects.filter(role=Role.COLLECTOR)
 
 
 class CancellationForm(BootstrapFormMixin, forms.Form):

@@ -3,8 +3,7 @@
 {% block content %}
 <div class="row"><div class="col-lg-6">
 <div class="card-panel"><div class="card-panel-body">
-  <p class="small text-secondary">{% trans "Role" %}: <strong>{{ user.get_role_display }}</strong> &middot;
-    {% trans "Businesses" %}: {% for business in user.businesses.all %}{{ business }}{% if not forloop.last %}, {% endif %}{% empty %}{% trans "all" %}{% endfor %}</p>
+  <p class="small text-secondary">{% trans "Role" %}: <strong>{{ user.get_role_display }}</strong></p>
   <form method="post" novalidate>
     {% csrf_token %}
     {% include "components/form.html" %}

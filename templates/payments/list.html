@@ -5,11 +5,10 @@
 <form class="filters" method="get">
   <div class="row g-2 align-items-end">
     <div class="col-md-3">{{ filter_form.q.label_tag }}{{ filter_form.q }}</div>
-    <div class="col-md-2">{{ filter_form.business.label_tag }}{{ filter_form.business }}</div>
     <div class="col-md-2">{{ filter_form.method.label_tag }}{{ filter_form.method }}</div>
     <div class="col-md-2">{{ filter_form.status.label_tag }}{{ filter_form.status }}</div>
-    <div class="col-md-1">{{ filter_form.start.label_tag }}{{ filter_form.start }}</div>
-    <div class="col-md-1">{{ filter_form.end.label_tag }}{{ filter_form.end }}</div>
+    <div class="col-md-2">{{ filter_form.start.label_tag }}{{ filter_form.start }}</div>
+    <div class="col-md-2">{{ filter_form.end.label_tag }}{{ filter_form.end }}</div>
     <div class="col-md-1 d-grid"><button class="btn btn-primary btn-sm">{% trans "Filter" %}</button></div>
   </div>
 </form>

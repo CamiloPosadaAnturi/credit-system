@@ -22,43 +22,23 @@ class UserForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = User
         fields = ["username", "first_name", "last_name", "email", "phone",
-                  "role", "businesses", "is_active"]
-        widgets = {"businesses": forms.CheckboxSelectMultiple()}
+                  "role", "is_active"]
 
     SECTIONS = [
         (_("Personal details"), ["first_name", "last_name", "email", "phone"]),
-        (_("Access"), ["username", "is_active"]),
-        (_("Role and businesses"), ["role", "businesses"]),
+        (_("Access"), ["username", "role", "is_active"]),
     ]
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
-        from apps.users import permissions
-
-        if user is not None:
-            self.fields["businesses"].queryset = permissions.allowed_businesses(user)
-            if not user.is_superadmin:
-                # A business administrator cannot create super administrators.
-                self.fields["role"].choices = [
-                    (value, label) for value, label in Role.choices
-                    if value != Role.SUPERADMIN
-                ]
-        self.fields["businesses"].required = False
+        if user is not None and not user.is_superadmin:
+            # A business administrator cannot create super administrators.
+            self.fields["role"].choices = [
+                (value, label) for value, label in Role.choices
+                if value != Role.SUPERADMIN
+            ]
         self.apply_widget_styles()
-        self.fields["businesses"].widget.attrs.pop("class", None)
-
-    def clean(self):
-        data = super().clean()
-        role = data.get("role")
-        businesses = data.get("businesses")
-        if role != Role.SUPERADMIN and not businesses:
-            self.add_error(
-                "businesses",
-                _("Select at least one business. Without an authorized business "
-                  "the user cannot see any data."),
-            )
-        return data
 
 
 class UserCreateForm(UserForm, UserCreationForm):

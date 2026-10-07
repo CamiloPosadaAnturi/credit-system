@@ -2,7 +2,7 @@
 {% block heading %}{{ loan.reference }}{% endblock %}
 {% block subheading %}
 <p class="text-secondary small mb-0">
-  <a href="{{ loan.customer.get_absolute_url }}">{{ loan.customer }}</a> &middot; {{ loan.business }}
+  <a href="{{ loan.customer.get_absolute_url }}">{{ loan.customer }}</a>
   &middot; <span class="badge text-bg-{{ loan.status|badge }} status-badge">{{ loan.get_status_display }}</span>
   {% if loan.original_loan %}&middot; {% blocktrans with ref=loan.original_loan.reference %}restructuring of {{ ref }}{% endblocktrans %}{% endif %}
 </p>

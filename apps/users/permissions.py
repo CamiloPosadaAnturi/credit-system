@@ -1,4 +1,4 @@
-"""Permission matrix and per-business data isolation helpers.
+"""Permission matrix and data visibility helpers.
 
 Every permission check runs on the server: in the views (which action is
 allowed) and in the ORM (which rows may be seen). Hiding buttons in the
@@ -73,14 +73,15 @@ def require(user, action: str) -> None:
 
 
 def allowed_businesses(user) -> QuerySet:
-    """Businesses the user may operate on."""
+    """Businesses the user may operate on.
+
+    Single-business mode: every authenticated user works on the one business.
+    """
     from apps.businesses.models import Business
 
     if not user or not user.is_authenticated:
         return Business.objects.none()
-    if user.is_superadmin:
-        return Business.objects.all()
-    return Business.objects.filter(users=user).distinct()
+    return Business.objects.all()
 
 
 def allowed_business_ids(user) -> list[int]:
@@ -88,10 +89,14 @@ def allowed_business_ids(user) -> list[int]:
 
 
 def filter_by_business(queryset: QuerySet, user, field: str = "business") -> QuerySet:
-    """Restrict a queryset to the businesses the user is authorized for."""
-    if user and getattr(user, "is_superadmin", False):
-        return queryset
-    return queryset.filter(**{f"{field}__in": allowed_businesses(user)})
+    """Restrict a queryset to what the user may see.
+
+    Single-business mode: authenticated users see every record (the
+    collector portfolio filter still applies separately).
+    """
+    if not user or not user.is_authenticated:
+        return queryset.none()
+    return queryset
 
 
 def filter_collector_portfolio(queryset: QuerySet, user,
@@ -103,9 +108,7 @@ def filter_collector_portfolio(queryset: QuerySet, user,
 
 
 def user_has_business(user, business) -> bool:
-    if user.is_superadmin:
-        return True
-    return allowed_businesses(user).filter(pk=business.pk).exists()
+    return bool(user and user.is_authenticated and business is not None)
 
 
 def require_business(user, business) -> None:

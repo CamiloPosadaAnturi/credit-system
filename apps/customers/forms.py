@@ -2,6 +2,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 
+from apps.businesses.models import Business
 from apps.core.forms import BootstrapFormMixin
 from apps.customers.models import Customer, CustomerStatus, PersonalReference
 from apps.users import permissions
@@ -12,7 +13,7 @@ class CustomerForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = Customer
         fields = [
-            "business", "first_name", "last_name", "second_last_name",
+            "first_name", "last_name", "second_last_name",
             "national_id", "tax_id", "birth_date",
             "phone", "alt_phone", "email",
             "address", "city", "state", "postal_code",
@@ -24,7 +25,7 @@ class CustomerForm(BootstrapFormMixin, forms.ModelForm):
         }
 
     SECTIONS = [
-        (_("Identification"), ["business", "first_name", "last_name",
+        (_("Identification"), ["first_name", "last_name",
                                "second_last_name", "birth_date", "occupation"]),
         (_("Documents (restricted access)"), ["national_id", "tax_id"]),
         (_("Contact"), ["phone", "alt_phone", "email"]),
@@ -35,29 +36,16 @@ class CustomerForm(BootstrapFormMixin, forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
+        if not self.instance.business_id:
+            # Single-business mode: every customer belongs to the one business.
+            self.instance.business = Business.objects.current()
+        self.fields["collector"].queryset = User.objects.collectors()
         if user is not None:
-            self.fields["business"].queryset = permissions.allowed_businesses(user).active()
-            self.fields["collector"].queryset = User.objects.collectors().filter(
-                businesses__in=permissions.allowed_businesses(user)
-            ).distinct()
             if not permissions.can(user, permissions.VIEW_SENSITIVE_DATA):
                 # Without the permission these fields are neither shown nor edited.
                 self.fields.pop("national_id", None)
                 self.fields.pop("tax_id", None)
         self.apply_widget_styles()
-
-    def clean(self):
-        data = super().clean()
-        business = data.get("business")
-        collector = data.get("collector")
-        if business and collector and not collector.businesses.filter(
-            pk=business.pk
-        ).exists():
-            self.add_error(
-                "collector",
-                _("The selected collector is not authorized for that business."),
-            )
-        return data
 
 
 ReferenceFormSet = inlineformset_factory(
@@ -78,9 +66,6 @@ class CustomerFilterForm(forms.Form):
         label=_("Search"), required=False,
         widget=forms.TextInput(attrs={"class": "form-control",
                                       "placeholder": _("Name, phone or code")}))
-    business = forms.ModelChoiceField(
-        label=_("Business"), required=False, queryset=None, empty_label=_("All"),
-        widget=forms.Select(attrs={"class": "form-select"}))
     status = forms.ChoiceField(
         label=_("Status"), required=False,
         choices=[("", _("All"))] + list(CustomerStatus.choices),
@@ -91,10 +76,4 @@ class CustomerFilterForm(forms.Form):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        businesses = permissions.allowed_businesses(user) if user else None
-        self.fields["business"].queryset = businesses
-        self.fields["collector"].queryset = (
-            User.objects.filter(role=Role.COLLECTOR, businesses__in=businesses).distinct()
-            if businesses is not None
-            else User.objects.collectors()
-        )
+        self.fields["collector"].queryset = User.objects.filter(role=Role.COLLECTOR)

@@ -38,8 +38,6 @@ class CollectionsBoardView(ActionRequiredMixin, TemplateView):
         min_days = 0
         if form.is_valid():
             data = form.cleaned_data
-            if data.get("business"):
-                loans = loans.filter(business=data["business"])
             if data.get("collector"):
                 loans = loans.filter(collector=data["collector"])
             min_days = data.get("min_days_past_due") or 0
@@ -68,7 +66,7 @@ class CollectionActionListView(ActionRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = CollectionAction.objects.select_related(
-            "customer", "loan", "user", "business")
+            "customer", "loan", "user")
         queryset = permissions.filter_by_business(queryset, self.request.user)
         if self.request.user.is_collector:
             queryset = queryset.filter(user=self.request.user)
@@ -76,8 +74,6 @@ class CollectionActionListView(ActionRequiredMixin, ListView):
             self.request.GET or None, user=self.request.user)
         if self.filter_form.is_valid():
             data = self.filter_form.cleaned_data
-            if data.get("business"):
-                queryset = queryset.filter(business=data["business"])
             if data.get("collector"):
                 queryset = queryset.filter(user=data["collector"])
             if data.get("action_type"):

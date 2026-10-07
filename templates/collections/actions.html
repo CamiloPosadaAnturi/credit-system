@@ -3,12 +3,11 @@
 {% block content %}
 <form class="filters" method="get">
   <div class="row g-2 align-items-end">
-    <div class="col-md-2">{{ filter_form.business.label_tag }}{{ filter_form.business }}</div>
     <div class="col-md-2">{{ filter_form.collector.label_tag }}{{ filter_form.collector }}</div>
     <div class="col-md-2">{{ filter_form.action_type.label_tag }}{{ filter_form.action_type }}</div>
     <div class="col-md-2">{{ filter_form.outcome.label_tag }}{{ filter_form.outcome }}</div>
-    <div class="col-md-1">{{ filter_form.start.label_tag }}{{ filter_form.start }}</div>
-    <div class="col-md-1">{{ filter_form.end.label_tag }}{{ filter_form.end }}</div>
+    <div class="col-md-2">{{ filter_form.start.label_tag }}{{ filter_form.start }}</div>
+    <div class="col-md-2">{{ filter_form.end.label_tag }}{{ filter_form.end }}</div>
     <div class="col-md-2 d-grid"><button class="btn btn-primary btn-sm">{% trans "Filter" %}</button></div>
   </div>
 </form>

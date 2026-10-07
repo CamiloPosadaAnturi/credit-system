@@ -16,7 +16,7 @@ class LoadDemoDataTests(TestCase):
         output = StringIO()
         call_command("load_demo_data", stdout=output)
 
-        self.assertEqual(Business.objects.count(), 2)
+        self.assertEqual(Business.objects.count(), 1)
         self.assertEqual(Customer.objects.count(), 20)
         self.assertEqual(User.objects.count(), 4)
         self.assertGreater(Loan.objects.count(), 15)

@@ -21,6 +21,18 @@ from apps.users.forms import (
 from apps.users.models import Role, User
 
 
+def manageable_users(request_user, queryset=None):
+    """Users the given administrator may manage.
+
+    Only a super administrator may manage other super administrators.
+    """
+    if queryset is None:
+        queryset = User.objects.all()
+    if not request_user.is_superadmin:
+        queryset = queryset.exclude(Q(role=Role.SUPERADMIN) | Q(is_superuser=True))
+    return queryset
+
+
 class SignInView(LoginView):
     template_name = "users/login.html"
     form_class = LoginForm
@@ -40,11 +52,7 @@ class UserListView(ActionRequiredMixin, SearchMixin, ListView):
     search_fields = ["username", "first_name", "last_name", "email"]
 
     def get_queryset(self):
-        queryset = super().get_queryset().prefetch_related("businesses")
-        if not self.request.user.is_superadmin:
-            queryset = queryset.filter(
-                Q(businesses__in=permissions.allowed_businesses(self.request.user))
-            ).distinct()
+        queryset = manageable_users(self.request.user, super().get_queryset())
         role = self.request.GET.get("role")
         if role:
             queryset = queryset.filter(role=role)
@@ -88,12 +96,7 @@ class UserUpdateView(ActionRequiredMixin, UpdateView):
     success_url = reverse_lazy("users:list")
 
     def get_queryset(self):
-        queryset = User.objects.all()
-        if not self.request.user.is_superadmin:
-            queryset = queryset.filter(
-                businesses__in=permissions.allowed_businesses(self.request.user)
-            ).distinct()
-        return queryset
+        return manageable_users(self.request.user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -130,10 +133,8 @@ class UserDetailView(ActionRequiredMixin, DetailView):
 def set_user_password(request, pk):
     permissions.require(request.user, permissions.MANAGE_USERS)
     user = get_object_or_404(User, pk=pk)
-    if not request.user.is_superadmin:
-        allowed = permissions.allowed_businesses(request.user)
-        if not user.businesses.filter(pk__in=allowed).exists():
-            raise PermissionDenied(_("You cannot modify this user."))
+    if not manageable_users(request.user).filter(pk=user.pk).exists():
+        raise PermissionDenied(_("You cannot modify this user."))
     form = SetPasswordForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         user.set_password(form.cleaned_data["password1"])

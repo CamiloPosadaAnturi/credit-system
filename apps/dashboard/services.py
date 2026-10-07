@@ -188,9 +188,7 @@ def collector_performance(user, business=None, start=None, end=None):
     from apps.users.models import Role, User
 
     loans, payments = scope(user, business)
-    businesses = permissions.allowed_businesses(user)
-    collectors = User.objects.filter(
-        role=Role.COLLECTOR, businesses__in=businesses).distinct()
+    collectors = User.objects.filter(role=Role.COLLECTOR)
 
     rows = []
     for collector in collectors:

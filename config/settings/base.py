@@ -71,7 +71,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "apps.businesses.context_processors.user_businesses",
+                "apps.businesses.context_processors.user_permissions",
                 "apps.notifications.context_processors.pending_notifications",
             ],
         },

@@ -109,9 +109,8 @@ class MainScreenTests(TestCase):
     def test_screens(self):
         routes = [
             reverse("dashboard:home"),
-            reverse("businesses:list"),
-            reverse("businesses:detail", args=[self.business.pk]),
-            reverse("businesses:dashboard", args=[self.business.pk]),
+            reverse("businesses:settings"),
+            reverse("businesses:settings_edit"),
             reverse("customers:list"),
             reverse("customers:detail", args=[self.customer.pk]),
             reverse("loans:list"),
@@ -173,7 +172,7 @@ class MainScreenTests(TestCase):
 
     def test_creating_a_loan_through_the_view(self):
         data = {
-            "business": self.business.pk, "customer": self.customer.pk,
+            "customer": self.customer.pk,
             "application_date": today_local().isoformat(),
             "principal": "5000", "interest_mode": "flat_on_principal",
             "interest_rate": "0.40", "rate_period": "contract",
@@ -190,6 +189,7 @@ class MainScreenTests(TestCase):
         final = self.client.post(reverse("loans:create"), data, follow=True)
         self.assertEqual(final.status_code, 200)
         loan = Loan.objects.get(principal=Decimal("5000"))
+        self.assertEqual(loan.business, self.business)
         self.assertEqual(loan.total_interest, Decimal("2000.00"))
         self.assertEqual(loan.total_payable, Decimal("7000.00"))
         self.assertEqual(loan.installments.count(), 10)

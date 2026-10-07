@@ -43,7 +43,7 @@ CITIES = [("Guadalajara", "JAL"), ("Monterrey", "NL"), ("Puebla", "PUE"),
 
 
 class Command(BaseCommand):
-    help = "Load fictitious businesses, users, customers, loans and payments."
+    help = "Load fictitious users, customers, loans and payments."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -59,47 +59,44 @@ class Command(BaseCommand):
         password = options["password"]
         today = today_local()
 
-        if Business.objects.filter(trade_name__startswith="[DEMO]").exists():
+        if User.objects.filter(username="demo_admin").exists():
             self.stdout.write(self.style.WARNING(
                 "Demo data already exists. More records will be added."))
 
-        first_business = Business.objects.create(
-            trade_name="[DEMO] Creditos del Centro",
-            legal_name="Creditos del Centro SA de CV",
-            tax_id="CDC010101AB1", phone="3312345678",
-            email="contacto@demo-creditos.mx",
-            address="Av. Ficticia 100", city="Guadalajara", state="JAL",
-            interest_rate=Decimal("0.4000"), installment_count=4,
-            payment_frequency="weekly", grace_days=1,
-            notes="Negocio de demostración. Datos ficticios.",
-        )
-        second_business = Business.objects.create(
-            trade_name="[DEMO] Sucursal Norte",
-            phone="8112345678", city="Monterrey", state="NL",
-            interest_rate=Decimal("0.3000"), installment_count=6,
-            payment_frequency="biweekly", grace_days=3,
-            allows_early_payoff=True,
-            early_payoff_discount=Decimal("0.2000"),
-            notes="Sucursal de demostración. Datos ficticios.",
-        )
+        # Single-business mode: the demo data goes into the one business. Its
+        # commercial rules are only set when the database had no business yet,
+        # so an existing configuration is never overwritten.
+        fresh_install = not Business.objects.exists()
+        business = Business.objects.current()
+        if fresh_install:
+            business.trade_name = "[DEMO] Creditos del Centro"
+            business.legal_name = "Creditos del Centro SA de CV"
+            business.tax_id = "CDC010101AB1"
+            business.phone = "3312345678"
+            business.email = "contacto@demo-creditos.mx"
+            business.address = "Av. Ficticia 100"
+            business.city = "Guadalajara"
+            business.state = "JAL"
+            business.interest_rate = Decimal("0.4000")
+            business.installment_count = 4
+            business.payment_frequency = "weekly"
+            business.grace_days = 1
+            business.notes = "Negocio de demostración. Datos ficticios."
+            business.save()
 
-        admin = self._user("demo_admin", Role.ADMIN, "Alma", "Administradora",
-                           password, [first_business, second_business])
-        manager = self._user("demo_manager", Role.MANAGER, "Gustavo", "Gerente",
-                             password, [first_business])
+        admin = self._user("demo_admin", Role.ADMIN, "Alma", "Administradora", password)
+        manager = self._user("demo_manager", Role.MANAGER, "Gustavo", "Gerente", password)
         collector_one = self._user("demo_collector", Role.COLLECTOR, "Carlos",
-                                   "Cobrador", password, [first_business])
+                                   "Cobrador", password)
         collector_two = self._user("demo_collector2", Role.COLLECTOR, "Cecilia",
-                                   "Cobradora", password, [second_business])
-        first_business.manager = admin
-        first_business.save(update_fields=["manager"])
-        second_business.manager = admin
-        second_business.save(update_fields=["manager"])
+                                   "Cobradora", password)
+        if fresh_install:
+            business.manager = admin
+            business.save(update_fields=["manager"])
 
         customers = []
         for index, (first_name, last_name, second_last_name) in enumerate(NAMES):
-            business = first_business if index < 13 else second_business
-            collector = collector_one if business == first_business else collector_two
+            collector = collector_one if index < 13 else collector_two
             city, state = random.choice(CITIES)
             customer = Customer.objects.create(
                 business=business, first_name=first_name, last_name=last_name,
@@ -189,7 +186,7 @@ class Command(BaseCommand):
             created["pending"] += 1
 
         self.stdout.write(self.style.SUCCESS("Demo data loaded:"))
-        self.stdout.write(f"  Businesses: 2   Customers: {len(customers)}")
+        self.stdout.write(f"  Business: {business}   Customers: {len(customers)}")
         self.stdout.write(
             f"  Settled loans: {created['settled']}, live: {created['live']}, "
             f"past due: {created['past_due']}, pending: {created['pending']}")
@@ -199,7 +196,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING(
             "All data is fictitious. Never use real personal information."))
 
-    def _user(self, username, role, first_name, last_name, password, businesses):
+    def _user(self, username, role, first_name, last_name, password):
         user, created = User.objects.get_or_create(
             username=username,
             defaults={"role": role, "first_name": first_name, "last_name": last_name,
@@ -208,7 +205,6 @@ class Command(BaseCommand):
         if created:
             user.set_password(password)
             user.save()
-        user.businesses.add(*businesses)
         return user
 
     def _loan(self, customer, user, principal, first_payment_date):

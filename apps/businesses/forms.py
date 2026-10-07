@@ -11,7 +11,7 @@ class BusinessForm(BootstrapFormMixin, forms.ModelForm):
         model = Business
         fields = [
             "trade_name", "legal_name", "tax_id", "phone", "email",
-            "address", "city", "state", "manager", "is_active",
+            "address", "city", "state", "manager",
             "interest_mode", "interest_rate", "rate_period",
             "payment_frequency", "installment_count",
             "grace_days", "charges_late_fee", "late_fee_rate",
@@ -26,7 +26,7 @@ class BusinessForm(BootstrapFormMixin, forms.ModelForm):
     #: Field grouping used to render the form in sections.
     SECTIONS = [
         (_("General information"), ["trade_name", "legal_name", "tax_id", "phone",
-                                    "email", "manager", "is_active"]),
+                                    "email", "manager"]),
         (_("Location"), ["address", "city", "state"]),
         (_("Interest configuration"), ["interest_mode", "interest_rate",
                                        "rate_period", "payment_frequency",
@@ -37,9 +37,8 @@ class BusinessForm(BootstrapFormMixin, forms.ModelForm):
         (_("Other"), ["notes"]),
     ]
 
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user = user
         self.fields["manager"].queryset = User.objects.active().exclude(role=Role.VIEWER)
         self.fields["tax_id"].required = False
         self.apply_widget_styles()
@@ -57,24 +56,3 @@ class BusinessForm(BootstrapFormMixin, forms.ModelForm):
         if not data.get("charges_late_fee"):
             data["late_fee_rate"] = 0
         return data
-
-
-class BusinessFilterForm(forms.Form):
-    q = forms.CharField(
-        label=_("Search"), required=False,
-        widget=forms.TextInput(attrs={"class": "form-control",
-                                      "placeholder": _("Name, RFC or person in charge")}),
-    )
-    is_active = forms.ChoiceField(
-        label=_("Status"), required=False,
-        choices=[("", _("All")), ("1", _("Active")), ("0", _("Inactive"))],
-        widget=forms.Select(attrs={"class": "form-select"}),
-    )
-    start = forms.DateField(
-        label=_("Created from"), required=False,
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-    )
-    end = forms.DateField(
-        label=_("Created to"), required=False,
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-    )

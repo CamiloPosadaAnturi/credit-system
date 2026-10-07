@@ -21,33 +21,25 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         except ValueError:
             return (today.replace(day=1), today)
 
-    def get_business(self):
-        value = self.request.GET.get("business")
-        if not value:
-            return None
-        return permissions.allowed_businesses(self.request.user).filter(pk=value).first()
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         start, end = self.get_period()
-        business = self.get_business()
 
-        context["indicators"] = services.indicators(user, business, start, end)
-        context["due_today"] = services.customers_due_today(user, business)
-        context["past_due"] = services.customers_past_due(user, business)[:15]
-        context["top_borrowers"] = services.top_borrowers(user, business, start, end)
-        context["top_payers"] = services.top_payers(user, business, start, end)
-        context["activity"] = services.recent_activity(user, business)
+        context["indicators"] = services.indicators(user, start=start, end=end)
+        context["due_today"] = services.customers_due_today(user)
+        context["past_due"] = services.customers_past_due(user)[:15]
+        context["top_borrowers"] = services.top_borrowers(user, start=start, end=end)
+        context["top_payers"] = services.top_payers(user, start=start, end=end)
+        context["activity"] = services.recent_activity(user)
         if permissions.can(user, permissions.VIEW_REPORTS):
             context["collectors"] = services.collector_performance(
-                user, business, start, end)
+                user, start=start, end=end)
         # Passed as plain dicts: the template serializes them with json_script.
-        context["payments_chart"] = services.scheduled_vs_collected(user, business)
-        context["portfolio_chart"] = services.portfolio_composition(user, business)
-        context["collection_series"] = services.collection_series(user, business)
+        context["payments_chart"] = services.scheduled_vs_collected(user)
+        context["portfolio_chart"] = services.portfolio_composition(user)
+        context["collection_series"] = services.collection_series(user)
         context["start"] = start.isoformat()
         context["end"] = end.isoformat()
-        context["selected_business"] = business
         context["title"] = _("Dashboard")
         return context

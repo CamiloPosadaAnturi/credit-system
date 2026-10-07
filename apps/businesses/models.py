@@ -17,11 +17,26 @@ class BusinessQuerySet(models.QuerySet):
         return self.filter(is_active=True)
 
 
-class Business(BaseModel):
-    """A business or branch that grants loans.
+class BusinessManager(models.Manager.from_queryset(BusinessQuerySet)):
+    def current(self) -> "Business":
+        """The single business the system operates.
 
-    Each business isolates its own data: customers, loans, payments and
-    portfolio always belong to one business and are never mixed.
+        The platform runs in single-business mode: there is exactly one
+        record holding the commercial rules. It is created with the default
+        rules the first time it is needed (fresh installations).
+        """
+        business = self.order_by("pk").first()
+        if business is None:
+            business = self.create(trade_name=str(_("My business")))
+        return business
+
+
+class Business(BaseModel):
+    """The business that grants loans and its commercial configuration.
+
+    The system operates a single business (see ``Business.objects.current``).
+    Customers, loans and payments still reference it internally, but the
+    interface never asks the user to pick one.
     """
 
     trade_name = models.CharField(_("trade name"), max_length=150)
@@ -102,7 +117,7 @@ class Business(BaseModel):
 
     notes = models.TextField(_("notes"), blank=True)
 
-    objects = BusinessQuerySet.as_manager()
+    objects = BusinessManager()
 
     class Meta:
         verbose_name = _("business")
@@ -121,7 +136,7 @@ class Business(BaseModel):
         return self.trade_name
 
     def get_absolute_url(self) -> str:
-        return reverse("businesses:detail", args=[self.pk])
+        return reverse("businesses:settings")
 
     @property
     def rate_percentage(self) -> Decimal:

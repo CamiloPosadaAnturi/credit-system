@@ -3,7 +3,6 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.core.forms import BootstrapFormMixin
 from apps.payments.models import PaymentMethod, PaymentStatus
-from apps.users import permissions
 from apps.users.models import Role, User
 
 
@@ -71,9 +70,6 @@ class PaymentFilterForm(forms.Form):
         label=_("Search"), required=False,
         widget=forms.TextInput(attrs={"class": "form-control",
                                       "placeholder": _("Reference, customer or note")}))
-    business = forms.ModelChoiceField(
-        label=_("Business"), required=False, queryset=None, empty_label=_("All"),
-        widget=forms.Select(attrs={"class": "form-select"}))
     method = forms.ChoiceField(
         label=_("Method"), required=False,
         choices=[("", _("All"))] + list(PaymentMethod.choices),
@@ -94,9 +90,4 @@ class PaymentFilterForm(forms.Form):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        businesses = permissions.allowed_businesses(user) if user else None
-        self.fields["business"].queryset = businesses
-        self.fields["collector"].queryset = (
-            User.objects.filter(role=Role.COLLECTOR, businesses__in=businesses).distinct()
-            if businesses is not None else User.objects.collectors()
-        )
+        self.fields["collector"].queryset = User.objects.filter(role=Role.COLLECTOR)

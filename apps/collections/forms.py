@@ -3,7 +3,6 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.collections.models import ActionOutcome, ActionType, CollectionAction
 from apps.core.forms import BootstrapFormMixin
-from apps.users import permissions
 from apps.users.models import Role, User
 
 
@@ -36,9 +35,6 @@ class CollectionActionForm(BootstrapFormMixin, forms.ModelForm):
 
 
 class CollectionsFilterForm(forms.Form):
-    business = forms.ModelChoiceField(
-        label=_("Business"), required=False, queryset=None, empty_label=_("All"),
-        widget=forms.Select(attrs={"class": "form-select"}))
     collector = forms.ModelChoiceField(
         label=_("Collector"), required=False, queryset=None, empty_label=_("All"),
         widget=forms.Select(attrs={"class": "form-select"}))
@@ -54,12 +50,7 @@ class CollectionsFilterForm(forms.Form):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        businesses = permissions.allowed_businesses(user) if user else None
-        self.fields["business"].queryset = businesses
-        self.fields["collector"].queryset = (
-            User.objects.filter(role=Role.COLLECTOR, businesses__in=businesses).distinct()
-            if businesses is not None else User.objects.collectors()
-        )
+        self.fields["collector"].queryset = User.objects.filter(role=Role.COLLECTOR)
 
 
 class CollectionActionFilterForm(CollectionsFilterForm):

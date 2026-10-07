@@ -17,7 +17,7 @@ class CustomerBaseMixin(LoginRequiredMixin):
     model = Customer
 
     def get_queryset(self):
-        queryset = Customer.objects.select_related("business", "collector")
+        queryset = Customer.objects.select_related("collector")
         queryset = permissions.filter_by_business(queryset, self.request.user)
         return permissions.filter_collector_portfolio(queryset, self.request.user)
 
@@ -34,8 +34,6 @@ class CustomerListView(CustomerBaseMixin, SearchMixin, ListView):
             self.request.GET or None, user=self.request.user)
         if self.filter_form.is_valid():
             data = self.filter_form.cleaned_data
-            if data.get("business"):
-                queryset = queryset.filter(business=data["business"])
             if data.get("status"):
                 queryset = queryset.filter(status=data["status"])
             if data.get("collector"):
@@ -101,7 +99,6 @@ class CustomerCreateView(ActionRequiredMixin, CustomerFormMixin, CreateView):
     model = Customer
 
     def form_valid(self, form):
-        permissions.require_business(self.request.user, form.cleaned_data["business"])
         messages.success(self.request, _("Customer registered successfully."))
         return super().form_valid(form)
 
@@ -116,7 +113,6 @@ class CustomerUpdateView(ActionRequiredMixin, CustomerFormMixin, CustomerBaseMix
     action = permissions.MANAGE_CUSTOMERS
 
     def form_valid(self, form):
-        permissions.require_business(self.request.user, form.cleaned_data["business"])
         messages.success(self.request, _("Customer updated."))
         return super().form_valid(form)
 

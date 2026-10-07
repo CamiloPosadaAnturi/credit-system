@@ -8,10 +8,9 @@
 {% block content %}
 <form class="filters" method="get">
   <div class="row g-2 align-items-end">
-    <div class="col-md-4">{{ filter_form.q.label_tag }}{{ filter_form.q }}</div>
-    <div class="col-md-3">{{ filter_form.business.label_tag }}{{ filter_form.business }}</div>
-    <div class="col-md-2">{{ filter_form.status.label_tag }}{{ filter_form.status }}</div>
-    <div class="col-md-2">{{ filter_form.collector.label_tag }}{{ filter_form.collector }}</div>
+    <div class="col-md-5">{{ filter_form.q.label_tag }}{{ filter_form.q }}</div>
+    <div class="col-md-3">{{ filter_form.status.label_tag }}{{ filter_form.status }}</div>
+    <div class="col-md-3">{{ filter_form.collector.label_tag }}{{ filter_form.collector }}</div>
     <div class="col-md-1 d-grid"><button class="btn btn-primary btn-sm">{% trans "Filter" %}</button></div>
   </div>
 </form>
@@ -19,7 +18,7 @@
   <div class="table-wrap">
     <table class="data-table">
       <thead><tr><th>{% trans "Code" %}</th><th>{% trans "Customer" %}</th><th>{% trans "Phone" %}</th>
-        <th>{% trans "Business" %}</th><th>{% trans "Collector" %}</th><th class="num">{% trans "Loans" %}</th>
+        <th>{% trans "Collector" %}</th><th class="num">{% trans "Loans" %}</th>
         <th>{% trans "Status" %}</th><th></th></tr></thead>
       <tbody>
       {% for customer in customers %}
@@ -28,7 +27,6 @@
           <td><a href="{{ customer.get_absolute_url }}" class="fw-semibold">{{ customer.full_name }}</a>
             {% if customer.occupation %}<span class="d-block text-secondary small">{{ customer.occupation }}</span>{% endif %}</td>
           <td>{{ customer.phone }}</td>
-          <td>{{ customer.business.trade_name }}</td>
           <td>{{ customer.collector|default:"-" }}</td>
           <td class="num">{{ customer.loans.count }}</td>
           <td><span class="badge text-bg-{{ customer.status|badge }} status-badge">{{ customer.get_status_display }}</span></td>
@@ -36,7 +34,7 @@
             <a class="btn btn-sm btn-outline-soft" href="{% url 'loans:create' %}?customer={{ customer.pk }}">{% trans "New loan" %}</a>{% endif %}</td>
         </tr>
       {% empty %}
-        <tr><td colspan="8">{% include "components/empty_state.html" with message=_("No customers match the filter.") icon="bi-people" action_url="/customers/new/" action_label=_("Register customer") %}</td></tr>
+        <tr><td colspan="7">{% include "components/empty_state.html" with message=_("No customers match the filter.") icon="bi-people" action_url="/customers/new/" action_label=_("Register customer") %}</td></tr>
       {% endfor %}
       </tbody>
     </table>

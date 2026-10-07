@@ -30,7 +30,7 @@ class Report:
     description: str
     columns: list[tuple[str, str]]
     generator: Callable
-    filters: list[str] = field(default_factory=lambda: ["business", "start", "end"])
+    filters: list[str] = field(default_factory=lambda: ["start", "end"])
 
 
 # --------------------------------------------------------------------------
@@ -39,25 +39,21 @@ class Report:
 def _loans(user, filters):
     queryset = permissions.filter_by_business(Loan.objects.all(), user)
     queryset = permissions.filter_collector_portfolio(queryset, user)
-    if filters.get("business"):
-        queryset = queryset.filter(business=filters["business"])
     if filters.get("collector"):
         queryset = queryset.filter(collector=filters["collector"])
     if filters.get("status"):
         queryset = queryset.filter(status=filters["status"])
-    return queryset.select_related("customer", "business", "collector")
+    return queryset.select_related("customer", "collector")
 
 
 def _payments(user, filters):
     queryset = permissions.filter_by_business(Payment.objects.all(), user)
     queryset = permissions.filter_collector_portfolio(queryset, user)
-    if filters.get("business"):
-        queryset = queryset.filter(business=filters["business"])
     if filters.get("collector"):
         queryset = queryset.filter(collector=filters["collector"])
     if filters.get("method"):
         queryset = queryset.filter(method=filters["method"])
-    return queryset.select_related("customer", "loan", "business", "collector")
+    return queryset.select_related("customer", "loan", "collector")
 
 
 def _date_range(queryset, filters, field_name):
@@ -79,7 +75,6 @@ def loans_granted(user, filters):
         yield {
             "reference": loan.reference,
             "customer": str(loan.customer),
-            "business": loan.business.trade_name,
             "disbursement_date": loan.disbursement_date,
             "principal": loan.principal,
             "interest": loan.total_interest,
@@ -108,28 +103,6 @@ def loans_by_status(user, filters):
             "count": row["count"],
             "principal": money(row["principal"]),
             "balance": money(row["balance"]),
-        }
-
-
-def loans_by_business(user, filters):
-    queryset = _date_range(
-        _loans(user, filters).filter(status__in=DISBURSED_STATUSES),
-        filters, "disbursement_date")
-    rows = (
-        queryset.values("business__trade_name")
-        .annotate(count=Count("id"),
-                  principal=Coalesce(Sum("principal"), SQL_ZERO),
-                  interest=Coalesce(Sum("total_interest"), SQL_ZERO),
-                  balance=Coalesce(Sum("outstanding_balance"), SQL_ZERO))
-        .order_by("-principal")
-    )
-    for row in rows:
-        yield {
-            "business": row["business__trade_name"],
-            "loans": row["count"],
-            "disbursed_principal": money(row["principal"]),
-            "contractual_interest": money(row["interest"]),
-            "outstanding_balance": money(row["balance"]),
         }
 
 
@@ -177,7 +150,6 @@ def portfolio_status(user, filters):
         yield {
             "reference": loan.reference,
             "customer": str(loan.customer),
-            "business": loan.business.trade_name,
             "total_balance": loan.outstanding_balance,
             "overdue_balance": overdue,
             "not_yet_due": money(loan.outstanding_balance - overdue),
@@ -249,7 +221,7 @@ def collector_report(user, filters):
     from apps.dashboard.services import collector_performance
 
     for row in collector_performance(
-        user, filters.get("business"), filters.get("start"), filters.get("end")
+        user, start=filters.get("start"), end=filters.get("end")
     ):
         yield {
             "collector": str(row["collector"]),
@@ -335,7 +307,7 @@ REPORTS: dict[str, Report] = {
         Report("loans_granted", _("Loans granted in the period"),
                _("Loans disbursed within the date range."),
                [("reference", _("Reference")), ("customer", _("Customer")),
-                ("business", _("Business")), ("disbursement_date", _("Disbursed")),
+                ("disbursement_date", _("Disbursed")),
                 ("principal", _("Principal")), ("interest", _("Interest")),
                 ("total", _("Total")), ("installments", _("Installments")),
                 ("frequency", _("Frequency")), ("status", _("Status")),
@@ -346,13 +318,6 @@ REPORTS: dict[str, Report] = {
                [("status", _("Status")), ("count", _("Loans")),
                 ("principal", _("Principal")), ("balance", _("Outstanding balance"))],
                loans_by_status),
-        Report("loans_by_business", _("Loans per business or branch"),
-               _("Lending and balance grouped by business."),
-               [("business", _("Business")), ("loans", _("Loans")),
-                ("disbursed_principal", _("Disbursed principal")),
-                ("contractual_interest", _("Contractual interest")),
-                ("outstanding_balance", _("Outstanding balance"))],
-               loans_by_business),
         Report("payments", _("Payments in the period"),
                _("Detail of confirmed payments (daily, weekly or monthly by range)."),
                [("reference", _("Reference")), ("date", _("Date")),
@@ -370,7 +335,7 @@ REPORTS: dict[str, Report] = {
         Report("portfolio", _("Live and past-due portfolio"),
                _("Total, overdue and not-yet-due balance of every live loan."),
                [("reference", _("Reference")), ("customer", _("Customer")),
-                ("business", _("Business")), ("total_balance", _("Total balance")),
+                ("total_balance", _("Total balance")),
                 ("overdue_balance", _("Overdue balance")),
                 ("not_yet_due", _("Not yet due")),
                 ("days_past_due", _("Days past due")), ("status", _("Status")),

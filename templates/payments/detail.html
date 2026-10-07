@@ -17,7 +17,6 @@
       <div class="card-panel-body"><dl class="row small mb-0">
         <dt class="col-5">{% trans "Customer" %}</dt><dd class="col-7">{{ payment.customer }}</dd>
         <dt class="col-5">{% trans "Loan" %}</dt><dd class="col-7">{{ payment.loan.reference }}</dd>
-        <dt class="col-5">{% trans "Business" %}</dt><dd class="col-7">{{ payment.business }}</dd>
         <dt class="col-5">{% trans "Date" %}</dt><dd class="col-7">{{ payment.paid_at|date:"d/m/Y H:i" }}</dd>
         <dt class="col-5">{% trans "Amount" %}</dt><dd class="col-7 fw-semibold">{{ payment.amount|mxn }}</dd>
         <dt class="col-5">{% trans "Allocated" %}</dt><dd class="col-7">{{ payment.allocated_amount|mxn }}</dd>

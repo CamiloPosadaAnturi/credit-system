@@ -4,18 +4,11 @@
 {% block subheading %}
   <p class="text-secondary small mb-0">
     {% blocktrans with start=indicators.start|date:"d/m/Y" end=indicators.end|date:"d/m/Y" %}Period {{ start }} - {{ end }}{% endblocktrans %}
-    {% if selected_business %} &middot; {{ selected_business }}{% else %} &middot; {% trans "all businesses" %}{% endif %}
   </p>
 {% endblock %}
 
 {% block actions %}
 <form class="d-flex gap-2 flex-wrap" method="get">
-  <select name="business" class="form-select form-select-sm" style="min-width:160px">
-    <option value="">{% trans "All businesses" %}</option>
-    {% for business in user_businesses %}
-      <option value="{{ business.pk }}" {% if selected_business and selected_business.pk == business.pk %}selected{% endif %}>{{ business }}</option>
-    {% endfor %}
-  </select>
   <input type="date" name="start" value="{{ start }}" class="form-control form-control-sm">
   <input type="date" name="end" value="{{ end }}" class="form-control form-control-sm">
   <button class="btn btn-sm btn-primary" type="submit">{% trans "Apply" %}</button>

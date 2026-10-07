@@ -69,7 +69,6 @@ class ReportView(ActionRequiredMixin, View):
                 "name": report.name, "format": export_format,
             },
             user=request.user,
-            business=filters.get("business"),
             data={"rows": len(rows), "filters": {
                 key: str(value) for key, value in filters.items() if value}},
         )

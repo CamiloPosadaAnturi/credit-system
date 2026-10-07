@@ -5,7 +5,8 @@
 {% endblock %}
 {% block actions %}
   {% if user_permissions.create_loan %}
-    <a class="btn btn-sm btn-primary" href="{% url 'loans:create' %}?customer={{ customer.pk }}">{% trans "New loan" %}</a>
+    <a class="btn btn-sm btn-primary" href="{% url 'loans:create' %}?customer={{ customer.pk }}"
+       data-bs-toggle="modal" data-bs-target="#newLoanModal">{% trans "New loan" %}</a>
   {% endif %}
   {% if user_permissions.manage_customers %}
     <a class="btn btn-sm btn-outline-soft" href="{% url 'customers:update' customer.pk %}">{% trans "Edit" %}</a>
@@ -108,4 +109,8 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block modals %}
+{% if loan_form %}{% include "loans/_create_modal.html" %}{% endif %}
 {% endblock %}

@@ -2,7 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 from apps.collections.models import ActionOutcome, ActionType, CollectionAction
-from apps.core.forms import BootstrapFormMixin
+from apps.core.forms import BootstrapFormMixin, DateInput
 from apps.users.models import Role, User
 
 
@@ -12,8 +12,8 @@ class CollectionActionForm(BootstrapFormMixin, forms.ModelForm):
         fields = ["action_type", "outcome", "promised_amount", "promise_date",
                   "next_contact_date", "notes"]
         widgets = {
-            "promise_date": forms.DateInput(attrs={"type": "date"}),
-            "next_contact_date": forms.DateInput(attrs={"type": "date"}),
+            "promise_date": DateInput(),
+            "next_contact_date": DateInput(),
             "notes": forms.Textarea(attrs={"rows": 3}),
             "promised_amount": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
         }
@@ -40,10 +40,10 @@ class CollectionsFilterForm(forms.Form):
         widget=forms.Select(attrs={"class": "form-select"}))
     start = forms.DateField(
         label=_("From"), required=False,
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}))
+        widget=DateInput(attrs={"class": "form-control"}))
     end = forms.DateField(
         label=_("To"), required=False,
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}))
+        widget=DateInput(attrs={"class": "form-control"}))
     min_days_past_due = forms.IntegerField(
         label=_("Minimum days past due"), required=False, min_value=0,
         widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "0"}))

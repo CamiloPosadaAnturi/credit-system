@@ -1,0 +1,19 @@
+{% load i18n %}
+<div data-preview>
+  <h3 class="h6 mb-3">{% trans "Preview" %}</h3>
+  <div class="alert alert-warning py-2 small d-none" data-field="warnings"></div>
+  <p class="text-secondary small mb-0" data-preview-empty>{% trans "Enter the principal to see the interest and the installments." %}</p>
+  <dl class="row small mb-0 d-none" data-preview-body>
+    <dt class="col-7 fw-normal">{% blocktrans with rate=form.rate_percentage|floatformat:"-2" %}Interest ({{ rate }}% of the principal){% endblocktrans %}</dt>
+    <dd class="col-5 text-end" data-field="interest">-</dd>
+    <dt class="col-7">{% trans "Total payable" %}</dt>
+    <dd class="col-5 text-end fw-semibold" data-field="total">-</dd>
+    <dt class="col-7 fw-normal">{% trans "Installment amount" %}</dt>
+    <dd class="col-5 text-end" data-field="installment">-</dd>
+    <dt class="col-7 fw-normal d-none" data-last>{% trans "Last installment" %}</dt>
+    <dd class="col-5 text-end d-none" data-last data-field="last">-</dd>
+    <dt class="col-7 fw-normal">{% trans "Final due date" %}</dt>
+    <dd class="col-5 text-end" data-field="final">-</dd>
+  </dl>
+  <p class="form-hint mt-3 mb-0">{% trans "Informational. The system recomputes everything when the loan is saved." %}</p>
+</div>

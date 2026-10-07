@@ -17,6 +17,7 @@ from apps.customers.forms import (
 )
 from apps.customers.models import Customer, CustomerStatus
 from apps.customers.services import customer_summary, payment_history
+from apps.loans.forms import LoanForm
 from apps.users import permissions
 
 
@@ -52,6 +53,8 @@ class CustomerListView(CustomerBaseMixin, SearchMixin, ListView):
         context["filter_form"] = self.filter_form
         if permissions.can(self.request.user, permissions.MANAGE_CUSTOMERS):
             context["quick_form"] = CustomerQuickForm()
+        if permissions.can(self.request.user, permissions.CREATE_LOAN):
+            context["loan_form"] = LoanForm.for_new_loan(user=self.request.user)
         context["title"] = _("Customers")
         return context
 
@@ -68,6 +71,8 @@ class CustomerDetailView(CustomerBaseMixin, DetailView):
         context["payments"] = payment_history(self.object, limit=25)
         context["can_view_sensitive"] = permissions.can(
             self.request.user, permissions.VIEW_SENSITIVE_DATA)
+        if permissions.can(self.request.user, permissions.CREATE_LOAN):
+            context["loan_form"] = LoanForm.for_new_loan(self.object, user=self.request.user)
         return context
 
 

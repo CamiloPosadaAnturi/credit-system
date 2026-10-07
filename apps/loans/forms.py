@@ -2,72 +2,90 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.choices import InterestMode, PaymentFrequency
-from apps.core.forms import BootstrapFormMixin
+from apps.core.forms import BootstrapFormMixin, DateInput
 from apps.customers.models import Customer
 from apps.loans.models import Loan, LoanStatus
 from apps.users.models import Role, User
+
+#: Frequencies offered when creating a loan (the custom "every N days" one
+#: is not used by the business).
+LOAN_FREQUENCIES = [
+    (value, label) for value, label in PaymentFrequency.choices
+    if value != PaymentFrequency.CUSTOM
+]
 
 
 class LoanForm(BootstrapFormMixin, forms.ModelForm):
     """Loan terms.
 
-    Interest, total and schedule are NOT captured: the service layer
-    computes them from these terms.
+    Only the principal and the schedule are captured. The interest is always
+    the business rate (Settings) x principal, and the collector is the one
+    assigned to the customer. Interest, total and schedule are computed by
+    the service layer.
     """
 
     class Meta:
         model = Loan
         fields = [
-            "customer", "collector", "application_date", "principal",
-            "interest_mode", "interest_rate", "rate_period",
-            "payment_frequency", "custom_days", "installment_count",
-            "first_payment_date", "notes", "contract",
+            "customer", "principal", "payment_frequency", "installment_count",
+            "first_payment_date", "application_date", "notes",
         ]
         widgets = {
-            "application_date": forms.DateInput(attrs={"type": "date"}),
-            "first_payment_date": forms.DateInput(attrs={"type": "date"}),
-            "notes": forms.Textarea(attrs={"rows": 3}),
-            "principal": forms.NumberInput(attrs={"step": "0.01", "min": "0.01"}),
-            "interest_rate": forms.NumberInput(attrs={"step": "0.0001", "min": "0"}),
+            "application_date": DateInput(),
+            "first_payment_date": DateInput(),
+            "notes": forms.Textarea(attrs={"rows": 2}),
+            "principal": forms.NumberInput(attrs={"step": "0.01", "min": "0.01",
+                                                  "inputmode": "decimal"}),
+            "installment_count": forms.NumberInput(attrs={"min": "1"}),
         }
-
-    SECTIONS = [
-        (_("Application"), ["customer", "collector", "application_date"]),
-        (_("Financial terms"), ["principal", "interest_mode", "interest_rate",
-                                "rate_period"]),
-        (_("Schedule"), ["payment_frequency", "installment_count", "custom_days",
-                         "first_payment_date"]),
-        (_("Documents"), ["notes", "contract"]),
-    ]
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
         self.fields["customer"].queryset = Customer.objects.active()
-        self.fields["collector"].queryset = User.objects.collectors()
-        self.fields["custom_days"].help_text = _("Only for the custom frequency.")
-        self.fields["interest_rate"].help_text = _(
-            "Ratio. 0.40 = 40% (400 MXN per 1,000 MXN lent)."
-        )
+        self.fields["customer"].empty_label = _("Select a customer")
+        self.fields["payment_frequency"].choices = LOAN_FREQUENCIES
+        from apps.businesses.models import Business
+
+        #: Shown in the preview: the interest is always this rate x principal.
+        self.rate_percentage = Business.objects.current().rate_percentage
         self.apply_widget_styles()
+
+    @classmethod
+    def for_new_loan(cls, customer=None, user=None):
+        """Unbound form with the defaults of the business configuration."""
+        from apps.businesses.models import Business
+        from apps.core.dates import today_local
+
+        business = Business.objects.current()
+        initial = {
+            "application_date": today_local(),
+            "first_payment_date": today_local(),
+            "payment_frequency": business.payment_frequency
+            if business.payment_frequency != PaymentFrequency.CUSTOM
+            else PaymentFrequency.WEEKLY,
+            "installment_count": business.installment_count,
+        }
+        if customer is not None:
+            initial["customer"] = customer.pk
+        return cls(initial=initial, user=user)
+
+    def full_clean(self):
+        super().full_clean()
+        # Highlight the fields with errors (Bootstrap ``is-invalid``).
+        for name in self.errors:
+            if name in self.fields:
+                widget = self.fields[name].widget
+                widget.attrs["class"] = f"{widget.attrs.get('class', '')} is-invalid".strip()
 
     def clean(self):
         data = super().clean()
-        frequency = data.get("payment_frequency")
-        custom_days = data.get("custom_days")
         principal = data.get("principal")
         installments = data.get("installment_count")
-
-        if frequency == PaymentFrequency.CUSTOM and not custom_days:
-            self.add_error("custom_days",
-                           _("State how many days apart the installments fall."))
         if principal is not None and principal <= 0:
             self.add_error("principal", _("The principal must be greater than zero."))
         if installments is not None and installments < 1:
             self.add_error("installment_count", _("There must be at least one installment."))
-        if data.get("interest_mode") != InterestMode.NO_INTEREST:
-            if data.get("interest_rate") in (None, ""):
-                self.add_error("interest_rate", _("State the applied rate."))
         return data
 
 
@@ -85,10 +103,10 @@ class LoanFilterForm(forms.Form):
         widget=forms.Select(attrs={"class": "form-select"}))
     start = forms.DateField(
         label=_("Disbursed from"), required=False,
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}))
+        widget=DateInput(attrs={"class": "form-control"}))
     end = forms.DateField(
         label=_("Disbursed to"), required=False,
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}))
+        widget=DateInput(attrs={"class": "form-control"}))
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -112,7 +130,7 @@ class RestructuringForm(BootstrapFormMixin, forms.Form):
         label=_("Frequency"), choices=PaymentFrequency.choices)
     first_payment_date = forms.DateField(
         label=_("First payment date"),
-        widget=forms.DateInput(attrs={"type": "date"}))
+        widget=DateInput())
     interest_mode = forms.ChoiceField(
         label=_("Interest mode"), choices=InterestMode.choices, required=False)
     interest_rate = forms.DecimalField(

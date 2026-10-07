@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from apps.core.forms import BootstrapFormMixin
+from apps.core.forms import BootstrapFormMixin, DateInput
 from apps.payments.models import PaymentMethod, PaymentStatus
 from apps.users.models import Role, User
 
@@ -83,10 +83,10 @@ class PaymentFilterForm(forms.Form):
         widget=forms.Select(attrs={"class": "form-select"}))
     start = forms.DateField(
         label=_("From"), required=False,
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}))
+        widget=DateInput(attrs={"class": "form-control"}))
     end = forms.DateField(
         label=_("To"), required=False,
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}))
+        widget=DateInput(attrs={"class": "form-control"}))
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)

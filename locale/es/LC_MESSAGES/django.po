@@ -2298,3 +2298,26 @@ msgstr "Guardando..."
 
 msgid "Last name"
 msgstr "Apellido"
+
+msgid "Select a customer"
+msgstr "Selecciona un cliente"
+
+msgid "Save loan"
+msgstr "Guardar crédito"
+
+msgid "Enter the principal to see the interest and the installments."
+msgstr "Escribe el capital para ver el interés y las cuotas."
+
+msgid "Interest (%(rate)s%% of the principal)"
+msgstr "Interés (%(rate)s%% del capital)"
+
+msgid ""
+"Informational. The system recomputes everything when the loan is saved."
+msgstr "Informativo. El sistema recalcula todo al guardar el crédito."
+
+msgid "Interest = rate x principal. 0.40 = 40% (400 MXN per 1,000 MXN lent)."
+msgstr ""
+"Interés = tasa x capital. 0.40 = 40% (400 MXN por cada 1,000 MXN prestados)."
+
+msgid "Rate x principal"
+msgstr "Tasa x capital"

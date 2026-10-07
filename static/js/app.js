@@ -74,8 +74,13 @@
     }
 
     function focusFirstField() {
-      const field = form.querySelector(".is-invalid") ||
-        form.querySelector("input:not([type=hidden]), select, textarea");
+      let field = form.querySelector(".is-invalid");
+      if (!field) {
+        // First empty field (e.g. the principal when the customer is preselected).
+        field = Array.prototype.find.call(
+          form.querySelectorAll("input:not([type=hidden]), select, textarea"),
+          function (element) { return !element.value; });
+      }
       if (field) { field.focus(); }
     }
 
@@ -105,6 +110,14 @@
     });
 
     if (modal) {
+      // A button can preselect the customer: data-customer="<id>".
+      modal.addEventListener("show.bs.modal", function (event) {
+        const trigger = event.relatedTarget;
+        const customer = form.querySelector("[name=customer]");
+        if (trigger && trigger.dataset.customer && customer) {
+          customer.value = trigger.dataset.customer;
+        }
+      });
       modal.addEventListener("shown.bs.modal", focusFirstField);
       modal.addEventListener("hidden.bs.modal", function () {
         if (body) { body.innerHTML = initialBody; }
@@ -116,50 +129,102 @@
 
   // Live preview of the loan terms.
   // IMPORTANT: informational only; the server recomputes everything on save.
-  const simulator = document.getElementById("loanSimulator");
-  if (simulator) {
-    const fieldNames = ["principal", "interest_rate", "installment_count",
-                        "interest_mode", "payment_frequency", "custom_days"];
-    const output = document.getElementById("simulationOutput");
+  document.querySelectorAll("form[data-simulate-url]").forEach(function (form) {
+    const fieldNames = ["customer", "principal", "payment_frequency",
+                        "installment_count", "first_payment_date"];
+    const csrfInput = form.querySelector("[name=csrfmiddlewaretoken]");
+    let timer = null;
+    let sequence = 0;
 
     function currency(value) {
-      return "$" + Number(value).toLocaleString("es-MX", { minimumFractionDigits: 2 });
+      return "$" + Number(value).toLocaleString("es-MX", {
+        minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    function runSimulation() {
+    function preview() { return form.querySelector("[data-preview]"); }
+
+    function clear() {
+      const box = preview();
+      if (!box) { return; }
+      box.querySelector("[data-preview-body]").classList.add("d-none");
+      box.querySelector("[data-preview-empty]").classList.remove("d-none");
+      const warnings = box.querySelector("[data-field=warnings]");
+      warnings.classList.add("d-none");
+      warnings.textContent = "";
+    }
+
+    function render(data) {
+      const box = preview();
+      if (!box) { return; }
+      const warnings = box.querySelector("[data-field=warnings]");
+      warnings.textContent = "";
+      (data.warnings || []).forEach(function (text) {
+        const line = document.createElement("div");
+        line.textContent = text;
+        warnings.appendChild(line);
+      });
+      warnings.classList.toggle("d-none", !(data.warnings || []).length);
+
+      const body = box.querySelector("[data-preview-body]");
+      const empty = box.querySelector("[data-preview-empty]");
+      const result = data.simulation;
+      if (!result) {
+        body.classList.add("d-none");
+        empty.classList.remove("d-none");
+        return;
+      }
+      body.querySelector("[data-field=interest]").textContent = currency(result.total_interest);
+      body.querySelector("[data-field=total]").textContent = currency(result.total_payable);
+      body.querySelector("[data-field=installment]").textContent =
+        result.installment_count + " x " + currency(result.installment_amount);
+      body.querySelector("[data-field=last]").textContent = currency(result.last_installment_amount);
+      body.querySelector("[data-field=final]").textContent = result.final_due_date;
+      const lastDiffers = result.last_installment_amount !== result.installment_amount;
+      body.querySelectorAll("[data-last]").forEach(function (element) {
+        element.classList.toggle("d-none", !lastDiffers);
+      });
+      body.classList.remove("d-none");
+      empty.classList.add("d-none");
+    }
+
+    function run() {
       const payload = {};
       fieldNames.forEach(function (name) {
-        const field = simulator.querySelector("[name=" + name + "]");
+        const field = form.querySelector("[name=" + name + "]");
         if (field) { payload[name] = field.value; }
       });
-      if (!payload.principal || !payload.installment_count) { return; }
-      fetch(simulator.dataset.url, {
+      const current = ++sequence;
+      fetch(form.dataset.simulateUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": simulator.dataset.csrf,
+          "X-CSRFToken": csrfInput ? csrfInput.value : "",
         },
         body: JSON.stringify(payload),
+        credentials: "same-origin",
       })
         .then(function (response) { return response.ok ? response.json() : null; })
         .then(function (data) {
-          if (!data || !output) { return; }
-          output.querySelector("[data-field=interest]").textContent = currency(data.total_interest);
-          output.querySelector("[data-field=total]").textContent = currency(data.total_payable);
-          output.querySelector("[data-field=installment]").textContent = currency(data.installment_amount);
-          output.querySelector("[data-field=last]").textContent = currency(data.last_installment_amount);
-          output.classList.remove("d-none");
+          if (data && current === sequence) { render(data); }
         })
         .catch(function () { /* the preview is optional */ });
     }
 
-    fieldNames.forEach(function (name) {
-      const field = simulator.querySelector("[name=" + name + "]");
-      if (field) {
-        field.addEventListener("change", runSimulation);
-        field.addEventListener("keyup", runSimulation);
-      }
-    });
-    runSimulation();
-  }
+    function schedule() {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(run, 250);
+    }
+
+    // Delegated: the fields may be re-rendered after a validation error.
+    form.addEventListener("input", schedule);
+    form.addEventListener("change", schedule);
+
+    const modal = form.closest(".modal");
+    if (modal) {
+      modal.addEventListener("shown.bs.modal", run);
+      modal.addEventListener("hidden.bs.modal", function () { sequence += 1; clear(); });
+    } else {
+      run();
+    }
+  });
 })();

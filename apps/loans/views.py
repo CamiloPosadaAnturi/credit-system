@@ -1,3 +1,4 @@
+import datetime as dt
 import json
 
 from django.contrib import messages
@@ -5,14 +6,17 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.utils.translation import gettext as _
 from django.views.generic import DetailView, ListView, UpdateView, View
 
 from apps.businesses.models import Business
+from apps.core.choices import InterestMode
 from apps.core.dates import today_local
 from apps.core.errors import BusinessRuleError
 from apps.core.mixins import ActionRequiredMixin, SearchMixin
 from apps.core.money import to_decimal
+from apps.customers.models import Customer
 from apps.loans import services
 from apps.loans.calculations import simulate
 from apps.loans.forms import (
@@ -59,6 +63,8 @@ class LoanListView(LoanBaseMixin, SearchMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filter_form"] = self.filter_form
+        if permissions.can(self.request.user, permissions.CREATE_LOAN):
+            context["loan_form"] = LoanForm.for_new_loan(user=self.request.user)
         context["title"] = _("Loans")
         return context
 
@@ -96,87 +102,65 @@ class LoanDetailView(LoanBaseMixin, DetailView):
         return context
 
 
+def is_ajax(request) -> bool:
+    return request.headers.get("x-requested-with") == "XMLHttpRequest"
+
+
 class LoanCreateView(ActionRequiredMixin, View):
-    """Two-step loan creation: capture the terms, then confirm them."""
+    """Register a loan in one step.
+
+    The interest is the business rate (Settings) x principal and the
+    collector is the customer's. The customer and loan pages open this form
+    in a modal and submit it with ``fetch``: the answer is JSON (the redirect,
+    or the form re-rendered with its errors). Without JavaScript it works as
+    a normal page.
+    """
 
     action = permissions.CREATE_LOAN
     template_name = "loans/form.html"
 
     def get(self, request):
-        business = Business.objects.current()
-        initial = {"application_date": today_local(), "first_payment_date": today_local(),
-                   "interest_mode": business.interest_mode,
-                   "interest_rate": business.interest_rate,
-                   "rate_period": business.rate_period,
-                   "payment_frequency": business.payment_frequency,
-                   "installment_count": business.installment_count}
+        customer = None
         customer_id = request.GET.get("customer")
         if customer_id:
-            from apps.customers.models import Customer
-
             customer = get_object_or_404(
                 permissions.filter_by_business(Customer.objects.all(), request.user),
                 pk=customer_id,
             )
-            initial.update({"customer": customer.pk, "collector": customer.collector_id})
-        form = LoanForm(initial=initial, user=request.user)
-        return render(request, self.template_name,
-                      {"form": form, "title": _("New loan")})
+        form = LoanForm.for_new_loan(customer, user=request.user)
+        return render(request, self.template_name, {"form": form, "title": _("New loan")})
 
     def post(self, request):
-        form = LoanForm(request.POST, request.FILES, user=request.user)
-        if not form.is_valid():
-            return render(request, self.template_name,
-                          {"form": form, "title": _("New loan")})
-
-        data = form.cleaned_data
-        simulation = simulate(
-            principal=data["principal"],
-            mode=data["interest_mode"],
-            rate=data["interest_rate"] or 0,
-            installment_count=data["installment_count"],
-            first_payment_date=data["first_payment_date"],
-            frequency=data["payment_frequency"],
-            custom_days=data.get("custom_days"),
-        )
-
-        if request.POST.get("confirm") != "1":
-            return render(request, "loans/confirm.html", {
-                "form": form,
-                "simulation": simulation,
-                "customer": data["customer"],
-                "customer_summary": services.pre_approval_summary(data["customer"]),
-                "title": _("Confirm the loan terms"),
-            })
-
-        try:
-            loan = services.create_loan(
-                customer=data["customer"],
-                business=data["customer"].business,
-                principal=data["principal"],
-                installment_count=data["installment_count"],
-                frequency=data["payment_frequency"],
-                first_payment_date=data["first_payment_date"],
-                user=request.user,
-                collector=data.get("collector"),
-                interest_mode=data["interest_mode"],
-                interest_rate=data["interest_rate"] or 0,
-                rate_period=data["rate_period"],
-                custom_days=data.get("custom_days"),
-                application_date=data["application_date"],
-                notes=data.get("notes", ""),
-            )
-        except BusinessRuleError as error:
-            messages.error(request, str(error))
-            return render(request, self.template_name,
-                          {"form": form, "title": _("New loan")})
-
-        if form.cleaned_data.get("contract"):
-            loan.contract = form.cleaned_data["contract"]
-            loan.save(update_fields=["contract"])
-        messages.success(request,
-                         _("Loan %(ref)s created.") % {"ref": loan.reference})
-        return redirect(loan.get_absolute_url())
+        form = LoanForm(request.POST, user=request.user)
+        if form.is_valid():
+            data = form.cleaned_data
+            customer = data["customer"]
+            try:
+                loan = services.create_loan(
+                    customer=customer,
+                    business=customer.business,
+                    principal=data["principal"],
+                    installment_count=data["installment_count"],
+                    frequency=data["payment_frequency"],
+                    first_payment_date=data["first_payment_date"],
+                    user=request.user,
+                    interest_mode=InterestMode.FLAT_ON_PRINCIPAL,
+                    application_date=data["application_date"],
+                    notes=data.get("notes", ""),
+                )
+            except BusinessRuleError as error:
+                form.add_error(None, str(error))
+            else:
+                messages.success(
+                    request, _("Loan %(ref)s created.") % {"ref": loan.reference})
+                if is_ajax(request):
+                    return JsonResponse({"ok": True, "redirect": loan.get_absolute_url()})
+                return redirect(loan.get_absolute_url())
+        if is_ajax(request):
+            html = render_to_string("loans/_loan_form.html", {"form": form},
+                                    request=request)
+            return JsonResponse({"ok": False, "html": html}, status=400)
+        return render(request, self.template_name, {"form": form, "title": _("New loan")})
 
 
 class LoanUpdateView(ActionRequiredMixin, LoanBaseMixin, UpdateView):
@@ -209,6 +193,7 @@ class LoanUpdateView(ActionRequiredMixin, LoanBaseMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = _("Edit %(ref)s") % {"ref": self.object.reference}
+        context["cancel_url"] = self.object.get_absolute_url()
         return context
 
 
@@ -326,28 +311,55 @@ def simulate_loan(request):
     """Live preview of the loan terms (JSON).
 
     The result is informational: the backend recomputes everything when
-    saving. Numbers sent from the browser are never trusted.
+    saving. The interest rule always comes from the business configuration;
+    numbers sent from the browser are never trusted.
+
+    Answers ``{"simulation": {...} | null, "warnings": [...]}``: the
+    customer's warnings are returned even while the terms are incomplete.
     """
-    if not request.user.is_authenticated:
+    if not permissions.can(request.user, permissions.CREATE_LOAN):
         raise PermissionDenied
     try:
         payload = json.loads(request.body or "{}")
+    except ValueError:
+        return JsonResponse({"error": "Invalid JSON."}, status=400)
+    if not isinstance(payload, dict):
+        return JsonResponse({"error": "Invalid payload."}, status=400)
+
+    warnings = []
+    customer_id = str(payload.get("customer") or "")
+    if customer_id.isdigit():
+        customer = (permissions.filter_by_business(Customer.objects.all(), request.user)
+                    .filter(pk=customer_id).first())
+        if customer is not None:
+            warnings = [str(text) for text in
+                        services.pre_approval_summary(customer)["warnings"]]
+
+    business = Business.objects.current()
+    simulation = None
+    try:
+        installment_count = int(payload.get("installment_count") or 0)
+        if not 1 <= installment_count <= 1000:
+            raise ValueError("Invalid number of installments.")
+        first_payment = payload.get("first_payment_date")
         result = simulate(
-            principal=to_decimal(payload.get("principal")),
-            mode=payload.get("interest_mode"),
-            rate=to_decimal(payload.get("interest_rate")),
-            installment_count=int(payload.get("installment_count") or 1),
-            first_payment_date=today_local(),
-            frequency=payload.get("payment_frequency"),
-            custom_days=int(payload.get("custom_days") or 0) or None,
+            principal=to_decimal(payload.get("principal") or 0),
+            mode=InterestMode.FLAT_ON_PRINCIPAL,
+            rate=business.interest_rate,
+            installment_count=installment_count,
+            first_payment_date=(dt.date.fromisoformat(first_payment) if first_payment
+                                else today_local()),
+            frequency=payload.get("payment_frequency") or business.payment_frequency,
         )
-    except (ValueError, TypeError, KeyError) as error:
-        return JsonResponse({"error": str(error)}, status=400)
-    return JsonResponse({
-        "principal": str(result["principal"]),
-        "total_interest": str(result["total_interest"]),
-        "total_payable": str(result["total_payable"]),
-        "installment_amount": str(result["installment_amount"]),
-        "last_installment_amount": str(result["last_installment_amount"]),
-        "installment_count": result["installment_count"],
-    })
+        simulation = {
+            "principal": str(result["principal"]),
+            "total_interest": str(result["total_interest"]),
+            "total_payable": str(result["total_payable"]),
+            "installment_amount": str(result["installment_amount"]),
+            "last_installment_amount": str(result["last_installment_amount"]),
+            "installment_count": result["installment_count"],
+            "final_due_date": result["final_due_date"].strftime("%d/%m/%Y"),
+        }
+    except (ValueError, TypeError, KeyError, ArithmeticError):
+        simulation = None
+    return JsonResponse({"simulation": simulation, "warnings": warnings})

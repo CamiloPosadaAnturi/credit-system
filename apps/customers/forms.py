@@ -3,7 +3,7 @@ from django.forms import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 
 from apps.businesses.models import Business
-from apps.core.forms import BootstrapFormMixin
+from apps.core.forms import BootstrapFormMixin, DateInput
 from apps.customers.models import Customer, CustomerStatus, PersonalReference
 from apps.users import permissions
 from apps.users.models import Role, User
@@ -20,7 +20,7 @@ class CustomerForm(BootstrapFormMixin, forms.ModelForm):
             "occupation", "collector", "status", "notes",
         ]
         widgets = {
-            "birth_date": forms.DateInput(attrs={"type": "date"}),
+            "birth_date": DateInput(),
             "notes": forms.Textarea(attrs={"rows": 3}),
         }
 

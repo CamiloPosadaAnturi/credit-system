@@ -148,7 +148,7 @@ Todos los datos son inventados.
 
 1. **Configuracion**: *Configuracion -> Editar*. Define la tasa (0.40 = 40 %, es decir 400 por cada 1,000) y la frecuencia predeterminada.
 2. **Alta de cliente**: *Clientes -> Nuevo cliente*, asigna el cobrador.
-3. **Nuevo credito**: desde la ficha del cliente o *Creditos -> Nuevo credito*. El sistema muestra una **pantalla de confirmacion** con interes, total, cuota y calendario antes de guardar nada.
+3. **Nuevo credito**: boton *Nuevo credito* en la ficha del cliente, en la lista de clientes o en *Creditos*. Se abre un modal con cliente, capital, frecuencia, numero de cuotas y fechas; el interes siempre es la tasa de *Configuracion* x capital y el cobrador es el del cliente. Mientras escribes ves el interes, el total, la cuota, la fecha final y las alertas del cliente (si debe o tiene cuotas vencidas).
 4. **Aprobar y desembolsar**: en la ficha del credito. Al aprobar se congela la tasa; al desembolsar empieza a contar el calendario.
 5. **Registrar un pago**: boton *Registrar pago*. Prueba un abono parcial y observa la cuota en estado `Parcial`.
 6. **Reversar un pago**: *Pagos -> ver pago -> Reversar*. El pago queda marcado, nunca se borra, y el saldo se recalcula.
@@ -166,7 +166,7 @@ Todos los datos son inventados.
 python manage.py test apps --settings=config.settings.test
 ```
 
-La suite (105 pruebas) cubre: interes por cada $1,000, total a pagar, generacion
+La suite (117 pruebas) cubre: interes por cada $1,000, total a pagar, generacion
 y redondeo de cuotas, frecuencias y fin de mes, abonos parciales, aplicacion a
 cuotas vencidas, separacion capital/interes, liquidacion anticipada, pagos
 duplicados, excedentes, reversos, deteccion de mora, modo de negocio unico,

@@ -2,7 +2,8 @@
 {% block heading %}{% trans "Customers" %}{% endblock %}
 {% block actions %}
   {% if user_permissions.manage_customers %}
-    <a class="btn btn-primary btn-sm" href="{% url 'customers:create' %}"><i class="bi bi-person-plus"></i> {% trans "New customer" %}</a>
+    <a class="btn btn-primary btn-sm" href="{% url 'customers:create' %}"
+       data-bs-toggle="modal" data-bs-target="#newCustomerModal"><i class="bi bi-person-plus"></i> {% trans "New customer" %}</a>
   {% endif %}
 {% endblock %}
 {% block content %}
@@ -34,11 +35,34 @@
             <a class="btn btn-sm btn-outline-soft" href="{% url 'loans:create' %}?customer={{ customer.pk }}">{% trans "New loan" %}</a>{% endif %}</td>
         </tr>
       {% empty %}
-        <tr><td colspan="7">{% include "components/empty_state.html" with message=_("No customers match the filter.") icon="bi-people" action_url="/customers/new/" action_label=_("Register customer") %}</td></tr>
+        <tr><td colspan="7">{% if user_permissions.manage_customers %}{% url 'customers:create' as create_url %}{% include "components/empty_state.html" with message=_("No customers match the filter.") icon="bi-people" action_url=create_url action_modal="#newCustomerModal" action_label=_("Register customer") %}{% else %}{% include "components/empty_state.html" with message=_("No customers match the filter.") icon="bi-people" %}{% endif %}</td></tr>
       {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
 {% include "components/pagination.html" %}
+{% endblock %}
+
+{% block modals %}
+{% if quick_form %}
+<div class="modal fade" id="newCustomerModal" tabindex="-1" aria-labelledby="newCustomerTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="{% url 'customers:create' %}" novalidate data-ajax-form>
+      {% csrf_token %}
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="newCustomerTitle">{% trans "New customer" %}</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+      </div>
+      <div class="modal-body" data-form-body>
+        {% include "customers/_quick_form.html" with form=quick_form %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-soft" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+        <button type="submit" class="btn btn-primary" data-busy-label="{% trans 'Saving...' %}">{% trans "Save customer" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
 {% endblock %}

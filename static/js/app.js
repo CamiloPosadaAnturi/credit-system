@@ -57,6 +57,63 @@
     });
   });
 
+  // Forms submitted with fetch (e.g. the "New customer" modal). The server
+  // answers JSON: {ok: true, redirect} or {ok: false, html} with the form
+  // re-rendered and its errors, which replaces the form body in place.
+  document.querySelectorAll("form[data-ajax-form]").forEach(function (form) {
+    const body = form.querySelector("[data-form-body]");
+    const button = form.querySelector("button[type=submit]");
+    const initialBody = body ? body.innerHTML : "";
+    const buttonLabel = button ? button.textContent : "";
+    const modal = form.closest(".modal");
+
+    function setBusy(busy) {
+      if (!button) { return; }
+      button.disabled = busy;
+      button.textContent = busy ? (button.dataset.busyLabel || "...") : buttonLabel;
+    }
+
+    function focusFirstField() {
+      const field = form.querySelector(".is-invalid") ||
+        form.querySelector("input:not([type=hidden]), select, textarea");
+      if (field) { field.focus(); }
+    }
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      setBusy(true);
+      fetch(form.action, {
+        method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+        body: new FormData(form),
+        credentials: "same-origin",
+      })
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+          if (data.ok) {
+            window.location.href = data.redirect;
+            return;
+          }
+          if (body && data.html) { body.innerHTML = data.html; }
+          setBusy(false);
+          focusFirstField();
+        })
+        .catch(function () {
+          // Unexpected answer: fall back to a normal (non-fetch) submission.
+          form.submit();
+        });
+    });
+
+    if (modal) {
+      modal.addEventListener("shown.bs.modal", focusFirstField);
+      modal.addEventListener("hidden.bs.modal", function () {
+        if (body) { body.innerHTML = initialBody; }
+        form.reset();
+        setBusy(false);
+      });
+    }
+  });
+
   // Live preview of the loan terms.
   // IMPORTANT: informational only; the server recomputes everything on save.
   const simulator = document.getElementById("loanSimulator");

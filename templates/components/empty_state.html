@@ -2,5 +2,5 @@
 <div class="empty-state">
   <i class="bi {{ icon|default:'bi-inbox' }}"></i>
   <p class="mb-2">{{ message|default:_("There is nothing to show yet.") }}</p>
-  {% if action_url %}<a class="btn btn-sm btn-primary" href="{{ action_url }}">{{ action_label|default:_("Create the first one") }}</a>{% endif %}
+  {% if action_url %}<a class="btn btn-sm btn-primary" href="{{ action_url }}"{% if action_modal %} data-bs-toggle="modal" data-bs-target="{{ action_modal }}"{% endif %}>{{ action_label|default:_("Create the first one") }}</a>{% endif %}
 </div>

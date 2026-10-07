@@ -1,0 +1,10 @@
+{% load i18n %}
+{% if form.non_field_errors %}
+  <div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>
+{% endif %}
+<div class="row g-3">
+  <div class="col-sm-6">{% include "components/field.html" with field=form.first_name %}</div>
+  <div class="col-sm-6">{% include "components/field.html" with field=form.last_name %}</div>
+  <div class="col-12">{% include "components/field.html" with field=form.phone %}</div>
+</div>
+<p class="form-hint mt-3 mb-0">{% trans "You can complete the rest of the details later from the customer's page." %}</p>

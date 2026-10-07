@@ -2284,3 +2284,17 @@ msgstr ""
 
 msgid "Every report uses real data and respects your permissions."
 msgstr "Todos los reportes usan datos reales y respetan tus permisos."
+
+msgid "Customer %(name)s registered."
+msgstr "Cliente %(name)s registrado."
+
+msgid ""
+"You can complete the rest of the details later from the customer's page."
+msgstr ""
+"Puedes completar el resto de los datos después desde la ficha del cliente."
+
+msgid "Saving..."
+msgstr "Guardando..."
+
+msgid "Last name"
+msgstr "Apellido"

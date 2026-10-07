@@ -1,13 +1,20 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DetailView, ListView, UpdateView, View
 
 from apps.core.mixins import ActionRequiredMixin, AuditableMixin, SearchMixin
-from apps.customers.forms import CustomerFilterForm, CustomerForm, ReferenceFormSet
+from apps.customers.forms import (
+    CustomerFilterForm,
+    CustomerForm,
+    CustomerQuickForm,
+    ReferenceFormSet,
+)
 from apps.customers.models import Customer, CustomerStatus
 from apps.customers.services import customer_summary, payment_history
 from apps.users import permissions
@@ -43,6 +50,8 @@ class CustomerListView(CustomerBaseMixin, SearchMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filter_form"] = self.filter_form
+        if permissions.can(self.request.user, permissions.MANAGE_CUSTOMERS):
+            context["quick_form"] = CustomerQuickForm()
         context["title"] = _("Customers")
         return context
 
@@ -94,13 +103,40 @@ class CustomerFormMixin(AuditableMixin):
         return response
 
 
-class CustomerCreateView(ActionRequiredMixin, CustomerFormMixin, CreateView):
+class CustomerCreateView(ActionRequiredMixin, AuditableMixin, CreateView):
+    """Quick registration: first name, last name and phone.
+
+    The customer list opens it in a modal and submits it with ``fetch``: the
+    view then answers JSON (the redirect, or the form re-rendered with its
+    errors). Without JavaScript it works as a normal page.
+    """
+
     action = permissions.MANAGE_CUSTOMERS
     model = Customer
+    form_class = CustomerQuickForm
+    template_name = "customers/quick_create.html"
+
+    def is_ajax(self) -> bool:
+        return self.request.headers.get("x-requested-with") == "XMLHttpRequest"
+
+    def get_success_url(self) -> str:
+        return reverse("customers:list")
 
     def form_valid(self, form):
-        messages.success(self.request, _("Customer registered successfully."))
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        messages.success(
+            self.request,
+            _("Customer %(name)s registered.") % {"name": self.object.full_name})
+        if self.is_ajax():
+            return JsonResponse({"ok": True, "redirect": self.get_success_url()})
+        return response
+
+    def form_invalid(self, form):
+        if self.is_ajax():
+            html = render_to_string("customers/_quick_form.html", {"form": form},
+                                    request=self.request)
+            return JsonResponse({"ok": False, "html": html}, status=400)
+        return super().form_invalid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -1,0 +1,33 @@
+{% load i18n formatting %}
+<div class="d-flex flex-column gap-3">
+  <div class="card-panel">
+    <div class="card-panel-body">
+      <dl class="row small mb-0">
+        <dt class="col-sm-4">{% trans "Customer" %}</dt><dd class="col-sm-8">{{ payment.customer }}</dd>
+        <dt class="col-sm-4">{% trans "Loan" %}</dt><dd class="col-sm-8">{{ payment.loan.reference }}</dd>
+        <dt class="col-sm-4">{% trans "Date" %}</dt><dd class="col-sm-8">{{ payment.paid_at|date:"d/m/Y H:i" }}</dd>
+        <dt class="col-sm-4">{% trans "Amount" %}</dt><dd class="col-sm-8 fw-semibold">{{ payment.amount|mxn }}</dd>
+        <dt class="col-sm-4">{% trans "Allocated" %}</dt><dd class="col-sm-8">{{ payment.allocated_amount|mxn }}</dd>
+        <dt class="col-sm-4">{% trans "Overpayment" %}</dt><dd class="col-sm-8">{{ payment.overpayment|mxn }}</dd>
+        <dt class="col-sm-4">{% trans "Method" %}</dt><dd class="col-sm-8">{{ payment.get_method_display }}</dd>
+        <dt class="col-sm-4">{% trans "Collector" %}</dt><dd class="col-sm-8">{{ payment.collector|default:"-" }}</dd>
+        <dt class="col-sm-4">{% trans "Status" %}</dt><dd class="col-sm-8"><span class="badge text-bg-{{ payment.status|badge }}">{{ payment.get_status_display }}</span></dd>
+      </dl>
+    </div>
+  </div>
+  <div class="card-panel">
+    <div class="card-panel-header"><h2>{% trans "Payment allocation" %}</h2></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>{% trans "Installment" %}</th><th>{% trans "Due" %}</th><th class="num">{% trans "Allocated" %}</th></tr></thead>
+        <tbody>
+        {% for allocation in allocations %}
+          <tr><td>{{ allocation.installment.number }}</td>
+            <td>{{ allocation.installment.due_date|date:"d/m/Y" }}</td>
+            <td class="num fw-semibold">{{ allocation.amount|mxn }}</td></tr>
+        {% empty %}<tr><td colspan="3" class="text-secondary small p-3">{% trans "This payment was not applied to any installment." %}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

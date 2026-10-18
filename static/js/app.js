@@ -106,3 +106,18 @@
     runSimulation();
   }
 })();
+
+document.addEventListener('click', function (e) {
+  const link = e.target.closest('.js-payment-modal');
+  if (!link) { return; }
+  e.preventDefault();
+  const body = document.getElementById('paymentModalBody');
+  body.innerHTML = '<p class="text-secondary">Cargando...</p>';
+  const modalEl = document.getElementById('paymentModal');
+bootstrap.Modal.getOrCreateInstance(modalEl).show();
+  fetch(link.dataset.url + '?modal=1', {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+    .then(function (r) { return r.text(); })
+    .then(function (html) { body.innerHTML = html; });
+});

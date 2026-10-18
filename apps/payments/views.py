@@ -71,6 +71,12 @@ class PaymentDetailView(PaymentBaseMixin, DetailView):
     template_name = "payments/detail.html"
     context_object_name = "payment"
 
+    def get_template_names(self):
+        if self.request.GET.get("modal"):
+            return ["payments/detail_modal.html"]
+        return ["payments/detail.html"]
+
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["allocations"] = self.object.allocations.select_related("installment")

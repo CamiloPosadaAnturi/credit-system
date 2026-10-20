@@ -51,8 +51,6 @@ venv\Scripts\activate
 pip install uv
 uv pip install -r pyproject.toml
 
-::    ...o con pip a secas:
-:: pip install "django>=5.1,<5.2" django-environ "psycopg[binary]" openpyxl whitenoise
 
 :: 3. Variables de entorno
 copy .env.example .env

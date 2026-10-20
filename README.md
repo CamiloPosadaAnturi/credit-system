@@ -273,3 +273,5 @@ Las vistas **no calculan dinero**: siempre llaman a estos servicios.
 - `docs/reglas_financieras.md`: formulas, politica de redondeo, orden de
   aplicacion de pagos, definicion de mora y significado exacto de cada
   indicador.
+
+Juan Camilo Posada - Julio Cesar Torres - (falta anotar los otros miembros)

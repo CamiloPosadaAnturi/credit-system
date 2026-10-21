@@ -1,6 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from apps.core.forms import DateInput
 from apps.loans.models import LoanStatus
 from apps.payments.models import PaymentMethod
 from apps.users.models import Role, User
@@ -9,10 +10,10 @@ from apps.users.models import Role, User
 class ReportFilterForm(forms.Form):
     start = forms.DateField(
         label=_("From"), required=False,
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}))
+        widget=DateInput(attrs={"class": "form-control"}))
     end = forms.DateField(
         label=_("To"), required=False,
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}))
+        widget=DateInput(attrs={"class": "form-control"}))
     status = forms.ChoiceField(
         label=_("Loan status"), required=False,
         choices=[("", _("All"))] + list(LoanStatus.choices),

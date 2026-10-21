@@ -1,0 +1,23 @@
+{% load i18n %}
+<div class="modal fade" id="newLoanModal" tabindex="-1" aria-labelledby="newLoanTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <form class="modal-content" method="post" action="{% url 'loans:create' %}" novalidate
+          data-ajax-form data-simulate-url="{% url 'loans:simulate' %}">
+      {% csrf_token %}
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="newLoanTitle">{% trans "New loan" %}</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-4">
+          <div class="col-md-7" data-form-body>{% include "loans/_loan_form.html" with form=loan_form %}</div>
+          <div class="col-md-5">{% include "loans/_loan_preview.html" with form=loan_form %}</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-soft" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+        <button type="submit" class="btn btn-primary" data-busy-label="{% trans 'Saving...' %}">{% trans "Save loan" %}</button>
+      </div>
+    </form>
+  </div>
+</div>

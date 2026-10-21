@@ -171,25 +171,70 @@ class MainScreenTests(TestCase):
         self.assertEqual(self.loan.payments.confirmed().count(), 2)
 
     def test_creating_a_loan_through_the_view(self):
+        """One step: no collector, rate, interest mode or file are captured."""
+        self.customer.collector = create_user("coll_x", Role.COLLECTOR)
+        self.customer.save()
         data = {
             "customer": self.customer.pk,
             "application_date": today_local().isoformat(),
-            "principal": "5000", "interest_mode": "flat_on_principal",
-            "interest_rate": "0.40", "rate_period": "contract",
+            "principal": "5000",
             "payment_frequency": "weekly", "installment_count": 10,
             "first_payment_date": today_local().isoformat(),
+            # Ignored: the rule always comes from the settings.
+            "interest_rate": "0.90", "interest_mode": "simple_per_period",
         }
-        # First submit: confirmation screen, nothing created yet.
-        preview = self.client.post(reverse("loans:create"), data)
-        self.assertEqual(preview.status_code, 200)
-        self.assertContains(preview, "Confirm")
-        self.assertEqual(Loan.objects.filter(principal=Decimal("5000")).count(), 0)
-
-        data["confirm"] = "1"
-        final = self.client.post(reverse("loans:create"), data, follow=True)
-        self.assertEqual(final.status_code, 200)
+        response = self.client.post(reverse("loans:create"), data)
         loan = Loan.objects.get(principal=Decimal("5000"))
+        self.assertRedirects(response, loan.get_absolute_url())
         self.assertEqual(loan.business, self.business)
+        self.assertEqual(loan.interest_mode, "flat_on_principal")
+        self.assertEqual(loan.interest_rate, Decimal("0.4000"))
+        self.assertEqual(loan.collector, self.customer.collector)
         self.assertEqual(loan.total_interest, Decimal("2000.00"))
         self.assertEqual(loan.total_payable, Decimal("7000.00"))
         self.assertEqual(loan.installments.count(), 10)
+
+    def test_creating_a_loan_from_the_modal(self):
+        ajax = {"HTTP_X_REQUESTED_WITH": "XMLHttpRequest"}
+        invalid = self.client.post(reverse("loans:create"),
+                                   {"customer": self.customer.pk}, **ajax)
+        self.assertEqual(invalid.status_code, 400)
+        self.assertIn("is-invalid", invalid.json()["html"])
+
+        response = self.client.post(reverse("loans:create"), {
+            "customer": self.customer.pk, "principal": "1000",
+            "application_date": today_local().isoformat(),
+            "payment_frequency": "weekly", "installment_count": 4,
+            "first_payment_date": today_local().isoformat(),
+        }, **ajax)
+        self.assertEqual(response.status_code, 200)
+        loan = Loan.objects.filter(principal=Decimal("1000")).latest("id")
+        self.assertEqual(response.json(), {"ok": True, "redirect": loan.get_absolute_url()})
+        self.assertEqual(loan.total_payable, Decimal("1400.00"))
+
+    def test_the_new_loan_form_is_simple(self):
+        from apps.loans.forms import LoanForm
+
+        form = LoanForm.for_new_loan()
+        for removed in ["collector", "interest_mode", "interest_rate", "rate_period",
+                        "custom_days", "contract"]:
+            self.assertNotIn(removed, form.fields)
+        self.assertNotIn("custom", dict(form.fields["payment_frequency"].choices))
+        for name in ["loans:list", "customers:list"]:
+            page = self.client.get(reverse(name))
+            self.assertContains(page, 'id="newLoanModal"')
+        page = self.client.get(reverse("customers:detail", args=[self.customer.pk]))
+        self.assertContains(page, 'id="newLoanModal"')
+        self.assertEqual(page.context["loan_form"].initial["customer"], self.customer.pk)
+
+    def test_date_fields_keep_their_value_in_spanish(self):
+        """<input type="date"> needs ISO values; a localized one shows up empty."""
+        from django.test import override_settings
+        from django.utils import translation
+
+        from apps.loans.forms import LoanForm
+
+        with override_settings(USE_I18N=True), translation.override("es"):
+            html = str(LoanForm.for_new_loan()["first_payment_date"])
+        self.assertIn(f'value="{today_local().isoformat()}"', html)
+        self.assertIn('type="date"', html)

@@ -2,6 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 from apps.businesses.models import Business
+from apps.core.choices import PaymentFrequency
 from apps.core.forms import BootstrapFormMixin
 from apps.users.models import Role, User
 
@@ -12,8 +13,7 @@ class BusinessForm(BootstrapFormMixin, forms.ModelForm):
         fields = [
             "trade_name", "legal_name", "tax_id", "phone", "email",
             "address", "city", "state", "manager",
-            "interest_mode", "interest_rate", "rate_period",
-            "payment_frequency", "installment_count",
+            "interest_rate", "payment_frequency", "installment_count",
             "grace_days", "charges_late_fee", "late_fee_rate",
             "allows_early_payoff", "early_payoff_discount",
             "notes",
@@ -28,8 +28,7 @@ class BusinessForm(BootstrapFormMixin, forms.ModelForm):
         (_("General information"), ["trade_name", "legal_name", "tax_id", "phone",
                                     "email", "manager"]),
         (_("Location"), ["address", "city", "state"]),
-        (_("Interest configuration"), ["interest_mode", "interest_rate",
-                                       "rate_period", "payment_frequency",
+        (_("Interest configuration"), ["interest_rate", "payment_frequency",
                                        "installment_count"]),
         (_("Late payment and payoff policy"), ["grace_days", "charges_late_fee",
                                                "late_fee_rate", "allows_early_payoff",
@@ -41,6 +40,13 @@ class BusinessForm(BootstrapFormMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["manager"].queryset = User.objects.active().exclude(role=Role.VIEWER)
         self.fields["tax_id"].required = False
+        # Loans charge rate x principal and use the standard frequencies.
+        self.fields["interest_rate"].help_text = _(
+            "Interest = rate x principal. 0.40 = 40% (400 MXN per 1,000 MXN lent).")
+        self.fields["payment_frequency"].choices = [
+            (value, label) for value, label in PaymentFrequency.choices
+            if value != PaymentFrequency.CUSTOM
+        ]
         self.apply_widget_styles()
 
     def clean_tax_id(self):

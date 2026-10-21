@@ -29,9 +29,8 @@
       <div class="card-panel-header"><h2>{% trans "Interest configuration" %}</h2></div>
       <div class="card-panel-body">
         <dl class="row small mb-0">
-          <dt class="col-6">{% trans "Interest mode" %}</dt><dd class="col-6">{{ business.get_interest_mode_display }}</dd>
+          <dt class="col-6">{% trans "Interest" %}</dt><dd class="col-6">{% trans "Rate x principal" %}</dd>
           <dt class="col-6">{% trans "Rate" %}</dt><dd class="col-6">{{ business.rate_percentage }}% ({{ business.interest_per_thousand|mxn }} / $1,000)</dd>
-          <dt class="col-6">{% trans "Rate period" %}</dt><dd class="col-6">{{ business.get_rate_period_display }}</dd>
           <dt class="col-6">{% trans "Frequency" %}</dt><dd class="col-6">{{ business.get_payment_frequency_display }} / {{ business.installment_count }}</dd>
         </dl>
       </div>

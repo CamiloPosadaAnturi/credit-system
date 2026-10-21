@@ -184,7 +184,7 @@ class SingleBusinessTests(TestCase):
         new_user = User.objects.get(username="newcoll")
         self.client.force_login(self.admin)
         # The new collector can be assigned to customers right away.
-        response = self.client.get(reverse("customers:create"))
+        response = self.client.get(reverse("customers:update", args=[self.customer.pk]))
         self.assertContains(response, f'value="{new_user.pk}"')
 
 

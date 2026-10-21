@@ -3,7 +3,7 @@ from django.forms import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 
 from apps.businesses.models import Business
-from apps.core.forms import BootstrapFormMixin
+from apps.core.forms import BootstrapFormMixin, DateInput
 from apps.customers.models import Customer, CustomerStatus, PersonalReference
 from apps.users import permissions
 from apps.users.models import Role, User
@@ -20,7 +20,7 @@ class CustomerForm(BootstrapFormMixin, forms.ModelForm):
             "occupation", "collector", "status", "notes",
         ]
         widgets = {
-            "birth_date": forms.DateInput(attrs={"type": "date"}),
+            "birth_date": DateInput(),
             "notes": forms.Textarea(attrs={"rows": 3}),
         }
 
@@ -46,6 +46,40 @@ class CustomerForm(BootstrapFormMixin, forms.ModelForm):
                 self.fields.pop("national_id", None)
                 self.fields.pop("tax_id", None)
         self.apply_widget_styles()
+
+
+class CustomerQuickForm(BootstrapFormMixin, forms.ModelForm):
+    """Register a customer with the minimum data: name, last name and phone.
+
+    The rest of the profile (documents, address, collector...) is completed
+    later from the customer's edit page.
+    """
+
+    class Meta:
+        model = Customer
+        fields = ["first_name", "last_name", "phone"]
+        labels = {"last_name": _("Last name"), "phone": _("Phone")}
+        widgets = {
+            "first_name": forms.TextInput(attrs={"autocomplete": "off"}),
+            "last_name": forms.TextInput(attrs={"autocomplete": "off"}),
+            "phone": forms.TextInput(attrs={"type": "tel", "inputmode": "tel",
+                                            "autocomplete": "off"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.business_id:
+            # Single-business mode: every customer belongs to the one business.
+            self.instance.business = Business.objects.current()
+        self.apply_widget_styles()
+
+    def full_clean(self):
+        super().full_clean()
+        # Highlight the fields with errors (Bootstrap ``is-invalid``).
+        for name in self.errors:
+            if name in self.fields:
+                widget = self.fields[name].widget
+                widget.attrs["class"] = f"{widget.attrs.get('class', '')} is-invalid".strip()
 
 
 ReferenceFormSet = inlineformset_factory(

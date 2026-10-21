@@ -2,7 +2,8 @@
 {% block heading %}{% trans "Loans" %}{% endblock %}
 {% block actions %}
   {% if user_permissions.create_loan %}
-    <a class="btn btn-primary btn-sm" href="{% url 'loans:create' %}"><i class="bi bi-plus-lg"></i> {% trans "New loan" %}</a>
+    <a class="btn btn-primary btn-sm" href="{% url 'loans:create' %}"
+       data-bs-toggle="modal" data-bs-target="#newLoanModal"><i class="bi bi-plus-lg"></i> {% trans "New loan" %}</a>
   {% endif %}
 {% endblock %}
 {% block content %}
@@ -37,11 +38,15 @@
           <td><span class="badge text-bg-{{ loan.status|badge }} status-badge">{{ loan.get_status_display }}</span></td>
         </tr>
       {% empty %}
-        <tr><td colspan="9">{% include "components/empty_state.html" with message=_("No loans match the filter.") icon="bi-file-earmark-text" action_url="/loans/new/" action_label=_("Register loan") %}</td></tr>
+        <tr><td colspan="9">{% if loan_form %}{% url 'loans:create' as create_url %}{% include "components/empty_state.html" with message=_("No loans match the filter.") icon="bi-file-earmark-text" action_url=create_url action_modal="#newLoanModal" action_label=_("Register loan") %}{% else %}{% include "components/empty_state.html" with message=_("No loans match the filter.") icon="bi-file-earmark-text" %}{% endif %}</td></tr>
       {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
 {% include "components/pagination.html" %}
+{% endblock %}
+
+{% block modals %}
+{% if loan_form %}{% include "loans/_create_modal.html" %}{% endif %}
 {% endblock %}

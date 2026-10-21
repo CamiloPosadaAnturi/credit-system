@@ -17,3 +17,17 @@ class BootstrapFormMixin:
                 widget.attrs.setdefault("rows", 3)
             else:
                 widget.attrs.setdefault("class", "form-control")
+
+
+class DateInput(forms.DateInput):
+    """Native date picker (``<input type="date">``).
+
+    The browser only accepts ISO values (YYYY-MM-DD). Without a fixed format
+    Django localizes the value (06/10/2026 in Spanish) and the field shows up
+    empty, so the date is lost when the form is saved.
+    """
+
+    input_type = "date"
+
+    def __init__(self, attrs=None, format=None):
+        super().__init__(attrs=attrs, format=format or "%Y-%m-%d")

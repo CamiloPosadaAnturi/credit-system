@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load i18n %}
+{% block heading %}{{ title }}{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-6">
+  <div class="card-panel"><div class="card-panel-body">
+    <form method="post" novalidate data-submit-once>
+      {% csrf_token %}
+      {% include "customers/_quick_form.html" %}
+      <div class="d-flex gap-2 mt-3">
+        <button class="btn btn-primary" type="submit">{% trans "Save customer" %}</button>
+        <a class="btn btn-outline-soft" href="{% url 'customers:list' %}">{% trans "Cancel" %}</a>
+      </div>
+    </form>
+  </div></div>
+</div></div>
+{% endblock %}

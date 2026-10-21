@@ -26,19 +26,36 @@
     shell.classList.add("collapsed");
   }
 
+  function setMenuOpen(open) {
+    shell.classList.toggle("menu-open", open);
+    document.body.classList.toggle("menu-lock", open);
+  }
+
   if (toggle && shell) {
     toggle.addEventListener("click", function () {
       if (window.innerWidth < 992) {
-        shell.classList.toggle("menu-open");
+        setMenuOpen(!shell.classList.contains("menu-open"));
         return;
       }
       shell.classList.toggle("collapsed");
       writePreference(shell.classList.contains("collapsed") ? "1" : "0");
     });
+    // Phone/tablet drawer: close it by tapping outside, with Escape, or when
+    // the screen grows back to desktop size.
+    const backdrop = document.getElementById("sidebarBackdrop");
+    if (backdrop) {
+      backdrop.addEventListener("click", function () { setMenuOpen(false); });
+    }
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && shell.classList.contains("menu-open")) { setMenuOpen(false); }
+    });
+    window.addEventListener("resize", function () {
+      if (window.innerWidth >= 992 && shell.classList.contains("menu-open")) { setMenuOpen(false); }
+    });
   }
 
   // Confirmation for sensitive operations.
-  document.querySelectorAll("form[data-confirm]").forEach(function (form) {
+  document.querySelectorAll("form[data-confirm]:not([data-ajax-form])").forEach(function (form) {
     form.addEventListener("submit", function (event) {
       if (!window.confirm(form.dataset.confirm)) {
         event.preventDefault();
@@ -46,7 +63,7 @@
     });
   });
 
-  // Prevent double submission (payments, approvals).
+  // Prevent double submission (payments, loans).
   document.querySelectorAll("form[data-submit-once]").forEach(function (form) {
     form.addEventListener("submit", function () {
       const button = form.querySelector("button[type=submit]");
@@ -62,15 +79,34 @@
   // re-rendered and its errors, which replaces the form body in place.
   document.querySelectorAll("form[data-ajax-form]").forEach(function (form) {
     const body = form.querySelector("[data-form-body]");
-    const button = form.querySelector("button[type=submit]");
     const initialBody = body ? body.innerHTML : "";
-    const buttonLabel = button ? button.textContent : "";
     const modal = form.closest(".modal");
+    // Optional confirmation step (data-confirm-step): the first submit shows
+    // a summary of the data; the second one ("Yes, ...") really sends it.
+    const hasConfirmStep = form.hasAttribute("data-confirm-step");
+    let confirming = false;
+
+    form.querySelectorAll("button[type=submit]").forEach(function (button) {
+      button.dataset.label = button.textContent;
+    });
+
+    function activeButton() {
+      return form.querySelector("[data-step]:not(.d-none) button[type=submit]")
+        || form.querySelector("button[type=submit]");
+    }
 
     function setBusy(busy) {
+      const button = activeButton();
       if (!button) { return; }
       button.disabled = busy;
-      button.textContent = busy ? (button.dataset.busyLabel || "...") : buttonLabel;
+      button.textContent = busy ? (button.dataset.busyLabel || "...") : button.dataset.label;
+    }
+
+    function showStep(name) {
+      form.querySelectorAll("[data-step]").forEach(function (element) {
+        element.classList.toggle("d-none", element.dataset.step !== name);
+      });
+      confirming = name === "confirm";
     }
 
     function focusFirstField() {
@@ -78,14 +114,85 @@
       if (!field) {
         // First empty field (e.g. the principal when the customer is preselected).
         field = Array.prototype.find.call(
-          form.querySelectorAll("input:not([type=hidden]), select, textarea"),
+          (body || form).querySelectorAll("input:not([type=hidden]), select, textarea"),
           function (element) { return !element.value; });
       }
       if (field) { field.focus(); }
     }
 
+    function fieldValue(name) {
+      const field = form.querySelector("[name=" + name + "]");
+      return field ? field.value.trim() : "";
+    }
+
+    function fieldText(name) {
+      const field = form.querySelector("[name=" + name + "]");
+      if (!field) { return ""; }
+      if (field.tagName === "SELECT") {
+        const option = field.options[field.selectedIndex];
+        return option ? option.textContent.trim() : "";
+      }
+      return field.value.trim();
+    }
+
+    function formatDate(value) {
+      const parts = value.split("-");
+      return parts.length === 3 ? parts[2] + "/" + parts[1] + "/" + parts[0] : value;
+    }
+
+    function formatMoney(value) {
+      const number = Number(value);
+      if (!value || isNaN(number)) { return value || "-"; }
+      return number.toLocaleString("es-MX", { style: "currency", currency: "MXN" });
+    }
+
+    function previewValue(name) {
+      const element = form.querySelector("[data-preview] [data-field=" + name + "]");
+      const text = element ? element.textContent.trim() : "";
+      return text && text !== "-" ? text : "";
+    }
+
+    // Required data present? If not, skip the summary: the server answers
+    // with the errors and nothing is saved.
+    function looksComplete() {
+      return ["customer", "principal", "installment_count", "first_payment_date"]
+        .every(function (name) { return fieldValue(name) !== ""; });
+    }
+
+    function fillSummary() {
+      const installment = previewValue("installment");
+      const last = form.querySelector("[data-preview] [data-field=last]:not(.d-none)");
+      let installments = fieldValue("installment_count");
+      if (installment) { installments += " \u00d7 " + installment; }
+      const frequency = fieldText("payment_frequency");
+      if (frequency) { installments += " (" + frequency.toLowerCase() + ")"; }
+      if (last && last.textContent.trim() && last.textContent.trim() !== "-") {
+        installments += " \u00b7 " + last.textContent.trim();
+      }
+      const values = {
+        customer: fieldText("customer"),
+        principal: formatMoney(fieldValue("principal")),
+        interest: previewValue("interest"),
+        total: previewValue("total"),
+        installments: installments,
+        first_payment: formatDate(fieldValue("first_payment_date")),
+        final: previewValue("final"),
+      };
+      Object.keys(values).forEach(function (key) {
+        const element = form.querySelector("[data-summary=" + key + "]");
+        if (element) { element.textContent = values[key] || "-"; }
+      });
+    }
+
     form.addEventListener("submit", function (event) {
       event.preventDefault();
+      if (hasConfirmStep && !confirming && looksComplete()) {
+        fillSummary();
+        showStep("confirm");
+        const button = activeButton();
+        if (button) { button.focus(); }
+        return;
+      }
       setBusy(true);
       fetch(form.action, {
         method: "POST",
@@ -99,14 +206,22 @@
             window.location.href = data.redirect;
             return;
           }
-          if (body && data.html) { body.innerHTML = data.html; }
           setBusy(false);
+          if (hasConfirmStep) { showStep("edit"); }
+          if (body && data.html) { body.innerHTML = data.html; }
           focusFirstField();
         })
         .catch(function () {
           // Unexpected answer: fall back to a normal (non-fetch) submission.
           form.submit();
         });
+    });
+
+    form.querySelectorAll("[data-step-back]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        showStep("edit");
+        focusFirstField();
+      });
     });
 
     if (modal) {
@@ -118,11 +233,17 @@
           customer.value = trigger.dataset.customer;
         }
       });
-      modal.addEventListener("shown.bs.modal", focusFirstField);
+      // No automatic focus on touch screens (it pops the keyboard up) or on
+      // forms loaded on demand ([data-no-autofocus]).
+      const canHover = window.matchMedia && window.matchMedia("(hover: hover)").matches;
+      if (canHover && !form.hasAttribute("data-no-autofocus")) {
+        modal.addEventListener("shown.bs.modal", focusFirstField);
+      }
       modal.addEventListener("hidden.bs.modal", function () {
         if (body) { body.innerHTML = initialBody; }
         form.reset();
         setBusy(false);
+        if (hasConfirmStep) { showStep("edit"); }
       });
     }
   });
@@ -229,17 +350,106 @@
   });
 })();
 
+// Payment detail modal (payments list): clicking a row opens the payment in a modal.
 document.addEventListener('click', function (e) {
-  const link = e.target.closest('.js-payment-modal');
-  if (!link) { return; }
-  e.preventDefault();
-  const body = document.getElementById('paymentModalBody');
-  body.innerHTML = '<p class="text-secondary">Cargando...</p>';
+  const trigger = e.target.closest('.js-payment-modal');
+  if (!trigger) { return; }
+  // Let other links/buttons inside the row (e.g. the loan) work normally,
+  // and keep ctrl/cmd/middle click opening the full page in a new tab.
+  const innerLink = e.target.closest('a, button');
+  if (innerLink && innerLink !== trigger && innerLink.classList.contains('js-no-modal')) { return; }
+  if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) { return; }
+
   const modalEl = document.getElementById('paymentModal');
-bootstrap.Modal.getOrCreateInstance(modalEl).show();
-  fetch(link.dataset.url + '?modal=1', {
-    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-  })
-    .then(function (r) { return r.text(); })
-    .then(function (html) { body.innerHTML = html; });
+  if (!modalEl || typeof bootstrap === 'undefined') { return; }
+  e.preventDefault();
+
+  const body = document.getElementById('paymentModalBody');
+  const title = document.getElementById('paymentModalLabel');
+  const loadingText = modalEl.dataset.loadingText || 'Cargando...';
+  const errorText = modalEl.dataset.errorText || 'No se pudo cargar el pago.';
+  const url = new URL(trigger.dataset.url, window.location.origin);
+  url.searchParams.set('modal', '1');
+
+  if (trigger.dataset.title) { title.textContent = trigger.dataset.title; }
+  body.innerHTML = '';
+  const loading = document.createElement('p');
+  loading.className = 'text-secondary mb-0';
+  loading.textContent = loadingText;
+  body.appendChild(loading);
+  bootstrap.Modal.getOrCreateInstance(modalEl).show();
+
+  const requestId = String(Date.now());
+  modalEl.dataset.requestId = requestId;
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+    .then(function (r) {
+      if (!r.ok) { throw new Error('HTTP ' + r.status); }
+      return r.text();
+    })
+    .then(function (html) {
+      if (modalEl.dataset.requestId === requestId) { body.innerHTML = html; }
+    })
+    .catch(function () {
+      if (modalEl.dataset.requestId !== requestId) { return; }
+      body.innerHTML = '';
+      const err = document.createElement('div');
+      err.className = 'alert alert-danger mb-0';
+      err.textContent = errorText;
+      body.appendChild(err);
+    });
+});
+
+// Forms loaded on demand into a modal (e.g. "Edit" a customer): the trigger
+// carries data-url (the form page) and data-target (the modal). The form
+// fragment is fetched with ?modal=1 and submitted by the [data-ajax-form]
+// handler above.
+document.addEventListener('click', function (e) {
+  const trigger = e.target.closest('.js-remote-form');
+  if (!trigger) { return; }
+  if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) { return; }
+  const modalEl = document.querySelector(trigger.dataset.target);
+  if (!modalEl || typeof bootstrap === 'undefined') { return; }
+  e.preventDefault();
+
+  const form = modalEl.querySelector('form');
+  const body = modalEl.querySelector('[data-form-body]');
+  const next = form.querySelector('[name=next]');
+  const loadingText = modalEl.dataset.loadingText || 'Cargando...';
+  const errorText = modalEl.dataset.errorText || 'No se pudo cargar el formulario.';
+  const url = new URL(trigger.dataset.url, window.location.origin);
+
+  form.action = url.pathname;
+  if (next) { next.value = trigger.dataset.next || ''; }
+  body.innerHTML = '';
+  const loading = document.createElement('p');
+  loading.className = 'text-secondary mb-0';
+  loading.textContent = loadingText;
+  body.appendChild(loading);
+  bootstrap.Modal.getOrCreateInstance(modalEl).show();
+
+  const requestId = String(Date.now());
+  modalEl.dataset.requestId = requestId;
+  url.searchParams.set('modal', '1');
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+    .then(function (r) {
+      if (!r.ok) { throw new Error('HTTP ' + r.status); }
+      return r.text();
+    })
+    .then(function (html) {
+      if (modalEl.dataset.requestId !== requestId) { return; }
+      body.innerHTML = html;
+      body.scrollTop = 0;
+      if (window.matchMedia && window.matchMedia('(hover: hover)').matches) {
+        const first = body.querySelector('input:not([type=hidden]), select, textarea');
+        if (first) { first.focus({ preventScroll: true }); }
+      }
+    })
+    .catch(function () {
+      if (modalEl.dataset.requestId !== requestId) { return; }
+      body.innerHTML = '';
+      const err = document.createElement('div');
+      err.className = 'alert alert-danger mb-0';
+      err.textContent = errorText;
+      body.appendChild(err);
+    });
 });

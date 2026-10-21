@@ -30,7 +30,7 @@ class PaymentBaseMixin(LoginRequiredMixin):
         return permissions.filter_collector_portfolio(queryset, self.request.user)
 
 
-class PaymentListView(PaymentBaseMixin, SearchMixin, ListView):
+class PaymentListView(SearchMixin, PaymentBaseMixin, ListView):
     template_name = "payments/list.html"
     context_object_name = "payments"
     paginate_by = 30

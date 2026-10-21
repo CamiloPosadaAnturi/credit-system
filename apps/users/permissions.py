@@ -19,8 +19,6 @@ MANAGE_CUSTOMERS = "manage_customers"
 VIEW_SENSITIVE_DATA = "view_sensitive_data"
 VIEW_LOANS = "view_loans"
 CREATE_LOAN = "create_loan"
-APPROVE_LOAN = "approve_loan"
-DISBURSE_LOAN = "disburse_loan"
 CANCEL_LOAN = "cancel_loan"
 RESTRUCTURE_LOAN = "restructure_loan"
 VIEW_PAYMENTS = "view_payments"
@@ -42,8 +40,6 @@ MATRIX: dict[str, set[str]] = {
     VIEW_SENSITIVE_DATA: {Role.SUPERADMIN, Role.ADMIN},
     VIEW_LOANS: EVERYONE,
     CREATE_LOAN: {Role.SUPERADMIN, Role.ADMIN, Role.MANAGER},
-    APPROVE_LOAN: {Role.SUPERADMIN, Role.ADMIN},
-    DISBURSE_LOAN: {Role.SUPERADMIN, Role.ADMIN},
     CANCEL_LOAN: {Role.SUPERADMIN, Role.ADMIN},
     RESTRUCTURE_LOAN: {Role.SUPERADMIN, Role.ADMIN},
     VIEW_PAYMENTS: EVERYONE,

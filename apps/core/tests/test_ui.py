@@ -46,29 +46,6 @@ class PublicScreenTests(TestCase):
         self.assertEqual(self.client.get("/a-route-that-does-not-exist/").status_code, 404)
 
 
-class SensitiveDataTests(TestCase):
-    def setUp(self):
-        self.business = create_business()
-        self.admin = create_user("admin", Role.ADMIN, [self.business])
-        self.manager = create_user("manager", Role.MANAGER, [self.business])
-        self.customer = create_customer(self.business,
-                                        national_id="RAMA850101HDFMNN09",
-                                        tax_id="RAMA850101AB1")
-
-    def test_admin_sees_the_national_id(self):
-        self.client.force_login(self.admin)
-        response = self.client.get(
-            reverse("customers:detail", args=[self.customer.pk]))
-        self.assertContains(response, "RAMA850101HDFMNN09")
-
-    def test_manager_does_not_see_the_national_id(self):
-        self.client.force_login(self.manager)
-        response = self.client.get(
-            reverse("customers:detail", args=[self.customer.pk]))
-        self.assertNotContains(response, "RAMA850101HDFMNN09")
-        self.assertContains(response, "sensitive data")
-
-
 class SimulatorTests(TestCase):
     def setUp(self):
         self.business = create_business()

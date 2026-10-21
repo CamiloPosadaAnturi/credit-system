@@ -21,7 +21,7 @@ class FullFlowTests(TestCase):
         self.business = create_business()
         self.admin = create_user("admin", Role.ADMIN, [self.business])
         self.collector = create_user("collector", Role.COLLECTOR, [self.business])
-        self.customer = create_customer(self.business, collector=self.collector)
+        self.customer = create_customer(self.business)
 
     def test_from_creation_to_settlement(self):
         start = today_local() - dt.timedelta(days=21)
@@ -30,12 +30,7 @@ class FullFlowTests(TestCase):
             installment_count=4, frequency="weekly", first_payment_date=start,
             user=self.admin, collector=self.collector)
 
-        self.assertEqual(loan.status, LoanStatus.PENDING)
         self.assertEqual(loan.total_payable, Decimal("1400.00"))
-
-        loan_services.approve_loan(loan, self.admin)
-        loan.refresh_from_db()
-        loan_services.disburse_loan(loan, self.admin)
         loan.refresh_from_db()
         self.assertEqual(loan.status, LoanStatus.PAST_DUE)  # 3 installments already due
 
@@ -65,9 +60,6 @@ class FullFlowTests(TestCase):
             customer=self.customer, business=self.business, principal=Decimal("3000"),
             installment_count=6, frequency="biweekly",
             first_payment_date=today_local(), user=self.admin)
-        loan_services.approve_loan(loan, self.admin)
-        loan.refresh_from_db()
-        loan_services.disburse_loan(loan, self.admin)
         loan.refresh_from_db()
         self.assertEqual(loan.total_payable, Decimal("4200.00"))
         self.assertEqual(loan.installment_amount, Decimal("700.00"))
@@ -172,7 +164,6 @@ class MainScreenTests(TestCase):
 
     def test_creating_a_loan_through_the_view(self):
         """One step: no collector, rate, interest mode or file are captured."""
-        self.customer.collector = create_user("coll_x", Role.COLLECTOR)
         self.customer.save()
         data = {
             "customer": self.customer.pk,
@@ -189,7 +180,7 @@ class MainScreenTests(TestCase):
         self.assertEqual(loan.business, self.business)
         self.assertEqual(loan.interest_mode, "flat_on_principal")
         self.assertEqual(loan.interest_rate, Decimal("0.4000"))
-        self.assertEqual(loan.collector, self.customer.collector)
+        self.assertIsNone(loan.collector)
         self.assertEqual(loan.total_interest, Decimal("2000.00"))
         self.assertEqual(loan.total_payable, Decimal("7000.00"))
         self.assertEqual(loan.installments.count(), 10)

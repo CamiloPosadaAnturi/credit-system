@@ -23,7 +23,6 @@ from apps.loans.calculations import (
     calculate_total_payable,
 )
 from apps.loans.models import (
-    EDITABLE_STATUSES,
     LIVE_STATUSES,
     Installment,
     InstallmentStatus,
@@ -73,14 +72,18 @@ def create_loan(
     custom_days: int | None = None,
     application_date: dt.date | None = None,
     notes: str = "",
-    status: str = LoanStatus.PENDING,
 ) -> Loan:
-    """Create a loan together with its payment schedule.
+    """Create a loan, already handed out, together with its payment schedule.
 
+    There is no approval stage: the loan is live from its application date.
     The interest rule is copied from the business unless another is given.
     """
     if customer.business_id != business.pk:
         raise LoanError(_("The customer does not belong to the selected business."))
+    if customer.is_restricted:
+        raise LoanError(
+            _("The customer is restricted. Review their history before lending.")
+        )
     principal = to_decimal(principal)
     if principal <= ZERO:
         raise LoanError(_("The principal must be greater than zero."))
@@ -97,7 +100,7 @@ def create_loan(
         reference=generate_reference(business),
         customer=customer,
         business=business,
-        collector=collector or customer.collector,
+        collector=collector,
         application_date=application_date or today_local(),
         principal=money(principal),
         interest_mode=mode,
@@ -110,13 +113,16 @@ def create_loan(
         installment_count=installment_count,
         first_payment_date=first_payment_date,
         outstanding_balance=total,
-        status=status,
+        status=LoanStatus.DISBURSED,
+        disbursement_date=application_date or today_local(),
+        disbursed_by=user,
         notes=notes,
         created_by=user,
         updated_by=user,
     )
     loan.save()
     generate_schedule(loan)
+    refresh_status(loan)
     log(
         AuditAction.CREATE,
         _("Loan %(reference)s created for %(customer)s for %(amount)s MXN") % {
@@ -126,25 +132,6 @@ def create_loan(
         data={"principal": str(loan.principal), "interest": str(interest),
               "total": str(total), "installments": installment_count},
     )
-    return loan
-
-
-@transaction.atomic
-def recalculate_terms(loan: Loan, user=None) -> Loan:
-    """Recompute interest, total and schedule after editing an editable loan."""
-    if loan.status not in EDITABLE_STATUSES:
-        raise LoanError(
-            _("An approved or disbursed loan cannot be freely recalculated. "
-              "Use an authorized restructuring instead.")
-        )
-    loan.total_interest = calculate_interest(
-        loan.principal, loan.interest_mode, loan.interest_rate, loan.installment_count,
-    )
-    loan.total_payable = calculate_total_payable(loan.principal, loan.total_interest)
-    loan.outstanding_balance = loan.total_payable
-    loan.updated_by = user
-    loan.save()
-    generate_schedule(loan)
     return loan
 
 
@@ -171,64 +158,6 @@ def generate_schedule(loan: Loan) -> list[Installment]:
 # --------------------------------------------------------------------------
 # Status transitions
 # --------------------------------------------------------------------------
-@transaction.atomic
-def approve_loan(loan: Loan, user, date: dt.date | None = None) -> Loan:
-    loan = Loan.objects.select_for_update().get(pk=loan.pk)
-    if loan.status not in EDITABLE_STATUSES:
-        raise LoanError(
-            _("Only a draft or pending loan can be approved (current status: "
-              "%(status)s).") % {"status": loan.get_status_display()}
-        )
-    if loan.customer.is_restricted:
-        raise LoanError(
-            _("The customer is restricted. Review their history before approving.")
-        )
-    # The interest rule is frozen at this point.
-    loan.total_interest = calculate_interest(
-        loan.principal, loan.interest_mode, loan.interest_rate, loan.installment_count,
-    )
-    loan.total_payable = calculate_total_payable(loan.principal, loan.total_interest)
-    loan.outstanding_balance = loan.total_payable
-    loan.approval_date = date or today_local()
-    loan.approved_by = user
-    loan.updated_by = user
-    loan.status = LoanStatus.APPROVED
-    loan.save()
-    generate_schedule(loan)
-    log(
-        AuditAction.APPROVE,
-        _("Loan %(reference)s approved (total %(total)s MXN)") % {
-            "reference": loan.reference, "total": loan.total_payable,
-        },
-        target=loan, user=user,
-        data={"rate": str(loan.interest_rate), "mode": loan.interest_mode,
-              "interest": str(loan.total_interest)},
-    )
-    return loan
-
-
-@transaction.atomic
-def disburse_loan(loan: Loan, user, date: dt.date | None = None) -> Loan:
-    loan = Loan.objects.select_for_update().get(pk=loan.pk)
-    if loan.status != LoanStatus.APPROVED:
-        raise LoanError(_("Only an approved loan can be disbursed."))
-    loan.disbursement_date = date or today_local()
-    loan.disbursed_by = user
-    loan.updated_by = user
-    loan.status = LoanStatus.DISBURSED
-    loan.save()
-    refresh_status(loan)
-    log(
-        AuditAction.DISBURSE,
-        _("Loan %(reference)s disbursed for %(amount)s MXN") % {
-            "reference": loan.reference, "amount": loan.principal,
-        },
-        target=loan, user=user,
-        data={"disbursement_date": str(loan.disbursement_date)},
-    )
-    return loan
-
-
 @transaction.atomic
 def cancel_loan(loan: Loan, user, reason: str) -> Loan:
     loan = Loan.objects.select_for_update().get(pk=loan.pk)
@@ -294,14 +223,9 @@ def restructure_loan(
         interest_rate=interest_rate if interest_rate is not None else loan.interest_rate,
         rate_period=loan.rate_period,
         notes=notes or _("Restructuring of %(reference)s") % {"reference": loan.reference},
-        status=LoanStatus.APPROVED,
     )
     new_loan.original_loan = loan
-    new_loan.approval_date = today_local()
-    new_loan.approved_by = user
-    new_loan.save(update_fields=["original_loan", "approval_date", "approved_by"])
-    disburse_loan(new_loan, user)
-    new_loan.refresh_from_db()
+    new_loan.save(update_fields=["original_loan"])
 
     loan.status = LoanStatus.RESTRUCTURED
     loan.outstanding_balance = ZERO
@@ -385,10 +309,9 @@ def _installment_status(installment: Installment, today: dt.date) -> str:
 def refresh_status(loan: Loan) -> str:
     """Derive the operational status of the loan from its installments.
 
-    Cancelled, restructured and not-yet-disbursed loans are left alone.
+    Cancelled and restructured loans are left alone.
     """
-    if loan.status in (LoanStatus.CANCELLED, LoanStatus.RESTRUCTURED,
-                       LoanStatus.DRAFT, LoanStatus.PENDING, LoanStatus.APPROVED):
+    if loan.status in (LoanStatus.CANCELLED, LoanStatus.RESTRUCTURED):
         return loan.status
 
     new_status = LoanStatus.ACTIVE
@@ -432,7 +355,7 @@ def refresh_statuses(queryset=None) -> int:
     return changed
 
 
-def pre_approval_summary(customer) -> dict:
+def pre_loan_summary(customer) -> dict:
     """Information shown BEFORE granting a new loan.
 
     It is not an automatic approval or rejection: it is data for a person

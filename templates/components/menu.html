@@ -20,26 +20,3 @@
   <i class="bi bi-person-walking"></i><span class="brand-text">{% trans "My portfolio" %}</span>
 </a>
 {% endif %}
-{% if user_permissions.view_reports %}
-<a class="nav-item {% if '/reports/' in request.path %}active{% endif %}" href="{% url 'reports:catalog' %}">
-  <i class="bi bi-bar-chart-line"></i><span class="brand-text">{% trans "Reports" %}</span>
-</a>
-{% endif %}
-{% if user_permissions.manage_users %}
-<a class="nav-item {% if request.path == '/users/' %}active{% endif %}" href="{% url 'users:list' %}">
-  <i class="bi bi-person-gear"></i><span class="brand-text">{% trans "Users" %}</span>
-</a>
-{% endif %}
-{% if user_permissions.view_audit %}
-<a class="nav-item {% if '/audit/' in request.path %}active{% endif %}" href="{% url 'audit:list' %}">
-  <i class="bi bi-shield-check"></i><span class="brand-text">{% trans "Audit log" %}</span>
-</a>
-{% endif %}
-{% if user_permissions.manage_businesses %}
-<a class="nav-item {% if '/settings/' in request.path %}active{% endif %}" href="{% url 'businesses:settings' %}">
-  <i class="bi bi-sliders"></i><span class="brand-text">{% trans "Settings" %}</span>
-</a>
-{% endif %}
-<a class="nav-item" href="{% url 'admin:index' %}">
-  <i class="bi bi-tools"></i><span class="brand-text">{% trans "Administration" %}</span>
-</a>

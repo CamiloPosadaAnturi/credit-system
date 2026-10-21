@@ -181,3 +181,6 @@ venv/
 .venv/
 
 .ruff_cache/
+
+# Local database backups
+db.backup-*.sqlite3*

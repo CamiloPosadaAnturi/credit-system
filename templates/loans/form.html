@@ -1,7 +1,7 @@
 {% extends "base.html" %}{% load i18n %}
 {% block heading %}{{ title }}{% endblock %}
 {% block content %}
-<form method="post" novalidate data-submit-once data-simulate-url="{% url 'loans:simulate' %}">
+<form method="post" novalidate data-submit-once data-simulate-url="{% url 'loans:simulate' %}"{% if confirm_message %} data-confirm="{{ confirm_message }}"{% endif %}>
   {% csrf_token %}
   <div class="row g-3">
     <div class="col-lg-8">

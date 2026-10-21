@@ -2,10 +2,10 @@
 
 Key rules (see docs/reglas_financieras.md):
 
-* Interest is computed ONCE, when the loan is approved, on the initial
+* Interest is computed ONCE, when the loan is created, on the initial
   principal. There is no compounding and no recalculation per payment.
 * The business interest rule is copied onto the loan (snapshot), so
-  changing the business rate never alters loans already approved.
+  changing the business rate never alters loans already granted.
 * ``outstanding_balance`` is a derived field: it can always be rebuilt
   from the payment allocations (``apps.payments.models.PaymentAllocation``).
 """
@@ -23,9 +23,6 @@ from apps.core.money import ZERO
 
 
 class LoanStatus(models.TextChoices):
-    DRAFT = "draft", _("Draft")
-    PENDING = "pending_approval", _("Pending approval")
-    APPROVED = "approved", _("Approved")
     DISBURSED = "disbursed", _("Disbursed")
     ACTIVE = "active", _("Active")
     PAST_DUE = "past_due", _("Past due")
@@ -45,8 +42,6 @@ DISBURSED_STATUSES = LIVE_STATUSES + [
     LoanStatus.SETTLED,
     LoanStatus.RESTRUCTURED,
 ]
-#: Statuses before disbursement: the loan terms can still be edited.
-EDITABLE_STATUSES = [LoanStatus.DRAFT, LoanStatus.PENDING]
 
 
 class InstallmentStatus(models.TextChoices):
@@ -91,7 +86,6 @@ class Loan(BaseModel):
     )
 
     application_date = models.DateField(_("application date"))
-    approval_date = models.DateField(_("approval date"), null=True, blank=True)
     disbursement_date = models.DateField(_("disbursement date"), null=True, blank=True)
 
     principal = models.DecimalField(
@@ -107,7 +101,7 @@ class Loan(BaseModel):
     interest_rate = models.DecimalField(
         _("applied interest rate"), max_digits=7, decimal_places=4,
         default=Decimal("0.4000"),
-        help_text=_("Ratio frozen when the loan was approved."),
+        help_text=_("Ratio frozen when the loan was created."),
     )
     rate_period = models.CharField(
         _("rate period"), max_length=15, choices=RatePeriod.choices,
@@ -145,7 +139,7 @@ class Loan(BaseModel):
 
     status = models.CharField(
         _("status"), max_length=25, choices=LoanStatus.choices,
-        default=LoanStatus.DRAFT, db_index=True,
+        default=LoanStatus.ACTIVE, db_index=True,
     )
     cancellation_reason = models.CharField(_("cancellation reason"), max_length=255,
                                            blank=True)
@@ -157,10 +151,6 @@ class Loan(BaseModel):
     contract = models.FileField(
         _("contract or document"), upload_to="contracts/%Y/%m/", blank=True, null=True)
 
-    approved_by = models.ForeignKey(
-        "users.User", verbose_name=_("approved by"), on_delete=models.SET_NULL,
-        null=True, blank=True, related_name="approved_loans",
-    )
     disbursed_by = models.ForeignKey(
         "users.User", verbose_name=_("disbursed by"), on_delete=models.SET_NULL,
         null=True, blank=True, related_name="disbursed_loans",
@@ -202,11 +192,6 @@ class Loan(BaseModel):
     @property
     def is_live(self) -> bool:
         return self.status in LIVE_STATUSES
-
-    @property
-    def is_editable(self) -> bool:
-        """A disbursed loan is never edited: it is adjusted with audited operations."""
-        return self.status in EDITABLE_STATUSES
 
     @property
     def percent_paid(self) -> Decimal:

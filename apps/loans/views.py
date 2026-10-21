@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.utils.translation import gettext as _
-from django.views.generic import DetailView, ListView, UpdateView, View
+from django.views.generic import DetailView, ListView, View
 
 from apps.businesses.models import Business
 from apps.core.choices import InterestMode
@@ -25,7 +25,7 @@ from apps.loans.forms import (
     LoanForm,
     RestructuringForm,
 )
-from apps.loans.models import EDITABLE_STATUSES, Loan, LoanStatus
+from apps.loans.models import Loan, LoanStatus
 from apps.users import permissions
 
 
@@ -38,7 +38,7 @@ class LoanBaseMixin(LoginRequiredMixin):
         return permissions.filter_collector_portfolio(queryset, self.request.user)
 
 
-class LoanListView(LoanBaseMixin, SearchMixin, ListView):
+class LoanListView(SearchMixin, LoanBaseMixin, ListView):
     template_name = "loans/list.html"
     context_object_name = "loans"
     paginate_by = 25
@@ -79,14 +79,6 @@ class LoanDetailView(LoanBaseMixin, DetailView):
         context["installments"] = loan.installments.all()
         context["payments"] = loan.payments.select_related("received_by").order_by(
             "-paid_at")
-        context["can_approve"] = (
-            permissions.can(self.request.user, permissions.APPROVE_LOAN)
-            and loan.status in EDITABLE_STATUSES
-        )
-        context["can_disburse"] = (
-            permissions.can(self.request.user, permissions.DISBURSE_LOAN)
-            and loan.status == LoanStatus.APPROVED
-        )
         context["can_register_payment"] = (
             permissions.can(self.request.user, permissions.REGISTER_PAYMENT)
             and loan.is_live
@@ -128,7 +120,15 @@ class LoanCreateView(ActionRequiredMixin, View):
                 pk=customer_id,
             )
         form = LoanForm.for_new_loan(customer, user=request.user)
-        return render(request, self.template_name, {"form": form, "title": _("New loan")})
+        return render(request, self.template_name, self.page_context(form))
+
+    def page_context(self, form):
+        return {
+            "form": form,
+            "title": _("New loan"),
+            "confirm_message": _("Are you sure the data is correct? The loan becomes "
+                                 "active right away."),
+        }
 
     def post(self, request):
         form = LoanForm(request.POST, user=request.user)
@@ -160,41 +160,7 @@ class LoanCreateView(ActionRequiredMixin, View):
             html = render_to_string("loans/_loan_form.html", {"form": form},
                                     request=request)
             return JsonResponse({"ok": False, "html": html}, status=400)
-        return render(request, self.template_name, {"form": form, "title": _("New loan")})
-
-
-class LoanUpdateView(ActionRequiredMixin, LoanBaseMixin, UpdateView):
-    action = permissions.CREATE_LOAN
-    form_class = LoanForm
-    template_name = "loans/form.html"
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["user"] = self.request.user
-        return kwargs
-
-    def get_object(self, queryset=None):
-        loan = super().get_object(queryset)
-        if not loan.is_editable:
-            raise PermissionDenied(
-                _("A disbursed loan cannot be edited. Use an authorized restructuring "
-                  "or a payment reversal.")
-            )
-        return loan
-
-    def form_valid(self, form):
-        loan = form.save(commit=False)
-        loan.updated_by = self.request.user
-        loan.save()
-        services.recalculate_terms(loan, user=self.request.user)
-        messages.success(self.request, _("Terms updated and schedule rebuilt."))
-        return redirect(loan.get_absolute_url())
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = _("Edit %(ref)s") % {"ref": self.object.reference}
-        context["cancel_url"] = self.object.get_absolute_url()
-        return context
+        return render(request, self.template_name, self.page_context(form))
 
 
 class LoanActionView(LoginRequiredMixin, View):
@@ -207,36 +173,6 @@ class LoanActionView(LoginRequiredMixin, View):
         loan = get_object_or_404(queryset, pk=pk)
         permissions.require(request.user, self.required_action)
         return loan
-
-
-class ApproveLoanView(LoanActionView):
-    required_action = permissions.APPROVE_LOAN
-
-    def post(self, request, pk):
-        loan = self.get_loan(request, pk)
-        try:
-            services.approve_loan(loan, request.user)
-            messages.success(request,
-                             _("Loan %(ref)s approved.") % {"ref": loan.reference})
-        except BusinessRuleError as error:
-            messages.error(request, str(error))
-        return redirect(loan.get_absolute_url())
-
-
-class DisburseLoanView(LoanActionView):
-    required_action = permissions.DISBURSE_LOAN
-
-    def post(self, request, pk):
-        loan = self.get_loan(request, pk)
-        try:
-            services.disburse_loan(loan, request.user)
-            messages.success(
-                request,
-                _("Loan %(ref)s disbursed. The schedule is now active.") % {
-                    "ref": loan.reference})
-        except BusinessRuleError as error:
-            messages.error(request, str(error))
-        return redirect(loan.get_absolute_url())
 
 
 class CancelLoanView(LoanActionView):
@@ -333,7 +269,7 @@ def simulate_loan(request):
                     .filter(pk=customer_id).first())
         if customer is not None:
             warnings = [str(text) for text in
-                        services.pre_approval_summary(customer)["warnings"]]
+                        services.pre_loan_summary(customer)["warnings"]]
 
     business = Business.objects.current()
     simulation = None

@@ -122,6 +122,9 @@ table.data-table thead th {
 table.data-table tbody td { padding: .7rem .85rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
 table.data-table tbody tr:hover { background: #fbfdff; }
 table.data-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.row-actions { display: inline-flex; gap: .35rem; flex-wrap: nowrap; }
+table.data-table tr.row-clickable { cursor: pointer; }
+table.data-table tr.row-clickable:hover { background: #f1f6ff; }
 
 .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--grey); }
 .empty-state i { font-size: 2rem; display: block; margin-bottom: .6rem; opacity: .5; }
@@ -145,12 +148,62 @@ table.data-table .num { text-align: right; font-variant-numeric: tabular-nums; w
 }
 
 /* --- Responsive -------------------------------------------------------- */
+/* --- Responsive: tablet (< 992px) and phone (< 576px) ------------------ */
+.sidebar-backdrop { display: none; }
+.period-form .form-control { width: auto; }
+
 @media (max-width: 991.98px) {
   .sidebar { transform: translateX(-100%); width: var(--sidebar-width); }
-  .app-shell.menu-open .sidebar { transform: translateX(0); }
+  .app-shell.menu-open .sidebar { transform: translateX(0); box-shadow: 0 0 40px rgba(15, 23, 42, .35); }
+  /* The collapsed (icons only) desktop mode does not apply to the drawer. */
+  .app-shell.collapsed .sidebar { width: var(--sidebar-width); }
+  .app-shell.collapsed .brand-text { display: inline; }
+  .app-shell.collapsed .sidebar-nav .nav-item { justify-content: flex-start; }
+  .sidebar-backdrop {
+    position: fixed; inset: 0; z-index: 1029; background: rgba(15, 23, 42, .45);
+  }
+  .app-shell.menu-open .sidebar-backdrop { display: block; }
+  body.menu-lock { overflow: hidden; }
   .content { margin-left: 0; }
   .app-shell.collapsed .content { margin-left: 0; }
   .page { padding: 1rem 1rem 2.5rem; }
+
+  /* Tables keep one line per cell and scroll sideways inside their panel. */
+  table.data-table th, table.data-table td { white-space: nowrap; }
+  table.data-table td.wrap-sm { white-space: normal; min-width: 9rem; }
+  .table-wrap { -webkit-overflow-scrolling: touch; }
+
+  /* Tabs scroll sideways instead of wrapping into several rows. */
+  .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
+  .nav-tabs .nav-link { white-space: nowrap; }
+}
+
+@media (max-width: 767.98px) {
+  /* Filter panels: search on its own row, the rest two per row. */
+  .filters .row > [class*="col-md-"] { flex: 0 0 auto; width: 50%; }
+  .filters .row > [class*="col-md-"]:first-child,
+  .filters .row > .d-grid:nth-child(even) { width: 100%; }
+  .filters .row > div { margin-bottom: .25rem; }
+  .filters label { font-size: .8rem; margin-bottom: .2rem; }
+}
+
+@media (max-width: 575.98px) {
+  .topbar { padding: 0 .75rem; gap: .5rem; height: 56px; }
+  .page { padding: .85rem .75rem 2rem; }
+  .page-header { gap: .65rem; margin-bottom: 1rem; }
+  .page-header h1 { font-size: 1.2rem; overflow-wrap: anywhere; }
+  .page-actions { width: 100%; }
+  .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+  .stat-tile { padding: .7rem .8rem; border-radius: 10px; }
+  .stat-tile .stat-label { font-size: .66rem; }
+  .stat-tile .stat-value { font-size: 1.1rem; margin-top: .2rem; overflow-wrap: anywhere; }
+  .stat-tile .stat-hint { font-size: .7rem; }
+  .card-panel-header { padding: .75rem .9rem; }
+  .card-panel-body { padding: .9rem; }
+  .period-form { width: 100%; }
+  .period-form .form-control { flex: 1 1 0; min-width: 0; }
+  .modal-footer { flex-wrap: wrap; }
+  .modal-footer > .d-flex { width: 100%; justify-content: flex-end; }
 }
 
 @media print {

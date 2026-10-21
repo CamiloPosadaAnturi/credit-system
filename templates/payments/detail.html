@@ -25,7 +25,6 @@
         <dt class="col-5">{% trans "Kind" %}</dt><dd class="col-7">{{ payment.get_kind_display }}</dd>
         <dt class="col-5">{% trans "Reference" %}</dt><dd class="col-7">{{ payment.external_reference|default:"-" }}</dd>
         <dt class="col-5">{% trans "Registered by" %}</dt><dd class="col-7">{{ payment.received_by }}</dd>
-        <dt class="col-5">{% trans "Collector" %}</dt><dd class="col-7">{{ payment.collector|default:"-" }}</dd>
         <dt class="col-5">{% trans "Status" %}</dt><dd class="col-7"><span class="badge text-bg-{{ payment.status|badge }} status-badge">{{ payment.get_status_display }}</span></dd>
       </dl>
       {% if payment.notes %}<hr><p class="small mb-0">{{ payment.notes|linebreaksbr }}</p>{% endif %}

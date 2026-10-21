@@ -1,36 +1,25 @@
 from django import forms
-from django.forms import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 
 from apps.businesses.models import Business
-from apps.core.forms import BootstrapFormMixin, DateInput
-from apps.customers.models import Customer, CustomerStatus, PersonalReference
-from apps.users import permissions
-from apps.users.models import Role, User
+from apps.core.forms import BootstrapFormMixin
+from apps.customers.models import Customer, CustomerStatus
 
 
 class CustomerForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = Customer
         fields = [
-            "first_name", "last_name", "second_last_name",
-            "national_id", "tax_id", "birth_date",
-            "phone", "alt_phone", "email",
-            "address", "city", "state", "postal_code",
-            "occupation", "collector", "status", "notes",
+            "first_name", "last_name", "second_last_name", "phone", "status", "notes",
         ]
         widgets = {
-            "birth_date": DateInput(),
+            "phone": forms.TextInput(attrs={"type": "tel", "inputmode": "tel"}),
             "notes": forms.Textarea(attrs={"rows": 3}),
         }
 
     SECTIONS = [
-        (_("Identification"), ["first_name", "last_name",
-                               "second_last_name", "birth_date", "occupation"]),
-        (_("Documents (restricted access)"), ["national_id", "tax_id"]),
-        (_("Contact"), ["phone", "alt_phone", "email"]),
-        (_("Address"), ["address", "city", "state", "postal_code"]),
-        (_("Operations"), ["collector", "status", "notes"]),
+        (_("Identification"), ["first_name", "last_name", "second_last_name", "phone"]),
+        (_("Operations"), ["status", "notes"]),
     ]
 
     def __init__(self, *args, user=None, **kwargs):
@@ -39,20 +28,22 @@ class CustomerForm(BootstrapFormMixin, forms.ModelForm):
         if not self.instance.business_id:
             # Single-business mode: every customer belongs to the one business.
             self.instance.business = Business.objects.current()
-        self.fields["collector"].queryset = User.objects.collectors()
-        if user is not None:
-            if not permissions.can(user, permissions.VIEW_SENSITIVE_DATA):
-                # Without the permission these fields are neither shown nor edited.
-                self.fields.pop("national_id", None)
-                self.fields.pop("tax_id", None)
         self.apply_widget_styles()
+
+    def full_clean(self):
+        super().full_clean()
+        # Highlight the fields with errors (Bootstrap ``is-invalid``).
+        for name in self.errors:
+            if name in self.fields:
+                widget = self.fields[name].widget
+                widget.attrs["class"] = f"{widget.attrs.get('class', '')} is-invalid".strip()
 
 
 class CustomerQuickForm(BootstrapFormMixin, forms.ModelForm):
     """Register a customer with the minimum data: name, last name and phone.
 
-    The rest of the profile (documents, address, collector...) is completed
-    later from the customer's edit page.
+    The rest of the profile (second last name, notes) is
+    completed later from the edit modal.
     """
 
     class Meta:
@@ -82,19 +73,6 @@ class CustomerQuickForm(BootstrapFormMixin, forms.ModelForm):
                 widget.attrs["class"] = f"{widget.attrs.get('class', '')} is-invalid".strip()
 
 
-ReferenceFormSet = inlineformset_factory(
-    Customer, PersonalReference,
-    fields=["name", "relationship", "phone", "address"],
-    extra=1, can_delete=True,
-    widgets={
-        "name": forms.TextInput(attrs={"class": "form-control"}),
-        "relationship": forms.TextInput(attrs={"class": "form-control"}),
-        "phone": forms.TextInput(attrs={"class": "form-control"}),
-        "address": forms.TextInput(attrs={"class": "form-control"}),
-    },
-)
-
-
 class CustomerFilterForm(forms.Form):
     q = forms.CharField(
         label=_("Search"), required=False,
@@ -104,10 +82,6 @@ class CustomerFilterForm(forms.Form):
         label=_("Status"), required=False,
         choices=[("", _("All"))] + list(CustomerStatus.choices),
         widget=forms.Select(attrs={"class": "form-select"}))
-    collector = forms.ModelChoiceField(
-        label=_("Collector"), required=False, queryset=None, empty_label=_("All"),
-        widget=forms.Select(attrs={"class": "form-select"}))
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["collector"].queryset = User.objects.filter(role=Role.COLLECTOR)

@@ -16,7 +16,7 @@ from django.utils import timezone
 from apps.businesses.models import Business
 from apps.collections.models import ActionOutcome, ActionType, CollectionAction
 from apps.core.dates import today_local
-from apps.customers.models import Customer, CustomerStatus, PersonalReference
+from apps.customers.models import Customer, CustomerStatus
 from apps.loans import services as loan_services
 from apps.payments import services as payment_services
 from apps.payments.models import PaymentMethod
@@ -35,11 +35,6 @@ NAMES = [
     ("Monica", "Silva", "Herrera"), ("Javier", "Duran", "Peralta"),
 ]
 # Values stored in the database and shown in the UI, so they are in Spanish.
-OCCUPATIONS = ["Comerciante", "Taxista", "Estilista", "Vendedor ambulante",
-               "Costurera", "Carpintero", "Trabajadora del hogar", "Abarrotero",
-               "Mecánico", "Panadero"]
-CITIES = [("Guadalajara", "JAL"), ("Monterrey", "NL"), ("Puebla", "PUE"),
-          ("Leon", "GTO"), ("Merida", "YUC")]
 
 
 class Command(BaseCommand):
@@ -95,29 +90,22 @@ class Command(BaseCommand):
             business.save(update_fields=["manager"])
 
         customers = []
+        # Collector of each customer's loans (customers no longer store one).
+        self.collector_of = {}
         for index, (first_name, last_name, second_last_name) in enumerate(NAMES):
             collector = collector_one if index < 13 else collector_two
-            city, state = random.choice(CITIES)
             customer = Customer.objects.create(
                 business=business, first_name=first_name, last_name=last_name,
                 second_last_name=second_last_name,
                 phone=f"55{random.randint(10000000, 99999999)}",
-                occupation=random.choice(OCCUPATIONS),
-                address=f"Calle Ficticia {random.randint(1, 500)}",
-                city=city, state=state,
-                postal_code=f"{random.randint(10000, 99999)}",
-                collector=collector,
                 status=CustomerStatus.RESTRICTED if index == 19 else CustomerStatus.ACTIVE,
                 notes="Cliente de demostración (datos ficticios).",
                 created_by=admin,
             )
-            PersonalReference.objects.create(
-                customer=customer, name="Referencia de demostración",
-                relationship=random.choice(["Hermano", "Vecino", "Amigo", "Primo"]),
-                phone=f"55{random.randint(10000000, 99999999)}")
+            self.collector_of[customer.pk] = collector
             customers.append(customer)
 
-        created = {"settled": 0, "live": 0, "past_due": 0, "pending": 0}
+        created = {"settled": 0, "live": 0, "past_due": 0, "new": 0}
 
         # --- Settled loans ---------------------------------------------------
         for customer in customers[:4]:
@@ -130,7 +118,7 @@ class Command(BaseCommand):
                 next_installment = loan.installments.exclude(status="paid").first()
                 payment_services.register_payment(
                     loan=loan, amount=next_installment.balance,
-                    user=customer.collector, collector=customer.collector,
+                    user=self.collector_of[customer.pk], collector=self.collector_of[customer.pk],
                     method=PaymentMethod.CASH, force_duplicate=True,
                     paid_at=timezone.now() - dt.timedelta(days=random.randint(1, 50)))
             created["settled"] += 1
@@ -143,7 +131,7 @@ class Command(BaseCommand):
                 installment = loan.installments.first()
                 payment_services.register_payment(
                     loan=loan, amount=installment.scheduled_amount,
-                    user=customer.collector, collector=customer.collector,
+                    user=self.collector_of[customer.pk], collector=self.collector_of[customer.pk],
                     force_duplicate=True)
             created["live"] += 1
 
@@ -154,13 +142,13 @@ class Command(BaseCommand):
             if random.random() > 0.4:
                 payment_services.register_payment(
                     loan=loan, amount=Decimal(random.choice([200, 350, 500])),
-                    user=customer.collector, collector=customer.collector,
+                    user=self.collector_of[customer.pk], collector=self.collector_of[customer.pk],
                     force_duplicate=True,
                     paid_at=timezone.now() - dt.timedelta(days=random.randint(1, 20)))
             loan_services.refresh_status(loan)
             CollectionAction.objects.create(
                 loan=loan, customer=customer, business=customer.business,
-                user=customer.collector,
+                user=self.collector_of[customer.pk],
                 performed_at=timezone.now() - dt.timedelta(days=2),
                 action_type=random.choice([ActionType.CALL, ActionType.VISIT,
                                            ActionType.PROMISE]),
@@ -173,7 +161,7 @@ class Command(BaseCommand):
                 notes="Acción de cobranza de demostración.")
             created["past_due"] += 1
 
-        # --- Loans pending approval -------------------------------------------
+        # --- New loans, first installment next week ---------------------------
         for customer in customers[17:19]:
             loan_services.create_loan(
                 customer=customer, business=customer.business,
@@ -181,15 +169,15 @@ class Command(BaseCommand):
                 installment_count=customer.business.installment_count,
                 frequency=customer.business.payment_frequency,
                 first_payment_date=today + dt.timedelta(days=7), user=manager,
-                collector=customer.collector,
-                notes="Solicitud de demostración pendiente de aprobación.")
-            created["pending"] += 1
+                collector=self.collector_of[customer.pk],
+                notes="Crédito de demostración recién otorgado.")
+            created["new"] += 1
 
         self.stdout.write(self.style.SUCCESS("Demo data loaded:"))
         self.stdout.write(f"  Business: {business}   Customers: {len(customers)}")
         self.stdout.write(
             f"  Settled loans: {created['settled']}, live: {created['live']}, "
-            f"past due: {created['past_due']}, pending: {created['pending']}")
+            f"past due: {created['past_due']}, new: {created['new']}")
         self.stdout.write(f"  Users (password: {password}):")
         for user in [admin, manager, collector_one, collector_two]:
             self.stdout.write(f"    {user.username} -> {user.get_role_display()}")
@@ -214,13 +202,8 @@ class Command(BaseCommand):
             installment_count=business.installment_count,
             frequency=business.payment_frequency,
             first_payment_date=first_payment_date, user=user,
-            collector=customer.collector,
+            collector=self.collector_of[customer.pk],
             application_date=first_payment_date - dt.timedelta(days=1),
             notes="Crédito de demostración.")
-        loan_services.approve_loan(loan, user,
-                                   date=first_payment_date - dt.timedelta(days=1))
-        loan.refresh_from_db()
-        loan_services.disburse_loan(loan, user,
-                                    date=first_payment_date - dt.timedelta(days=1))
         loan.refresh_from_db()
         return loan

@@ -24,7 +24,7 @@ class LoadDemoDataTests(TestCase):
 
         self.assertTrue(Loan.objects.filter(status=LoanStatus.SETTLED).exists())
         self.assertTrue(Loan.objects.filter(status=LoanStatus.PAST_DUE).exists())
-        self.assertTrue(Loan.objects.filter(status=LoanStatus.PENDING).exists())
+        self.assertFalse(Loan.objects.exclude(status__in=LoanStatus.values).exists())
         self.assertIn("Demo data loaded", output.getvalue())
 
     def test_balances_match_the_allocations(self):

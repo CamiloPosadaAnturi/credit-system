@@ -47,7 +47,7 @@ def create_customer(business, first_name="Ana", last_name="Ramirez", **extra) ->
 
 def create_loan(customer, user=None, principal=Decimal("1000"), installments=4,
                 frequency="weekly", first_payment_date: dt.date | None = None,
-                disburse=True, **extra):
+                **extra):
     loan = loan_services.create_loan(
         customer=customer,
         business=customer.business,
@@ -58,9 +58,5 @@ def create_loan(customer, user=None, principal=Decimal("1000"), installments=4,
         user=user,
         **extra,
     )
-    if disburse and user is not None:
-        loan_services.approve_loan(loan, user)
-        loan.refresh_from_db()
-        loan_services.disburse_loan(loan, user)
-        loan.refresh_from_db()
+    loan.refresh_from_db()
     return loan

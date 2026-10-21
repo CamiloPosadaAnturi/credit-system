@@ -2321,3 +2321,58 @@ msgstr ""
 
 msgid "Rate x principal"
 msgstr "Tasa x capital"
+
+msgid "Payment"
+msgstr "Pago"
+
+msgid "Loading..."
+msgstr "Cargando..."
+
+msgid "Could not load the payment."
+msgstr "No se pudo cargar el pago."
+
+msgid "Open full page"
+msgstr "Ver página completa"
+
+msgid "Are you sure the data is correct? The loan will be approved right away."
+msgstr "¿Está seguro de que los datos son correctos? El crédito quedará aprobado de inmediato."
+
+msgid "Are you sure the data is correct?"
+msgstr "¿Está seguro de que los datos son correctos?"
+
+msgid "When you confirm, the loan is created already approved and its schedule becomes active. It can no longer be edited."
+msgstr "Al confirmar, el crédito se crea ya aprobado y su calendario de pagos queda activo. Después no se podrá editar."
+
+msgid "Create loan"
+msgstr "Crear crédito"
+
+msgid "Review data"
+msgstr "Revisar datos"
+
+msgid "Yes, create loan"
+msgstr "Sí, crear crédito"
+
+#, python-format
+msgid "Loan %(ref)s created and approved."
+msgstr "Crédito %(ref)s creado y aprobado."
+
+msgid "Edit customer"
+msgstr "Editar cliente"
+
+msgid "Could not load the form."
+msgstr "No se pudo cargar el formulario."
+
+msgid "Delete"
+msgstr "Eliminar"
+
+msgid "Are you sure the data is correct? The loan becomes active right away."
+msgstr "¿Está seguro de que los datos son correctos? El crédito queda activo de inmediato."
+
+msgid "When you confirm, the loan is created active and its payment schedule starts. It can no longer be edited."
+msgstr "Al confirmar, el crédito se crea activo y su calendario de pagos empieza a correr. Después no se podrá editar."
+
+msgid "The customer is restricted. Review their history before lending."
+msgstr "El cliente está restringido. Revisa su historial antes de prestarle."
+
+msgid "Ratio frozen when the loan was created."
+msgstr "Proporción fijada al crear el crédito."

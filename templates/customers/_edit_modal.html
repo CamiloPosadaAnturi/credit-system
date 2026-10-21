@@ -1,0 +1,21 @@
+{% load i18n %}
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerTitle" aria-hidden="true"
+     data-loading-text="{% trans 'Loading...' %}" data-error-text="{% trans 'Could not load the form.' %}">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <form class="modal-content" method="post" action="" novalidate data-ajax-form data-no-autofocus>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="editCustomerTitle">{% trans "Edit customer" %}</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+      </div>
+      <div class="modal-body" data-form-body>
+        <p class="text-secondary mb-0">{% trans "Loading..." %}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-soft" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+        <button type="submit" class="btn btn-primary" data-busy-label="{% trans 'Saving...' %}">{% trans "Save customer" %}</button>
+      </div>
+    </form>
+  </div>
+</div>

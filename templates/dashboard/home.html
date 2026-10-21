@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block actions %}
-<form class="d-flex gap-2 flex-wrap" method="get">
+<form class="period-form d-flex gap-2 align-items-center" method="get">
   <input type="date" name="start" value="{{ start }}" class="form-control form-control-sm">
   <input type="date" name="end" value="{{ end }}" class="form-control form-control-sm">
   <button class="btn btn-sm btn-primary" type="submit">{% trans "Apply" %}</button>
@@ -134,22 +134,22 @@
         </ul>
         <div class="tab-content">
           <div class="tab-pane fade show active" id="byAmount">
-            <table class="data-table"><thead><tr><th>{% trans "Customer" %}</th><th class="num">{% trans "Historical principal" %}</th><th class="num">{% trans "Loans" %}</th></tr></thead>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>{% trans "Customer" %}</th><th class="num">{% trans "Historical principal" %}</th><th class="num">{% trans "Loans" %}</th></tr></thead>
               <tbody>
               {% for row in top_borrowers.by_amount %}
                 <tr><td>{{ row.customer__first_name }} {{ row.customer__last_name }} {{ row.customer__second_last_name }}</td>
                   <td class="num">{{ row.principal|mxn }}</td><td class="num">{{ row.count }}</td></tr>
               {% empty %}<tr><td colspan="3" class="text-secondary small">{% trans "No data in the period." %}</td></tr>{% endfor %}
-              </tbody></table>
+              </tbody></table></div>
           </div>
           <div class="tab-pane fade" id="byCount">
-            <table class="data-table"><thead><tr><th>{% trans "Customer" %}</th><th class="num">{% trans "Loans" %}</th><th class="num">{% trans "Principal" %}</th></tr></thead>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>{% trans "Customer" %}</th><th class="num">{% trans "Loans" %}</th><th class="num">{% trans "Principal" %}</th></tr></thead>
               <tbody>
               {% for row in top_borrowers.by_count %}
                 <tr><td>{{ row.customer__first_name }} {{ row.customer__last_name }}</td>
                   <td class="num">{{ row.count }}</td><td class="num">{{ row.principal|mxn }}</td></tr>
               {% empty %}<tr><td colspan="3" class="text-secondary small">{% trans "No data in the period." %}</td></tr>{% endfor %}
-              </tbody></table>
+              </tbody></table></div>
           </div>
         </div>
       </div>
@@ -166,20 +166,20 @@
         </ul>
         <div class="tab-content">
           <div class="tab-pane fade show active" id="payPeriod">
-            <table class="data-table"><thead><tr><th>{% trans "Customer" %}</th><th class="num">{% trans "Paid" %}</th><th class="num">{% trans "Payments" %}</th></tr></thead><tbody>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>{% trans "Customer" %}</th><th class="num">{% trans "Paid" %}</th><th class="num">{% trans "Payments" %}</th></tr></thead><tbody>
               {% for row in top_payers.period %}
                 <tr><td>{{ row.customer__first_name }} {{ row.customer__last_name }}</td>
                   <td class="num">{{ row.total|mxn }}</td><td class="num">{{ row.count }}</td></tr>
               {% empty %}<tr><td colspan="3" class="text-secondary small">{% trans "No payments in the period." %}</td></tr>{% endfor %}
-            </tbody></table>
+            </tbody></table></div>
           </div>
           <div class="tab-pane fade" id="payHistorical">
-            <table class="data-table"><thead><tr><th>{% trans "Customer" %}</th><th class="num">{% trans "Paid" %}</th><th class="num">{% trans "Payments" %}</th></tr></thead><tbody>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>{% trans "Customer" %}</th><th class="num">{% trans "Paid" %}</th><th class="num">{% trans "Payments" %}</th></tr></thead><tbody>
               {% for row in top_payers.historical %}
                 <tr><td>{{ row.customer__first_name }} {{ row.customer__last_name }}</td>
                   <td class="num">{{ row.total|mxn }}</td><td class="num">{{ row.count }}</td></tr>
               {% empty %}<tr><td colspan="3" class="text-secondary small">{% trans "No payments recorded." %}</td></tr>{% endfor %}
-            </tbody></table>
+            </tbody></table></div>
           </div>
         </div>
       </div>

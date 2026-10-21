@@ -27,15 +27,6 @@ class PermissionMatrixTests(TestCase):
                          Role.COLLECTOR, Role.VIEWER]
         }
 
-    def test_only_admins_approve_loans(self):
-        self.assertTrue(permissions.can(self.by_role[Role.SUPERADMIN],
-                                        permissions.APPROVE_LOAN))
-        self.assertTrue(permissions.can(self.by_role[Role.ADMIN],
-                                        permissions.APPROVE_LOAN))
-        for role in [Role.MANAGER, Role.COLLECTOR, Role.VIEWER]:
-            self.assertFalse(permissions.can(self.by_role[role],
-                                             permissions.APPROVE_LOAN))
-
     def test_collector_registers_payments_but_cannot_reverse_them(self):
         collector = self.by_role[Role.COLLECTOR]
         self.assertTrue(permissions.can(collector, permissions.REGISTER_PAYMENT))
@@ -114,8 +105,6 @@ class SingleBusinessTests(TestCase):
         response = self.client.post(reverse("customers:create"), {
             "first_name": "Carla", "last_name": "Lopez", "phone": "5512345678",
             "status": "active",
-            "references-TOTAL_FORMS": "0", "references-INITIAL_FORMS": "0",
-            "references-MIN_NUM_FORMS": "0", "references-MAX_NUM_FORMS": "1000",
         })
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Customer.objects.get(first_name="Carla").business, self.business)
@@ -182,10 +171,7 @@ class SingleBusinessTests(TestCase):
         })
         self.assertEqual(response.status_code, 302)
         new_user = User.objects.get(username="newcoll")
-        self.client.force_login(self.admin)
-        # The new collector can be assigned to customers right away.
-        response = self.client.get(reverse("customers:update", args=[self.customer.pk]))
-        self.assertContains(response, f'value="{new_user.pk}"')
+        self.assertEqual(new_user.role, Role.COLLECTOR)
 
 
 class CollectorPortfolioTests(TestCase):
@@ -194,12 +180,12 @@ class CollectorPortfolioTests(TestCase):
         self.admin = create_user("admin", Role.ADMIN, [self.business])
         self.collector_one = create_user("coll1", Role.COLLECTOR, [self.business])
         self.collector_two = create_user("coll2", Role.COLLECTOR, [self.business])
-        self.customer_one = create_customer(self.business, "Ana",
-                                            collector=self.collector_one)
-        self.customer_two = create_customer(self.business, "Beto",
-                                            collector=self.collector_two)
-        self.loan_one = create_loan(self.customer_one, self.admin)
-        self.loan_two = create_loan(self.customer_two, self.admin)
+        self.customer_one = create_customer(self.business, "Ana")
+        self.customer_two = create_customer(self.business, "Beto")
+        self.loan_one = create_loan(self.customer_one, self.admin,
+                                    collector=self.collector_one)
+        self.loan_two = create_loan(self.customer_two, self.admin,
+                                    collector=self.collector_two)
 
     def test_collector_only_sees_their_portfolio(self):
         visible = permissions.filter_collector_portfolio(
@@ -232,3 +218,9 @@ class CollectorPortfolioTests(TestCase):
         response = self.client.get(reverse("loans:list"))
         self.assertEqual(response.status_code, 302)
         self.assertIn("/users/sign-in/", response["Location"])
+
+    def test_collector_only_sees_customers_with_their_loans(self):
+        self.client.force_login(self.collector_one)
+        response = self.client.get(reverse("customers:list"))
+        self.assertContains(response, self.customer_one.full_name)
+        self.assertNotContains(response, self.customer_two.full_name)

@@ -9,34 +9,40 @@
 {% block content %}
 <form class="filters" method="get">
   <div class="row g-2 align-items-end">
-    <div class="col-md-5">{{ filter_form.q.label_tag }}{{ filter_form.q }}</div>
-    <div class="col-md-3">{{ filter_form.status.label_tag }}{{ filter_form.status }}</div>
-    <div class="col-md-3">{{ filter_form.collector.label_tag }}{{ filter_form.collector }}</div>
-    <div class="col-md-1 d-grid"><button class="btn btn-primary btn-sm">{% trans "Filter" %}</button></div>
+    <div class="col-md-6">{{ filter_form.q.label_tag }}{{ filter_form.q }}</div>
+    <div class="col-8 col-md-4">{{ filter_form.status.label_tag }}{{ filter_form.status }}</div>
+    <div class="col-4 col-md-2 d-grid"><button class="btn btn-primary btn-sm">{% trans "Filter" %}</button></div>
   </div>
 </form>
 <div class="card-panel">
   <div class="table-wrap">
     <table class="data-table">
-      <thead><tr><th>{% trans "Code" %}</th><th>{% trans "Customer" %}</th><th>{% trans "Phone" %}</th>
-        <th>{% trans "Collector" %}</th><th class="num">{% trans "Loans" %}</th>
+      <thead><tr><th class="d-none d-sm-table-cell">{% trans "Code" %}</th><th>{% trans "Customer" %}</th><th class="d-none d-sm-table-cell">{% trans "Phone" %}</th>
+        <th class="num d-none d-sm-table-cell">{% trans "Loans" %}</th>
         <th>{% trans "Status" %}</th><th></th></tr></thead>
       <tbody>
       {% for customer in customers %}
         <tr>
-          <td class="text-secondary small">{{ customer.code }}</td>
-          <td><a href="{{ customer.get_absolute_url }}" class="fw-semibold">{{ customer.full_name }}</a>
-            {% if customer.occupation %}<span class="d-block text-secondary small">{{ customer.occupation }}</span>{% endif %}</td>
-          <td>{{ customer.phone }}</td>
-          <td>{{ customer.collector|default:"-" }}</td>
-          <td class="num">{{ customer.loans.count }}</td>
+          <td class="text-secondary small d-none d-sm-table-cell">{{ customer.code }}</td>
+          <td class="wrap-sm"><a href="{{ customer.get_absolute_url }}" class="fw-semibold">{{ customer.full_name }}</a>
+            <span class="d-block d-sm-none small text-secondary">{{ customer.phone }}</span></td>
+          <td class="d-none d-sm-table-cell">{{ customer.phone }}</td>
+          <td class="num d-none d-sm-table-cell">{{ customer.loans.count }}</td>
           <td><span class="badge text-bg-{{ customer.status|badge }} status-badge">{{ customer.get_status_display }}</span></td>
-          <td>{% if user_permissions.create_loan %}
+          <td class="text-end"><div class="row-actions">
+            {% if user_permissions.manage_customers %}
+            <a class="btn btn-sm btn-outline-soft js-remote-form" href="{% url 'customers:update' customer.pk %}"
+               data-url="{% url 'customers:update' customer.pk %}" data-target="#editCustomerModal"
+               data-next="{{ request.get_full_path }}" title="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"><i class="bi bi-pencil"></i><span class="d-none d-md-inline"> {% trans "Edit" %}</span></a>
+            {% endif %}
+            {% if user_permissions.create_loan %}
             <a class="btn btn-sm btn-outline-soft" href="{% url 'loans:create' %}?customer={{ customer.pk }}"
-               data-bs-toggle="modal" data-bs-target="#newLoanModal" data-customer="{{ customer.pk }}">{% trans "New loan" %}</a>{% endif %}</td>
+               data-bs-toggle="modal" data-bs-target="#newLoanModal" data-customer="{{ customer.pk }}"
+               title="{% trans 'New loan' %}" aria-label="{% trans 'New loan' %}"><i class="bi bi-plus-lg"></i><span class="d-none d-md-inline"> {% trans "New loan" %}</span></a>{% endif %}
+          </div></td>
         </tr>
       {% empty %}
-        <tr><td colspan="7">{% if user_permissions.manage_customers %}{% url 'customers:create' as create_url %}{% include "components/empty_state.html" with message=_("No customers match the filter.") icon="bi-people" action_url=create_url action_modal="#newCustomerModal" action_label=_("Register customer") %}{% else %}{% include "components/empty_state.html" with message=_("No customers match the filter.") icon="bi-people" %}{% endif %}</td></tr>
+        <tr><td colspan="6">{% if user_permissions.manage_customers %}{% url 'customers:create' as create_url %}{% include "components/empty_state.html" with message=_("No customers match the filter.") icon="bi-people" action_url=create_url action_modal="#newCustomerModal" action_label=_("Register customer") %}{% else %}{% include "components/empty_state.html" with message=_("No customers match the filter.") icon="bi-people" %}{% endif %}</td></tr>
       {% endfor %}
       </tbody>
     </table>
@@ -65,6 +71,7 @@
     </form>
   </div>
 </div>
+{% include "customers/_edit_modal.html" %}
 {% endif %}
 {% if loan_form %}{% include "loans/_create_modal.html" %}{% endif %}
 {% endblock %}

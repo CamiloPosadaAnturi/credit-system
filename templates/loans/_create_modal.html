@@ -2,21 +2,45 @@
 <div class="modal fade" id="newLoanModal" tabindex="-1" aria-labelledby="newLoanTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <form class="modal-content" method="post" action="{% url 'loans:create' %}" novalidate
-          data-ajax-form data-simulate-url="{% url 'loans:simulate' %}">
+          data-ajax-form data-confirm-step data-simulate-url="{% url 'loans:simulate' %}">
       {% csrf_token %}
       <div class="modal-header">
         <h2 class="modal-title fs-5" id="newLoanTitle">{% trans "New loan" %}</h2>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
       </div>
       <div class="modal-body">
-        <div class="row g-4">
+        <div class="row g-4" data-step="edit">
           <div class="col-md-7" data-form-body>{% include "loans/_loan_form.html" with form=loan_form %}</div>
           <div class="col-md-5">{% include "loans/_loan_preview.html" with form=loan_form %}</div>
         </div>
+        <div class="d-none" data-step="confirm">
+          <div class="alert alert-warning d-flex gap-2 align-items-start">
+            <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+            <div>
+              <strong class="d-block">{% trans "Are you sure the data is correct?" %}</strong>
+              <span class="small">{% trans "When you confirm, the loan is created active and its payment schedule starts. It can no longer be edited." %}</span>
+            </div>
+          </div>
+          <dl class="row mb-0">
+            <dt class="col-sm-5 fw-normal text-secondary">{% trans "Customer" %}</dt><dd class="col-sm-7 fw-semibold" data-summary="customer">-</dd>
+            <dt class="col-sm-5 fw-normal text-secondary">{% trans "Principal" %}</dt><dd class="col-sm-7" data-summary="principal">-</dd>
+            <dt class="col-sm-5 fw-normal text-secondary">{% trans "Interest" %}</dt><dd class="col-sm-7" data-summary="interest">-</dd>
+            <dt class="col-sm-5 fw-normal text-secondary">{% trans "Total payable" %}</dt><dd class="col-sm-7 fw-semibold" data-summary="total">-</dd>
+            <dt class="col-sm-5 fw-normal text-secondary">{% trans "Installments" %}</dt><dd class="col-sm-7" data-summary="installments">-</dd>
+            <dt class="col-sm-5 fw-normal text-secondary">{% trans "First payment" %}</dt><dd class="col-sm-7" data-summary="first_payment">-</dd>
+            <dt class="col-sm-5 fw-normal text-secondary">{% trans "Final due date" %}</dt><dd class="col-sm-7" data-summary="final">-</dd>
+          </dl>
+        </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline-soft" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
-        <button type="submit" class="btn btn-primary" data-busy-label="{% trans 'Saving...' %}">{% trans "Save loan" %}</button>
+        <div class="d-flex gap-2" data-step="edit">
+          <button type="button" class="btn btn-outline-soft" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+          <button type="submit" class="btn btn-primary">{% trans "Create loan" %}</button>
+        </div>
+        <div class="d-flex gap-2 d-none" data-step="confirm">
+          <button type="button" class="btn btn-outline-soft" data-step-back>{% trans "Review data" %}</button>
+          <button type="submit" class="btn btn-success" data-busy-label="{% trans 'Saving...' %}">{% trans "Yes, create loan" %}</button>
+        </div>
       </div>
     </form>
   </div>

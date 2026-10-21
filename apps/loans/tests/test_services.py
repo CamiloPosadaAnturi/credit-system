@@ -24,43 +24,26 @@ class LifeCycleTests(TestCase):
         self.customer = create_customer(self.business)
 
     def test_creation_computes_interest_and_schedule(self):
-        loan = create_loan(self.customer, self.admin, Decimal("1000"), 4, disburse=False)
+        loan = create_loan(self.customer, self.admin, Decimal("1000"), 4)
         self.assertEqual(loan.total_interest, Decimal("400.00"))
         self.assertEqual(loan.total_payable, Decimal("1400.00"))
         self.assertEqual(loan.installments.count(), 4)
         self.assertEqual(loan.installment_amount, Decimal("350.00"))
-        self.assertEqual(loan.status, LoanStatus.PENDING)
         self.assertTrue(loan.reference.startswith("LN-"))
 
+    def test_a_new_loan_is_live_right_away(self):
+        loan = create_loan(self.customer, self.admin, Decimal("1000"), 4)
+        self.assertEqual(loan.status, LoanStatus.ACTIVE)
+        self.assertEqual(loan.disbursement_date, today_local())
+        self.assertEqual(loan.disbursed_by, self.admin)
+        self.assertEqual(loan.outstanding_balance, Decimal("1400.00"))
+
     def test_references_are_unique_and_sequential(self):
-        first = create_loan(self.customer, self.admin, disburse=False)
-        second = create_loan(self.customer, self.admin, disburse=False)
+        first = create_loan(self.customer, self.admin)
+        second = create_loan(self.customer, self.admin)
         self.assertNotEqual(first.reference, second.reference)
         self.assertEqual(int(second.reference.split("-")[-1]),
                          int(first.reference.split("-")[-1]) + 1)
-
-    def test_approval_and_disbursement_flow(self):
-        loan = create_loan(self.customer, self.admin, disburse=False)
-        services.approve_loan(loan, self.admin)
-        loan.refresh_from_db()
-        self.assertEqual(loan.status, LoanStatus.APPROVED)
-        self.assertEqual(loan.approval_date, today_local())
-
-        services.disburse_loan(loan, self.admin)
-        loan.refresh_from_db()
-        self.assertEqual(loan.status, LoanStatus.ACTIVE)
-        self.assertEqual(loan.outstanding_balance, Decimal("1400.00"))
-
-    def test_cannot_disburse_without_approval(self):
-        loan = create_loan(self.customer, self.admin, disburse=False)
-        with self.assertRaises(LoanError):
-            services.disburse_loan(loan, self.admin)
-
-    def test_disbursed_loan_is_not_editable(self):
-        loan = create_loan(self.customer, self.admin)
-        self.assertFalse(loan.is_editable)
-        with self.assertRaises(LoanError):
-            services.recalculate_terms(loan, self.admin)
 
     def test_loan_rate_survives_a_business_rate_change(self):
         loan = create_loan(self.customer, self.admin)
@@ -79,12 +62,11 @@ class LifeCycleTests(TestCase):
         self.assertEqual(loan.status, LoanStatus.CANCELLED)
         self.assertEqual(loan.outstanding_balance, Decimal("0.00"))
 
-    def test_restricted_customer_cannot_be_approved(self):
+    def test_restricted_customer_cannot_get_a_loan(self):
         self.customer.status = "restricted"
         self.customer.save()
-        loan = create_loan(self.customer, self.admin, disburse=False)
         with self.assertRaises(LoanError):
-            services.approve_loan(loan, self.admin)
+            create_loan(self.customer, self.admin)
 
     def test_customer_from_another_business(self):
         other = create_business("Other business")

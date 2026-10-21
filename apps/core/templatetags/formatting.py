@@ -39,9 +39,6 @@ def mxn_short(value) -> str:
 def badge(status) -> str:
     """Return the Bootstrap contextual class for a status value."""
     classes = {
-        "draft": "secondary",
-        "pending_approval": "warning",
-        "approved": "info",
         "disbursed": "primary",
         "active": "success",
         "past_due": "danger",

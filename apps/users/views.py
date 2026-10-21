@@ -125,7 +125,7 @@ class UserDetailView(ActionRequiredMixin, DetailView):
         from apps.loans.models import Loan
 
         context["assigned_customers"] = Customer.objects.filter(
-            collector=self.object).count()
+            loans__collector=self.object).distinct().count()
         context["assigned_loans"] = Loan.objects.filter(collector=self.object).count()
         return context
 

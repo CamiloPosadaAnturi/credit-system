@@ -8,27 +8,12 @@
 </p>
 {% endblock %}
 {% block actions %}
-  {% if can_approve %}
-    <form method="post" action="{% url 'loans:approve' loan.pk %}" class="d-inline" data-submit-once
-          data-confirm="{% trans 'Approving freezes the rate and builds the final schedule. Continue?' %}">
-      {% csrf_token %}<button class="btn btn-sm btn-success">{% trans "Approve" %}</button>
-    </form>
-  {% endif %}
-  {% if can_disburse %}
-    <form method="post" action="{% url 'loans:disburse' loan.pk %}" class="d-inline" data-submit-once
-          data-confirm="{% trans 'Confirm the money was handed to the customer?' %}">
-      {% csrf_token %}<button class="btn btn-sm btn-primary">{% trans "Disburse" %}</button>
-    </form>
-  {% endif %}
   {% if can_register_payment %}
     <a class="btn btn-sm btn-success" href="{% url 'payments:register' loan.pk %}">{% trans "Register payment" %}</a>
     <a class="btn btn-sm btn-outline-soft" href="{% url 'payments:payoff' loan.pk %}">{% trans "Pay off" %}</a>
   {% endif %}
   {% if user_permissions.log_collection_action and loan.is_live %}
     <a class="btn btn-sm btn-outline-soft" href="{% url 'collections:log_action' loan.pk %}">{% trans "Collection action" %}</a>
-  {% endif %}
-  {% if loan.is_editable %}
-    <a class="btn btn-sm btn-outline-soft" href="{% url 'loans:update' loan.pk %}">{% trans "Edit" %}</a>
   {% endif %}
   {% if can_restructure %}
     <a class="btn btn-sm btn-outline-warning" href="{% url 'loans:restructure' loan.pk %}">{% trans "Restructure" %}</a>
@@ -38,7 +23,7 @@
   {% endif %}
 {% endblock %}
 {% block content %}
-{% if not loan.is_editable and loan.is_live %}
+{% if loan.is_live %}
   <div class="alert alert-info py-2 small">
     {% trans "This loan was already disbursed: its terms cannot be edited. Any adjustment is made with an audited payment reversal or an authorized restructuring." %}
   </div>
@@ -67,11 +52,9 @@
           <dt class="col-6">{% trans "First payment" %}</dt><dd class="col-6">{{ loan.first_payment_date|date:"d/m/Y" }}</dd>
           <dt class="col-6">{% trans "Final due date" %}</dt><dd class="col-6">{{ loan.final_due_date|date:"d/m/Y"|default:"-" }}</dd>
           <dt class="col-6">{% trans "Application" %}</dt><dd class="col-6">{{ loan.application_date|date:"d/m/Y" }}</dd>
-          <dt class="col-6">{% trans "Approval" %}</dt><dd class="col-6">{{ loan.approval_date|date:"d/m/Y"|default:"-" }}</dd>
           <dt class="col-6">{% trans "Disbursement" %}</dt><dd class="col-6">{{ loan.disbursement_date|date:"d/m/Y"|default:"-" }}</dd>
           <dt class="col-6">{% trans "Collector" %}</dt><dd class="col-6">{{ loan.collector|default:"-" }}</dd>
           <dt class="col-6">{% trans "Registered by" %}</dt><dd class="col-6">{{ loan.created_by|default:"-" }}</dd>
-          <dt class="col-6">{% trans "Approved by" %}</dt><dd class="col-6">{{ loan.approved_by|default:"-" }}</dd>
           <dt class="col-6">{% trans "Days past due" %}</dt><dd class="col-6">{{ loan.days_past_due }}</dd>
         </dl>
         {% if loan.contract %}<hr><a class="btn btn-sm btn-outline-soft" href="{{ loan.contract.url }}">{% trans "View contract" %}</a>{% endif %}

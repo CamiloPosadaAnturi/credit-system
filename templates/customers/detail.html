@@ -9,7 +9,9 @@
        data-bs-toggle="modal" data-bs-target="#newLoanModal">{% trans "New loan" %}</a>
   {% endif %}
   {% if user_permissions.manage_customers %}
-    <a class="btn btn-sm btn-outline-soft" href="{% url 'customers:update' customer.pk %}">{% trans "Edit" %}</a>
+    <a class="btn btn-sm btn-outline-soft js-remote-form" href="{% url 'customers:update' customer.pk %}"
+       data-url="{% url 'customers:update' customer.pk %}" data-target="#editCustomerModal"
+       data-next="{{ request.get_full_path }}"><i class="bi bi-pencil"></i> {% trans "Edit" %}</a>
     <form method="post" action="{% url 'customers:status' customer.pk %}" class="d-inline">
       {% csrf_token %}
       <select name="status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
@@ -39,28 +41,7 @@
       <div class="card-panel-body">
         <dl class="row small mb-0">
           <dt class="col-5">{% trans "Phone" %}</dt><dd class="col-7">{{ customer.phone }}</dd>
-          <dt class="col-5">{% trans "Alternate" %}</dt><dd class="col-7">{{ customer.alt_phone|default:"-" }}</dd>
-          <dt class="col-5">{% trans "Email" %}</dt><dd class="col-7">{{ customer.email|default:"-" }}</dd>
-          <dt class="col-5">{% trans "Address" %}</dt><dd class="col-7">{{ customer.address|default:"-" }}</dd>
-          <dt class="col-5">{% trans "City" %}</dt><dd class="col-7">{{ customer.city|default:"-" }} {{ customer.get_state_display|default:"" }}</dd>
-          <dt class="col-5">{% trans "Postal code" %}</dt><dd class="col-7">{{ customer.postal_code|default:"-" }}</dd>
-          <dt class="col-5">{% trans "Occupation" %}</dt><dd class="col-7">{{ customer.occupation|default:"-" }}</dd>
-          <dt class="col-5">{% trans "Collector" %}</dt><dd class="col-7">{{ customer.collector|default:"-" }}</dd>
-          {% if can_view_sensitive %}
-            <dt class="col-5">{% trans "CURP" %}</dt><dd class="col-7">{{ customer.national_id|default:"-" }}</dd>
-            <dt class="col-5">{% trans "RFC" %}</dt><dd class="col-7">{{ customer.tax_id|default:"-" }}</dd>
-          {% else %}
-            <dt class="col-12 text-secondary fst-italic mt-2">{% trans "CURP and RFC hidden: your role has no access to sensitive data." %}</dt>
-          {% endif %}
         </dl>
-        {% if customer.references.exists %}
-          <hr><h3 class="h6">{% trans "References" %}</h3>
-          <ul class="list-unstyled small mb-0">
-            {% for reference in customer.references.all %}
-              <li>{{ reference.name }} {% if reference.relationship %}({{ reference.relationship }}){% endif %} - {{ reference.phone }}</li>
-            {% endfor %}
-          </ul>
-        {% endif %}
         {% if customer.notes %}<hr><p class="small mb-0">{{ customer.notes|linebreaksbr }}</p>{% endif %}
       </div>
     </div>
@@ -112,5 +93,6 @@
 {% endblock %}
 
 {% block modals %}
+{% if user_permissions.manage_customers %}{% include "customers/_edit_modal.html" %}{% endif %}
 {% if loan_form %}{% include "loans/_create_modal.html" %}{% endif %}
 {% endblock %}

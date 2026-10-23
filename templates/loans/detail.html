@@ -12,9 +12,7 @@
     <a class="btn btn-sm btn-success" href="{% url 'payments:register' loan.pk %}">{% trans "Register payment" %}</a>
     <a class="btn btn-sm btn-outline-soft" href="{% url 'payments:payoff' loan.pk %}">{% trans "Pay off" %}</a>
   {% endif %}
-  {% if user_permissions.log_collection_action and loan.is_live %}
-    <a class="btn btn-sm btn-outline-soft" href="{% url 'collections:log_action' loan.pk %}">{% trans "Collection action" %}</a>
-  {% endif %}
+  
   {% if can_restructure %}
     <a class="btn btn-sm btn-outline-warning" href="{% url 'loans:restructure' loan.pk %}">{% trans "Restructure" %}</a>
   {% endif %}

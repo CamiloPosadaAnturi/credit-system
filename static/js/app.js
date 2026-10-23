@@ -453,3 +453,24 @@ document.addEventListener('click', function (e) {
       body.appendChild(err);
     });
 });
+
+document.addEventListener("click", function (event) {
+  const link = event.target.closest(".js-customer-summary");
+  if (!link) return;
+
+  // Permite abrir el enlace normalmente en otra pestaña con Ctrl o clic del medio.
+  if (event.ctrlKey || event.metaKey || event.shiftKey || event.button === 1) return;
+
+  const modal = document.getElementById("customerSummaryModal");
+  if (!modal || typeof bootstrap === "undefined") return;
+
+  event.preventDefault();
+
+  document.getElementById("customerSummaryTitle").textContent = link.dataset.name;
+  document.getElementById("summaryCode").textContent = link.dataset.code || "-";
+  document.getElementById("summaryPhone").textContent = link.dataset.phone || "-";
+  document.getElementById("summaryLoans").textContent = link.dataset.loans || "0";
+  document.getElementById("summaryStatus").textContent = link.dataset.status || "-";
+
+  bootstrap.Modal.getOrCreateInstance(modal).show();
+});

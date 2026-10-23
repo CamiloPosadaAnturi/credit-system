@@ -41,6 +41,5 @@
   <div class="d-flex flex-wrap justify-content-end gap-2">
     {% if can_reverse %}<a class="btn btn-sm btn-outline-danger" href="{% url 'payments:reverse' payment.pk %}">{% trans "Reverse" %}</a>{% endif %}
     <a class="btn btn-sm btn-outline-soft" href="{{ payment.loan.get_absolute_url }}">{% trans "View loan" %}</a>
-    <a class="btn btn-sm btn-primary" href="{{ payment.get_absolute_url }}">{% trans "Open full page" %}</a>
   </div>
 </div>

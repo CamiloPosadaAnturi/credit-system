@@ -34,6 +34,7 @@ class PaymentViewsTests(TestCase):
         self.assertTemplateUsed(response, "payments/detail_modal.html")
         self.assertTemplateNotUsed(response, "base.html")
         self.assertContains(response, self.payment.loan.reference)
+        self.assertNotContains(response, f'href="{self.payment.get_absolute_url()}"')
         self.assertNotContains(response, "Cobrador")
 
     def test_full_detail_page_still_works(self):

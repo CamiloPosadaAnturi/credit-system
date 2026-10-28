@@ -37,13 +37,13 @@
   <div class="col-lg-8">
     <div class="card-panel h-100">
       <div class="card-panel-header"><h2>{% trans "Scheduled vs. collected (last 14 days)" %}</h2></div>
-      <div class="card-panel-body"><canvas id="paymentsChart" height="110"></canvas></div>
+      <div class="card-panel-body"><div class="chart-box"><canvas id="paymentsChart"></canvas></div></div>
     </div>
   </div>
   <div class="col-lg-4">
     <div class="card-panel h-100">
       <div class="card-panel-header"><h2>{% trans "Portfolio composition" %}</h2></div>
-      <div class="card-panel-body"><canvas id="portfolioChart" height="180"></canvas></div>
+      <div class="card-panel-body"><div class="chart-box"><canvas id="portfolioChart"></canvas></div></div>
     </div>
   </div>
 </div>
@@ -230,7 +230,7 @@
       <div class="card-panel-header"><h2>{% trans "F. Recent activity" %}</h2></div>
       <div class="card-panel-body">
         <div class="row g-4">
-          <div class="col-md-3">
+          <div class="col-sm-6 col-xl-3">
             <h3 class="h6 text-secondary">{% trans "New customers" %}</h3>
             <ul class="list-unstyled small mb-0">
               {% for customer in activity.new_customers %}
@@ -239,7 +239,7 @@
               {% empty %}<li class="text-secondary">{% trans "No records." %}</li>{% endfor %}
             </ul>
           </div>
-          <div class="col-md-3">
+          <div class="col-sm-6 col-xl-3">
             <h3 class="h6 text-secondary">{% trans "Registered loans" %}</h3>
             <ul class="list-unstyled small mb-0">
               {% for loan in activity.new_loans %}
@@ -248,7 +248,7 @@
               {% empty %}<li class="text-secondary">{% trans "No records." %}</li>{% endfor %}
             </ul>
           </div>
-          <div class="col-md-3">
+          <div class="col-sm-6 col-xl-3">
             <h3 class="h6 text-secondary">{% trans "Disbursements" %}</h3>
             <ul class="list-unstyled small mb-0">
               {% for loan in activity.disbursements %}
@@ -257,7 +257,7 @@
               {% empty %}<li class="text-secondary">{% trans "No records." %}</li>{% endfor %}
             </ul>
           </div>
-          <div class="col-md-3">
+          <div class="col-sm-6 col-xl-3">
             <h3 class="h6 text-secondary">{% trans "Payments received" %}</h3>
             <ul class="list-unstyled small mb-0">
               {% for payment in activity.recent_payments %}
@@ -281,6 +281,11 @@
   const payments = JSON.parse(document.getElementById("paymentsData").textContent);
   const portfolio = JSON.parse(document.getElementById("portfolioData").textContent);
   const currency = (value) => "$" + Number(value).toLocaleString("es-MX", {minimumFractionDigits: 2});
+  // Phones: shorter axis labels ($10 k) so the bars keep their width.
+  const narrow = window.matchMedia("(max-width: 575.98px)").matches;
+  const axisCurrency = (value) => narrow
+    ? "$" + Number(value).toLocaleString("es-MX", {notation: "compact", maximumFractionDigits: 1})
+    : currency(value);
 
   new Chart(document.getElementById("paymentsChart"), {
     type: "bar",
@@ -293,8 +298,12 @@
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {tooltip: {callbacks: {label: (c) => c.dataset.label + ": " + currency(c.parsed.y)}}},
-      scales: {y: {beginAtZero: true, ticks: {callback: (v) => currency(v)}}}
+      scales: {
+        x: {ticks: {maxRotation: 0, autoSkip: true}},
+        y: {beginAtZero: true, ticks: {callback: (v) => axisCurrency(v)}}
+      }
     }
   });
 
@@ -307,7 +316,8 @@
         backgroundColor: ["#2f5c8f", "#0f9d58", "#f2a600", "#d93025", "#64748b", "#8b5cf6", "#0ea5e9"]
       }]
     },
-    options: {responsive: true, plugins: {legend: {position: "bottom", labels: {boxWidth: 12}}}}
+    options: {responsive: true, maintainAspectRatio: false,
+              plugins: {legend: {position: "bottom", labels: {boxWidth: 12}}}}
   });
 })();
 </script>

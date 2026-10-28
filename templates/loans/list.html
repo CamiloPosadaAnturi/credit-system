@@ -20,22 +20,24 @@
 <div class="card-panel">
   <div class="table-wrap">
     <table class="data-table">
-      <thead><tr><th>{% trans "Reference" %}</th><th>{% trans "Customer" %}</th><th>{% trans "Disbursed" %}</th>
-        <th class="num">{% trans "Principal" %}</th><th class="num">{% trans "Interest" %}</th>
-        <th class="num">{% trans "Total" %}</th><th class="num">{% trans "Balance" %}</th>
-        <th class="num">{% trans "Past due" %}</th><th>{% trans "Status" %}</th></tr></thead>
+      <thead><tr><th>{% trans "Reference" %}</th><th class="d-none d-sm-table-cell">{% trans "Customer" %}</th><th class="d-none d-md-table-cell">{% trans "Disbursed" %}</th>
+        <th class="num d-none d-sm-table-cell">{% trans "Principal" %}</th><th class="num d-none d-md-table-cell">{% trans "Interest" %}</th>
+        <th class="num d-none d-md-table-cell">{% trans "Total" %}</th><th class="num">{% trans "Balance" %}</th>
+        <th class="num d-none d-sm-table-cell">{% trans "Past due" %}</th><th class="d-none d-sm-table-cell">{% trans "Status" %}</th></tr></thead>
       <tbody>
       {% for loan in loans %}
         <tr>
-          <td><a href="{{ loan.get_absolute_url }}" class="fw-semibold">{{ loan.reference }}</a></td>
-          <td>{{ loan.customer }}</td>
-          <td>{{ loan.disbursement_date|date:"d/m/Y"|default:"-" }}</td>
-          <td class="num">{{ loan.principal|mxn }}</td>
-          <td class="num">{{ loan.total_interest|mxn }}</td>
-          <td class="num">{{ loan.total_payable|mxn }}</td>
-          <td class="num fw-semibold">{{ loan.outstanding_balance|mxn }}</td>
-          <td class="num">{% if loan.days_past_due %}<span class="text-danger">{{ loan.days_past_due }} d</span>{% else %}-{% endif %}</td>
-          <td><span class="badge text-bg-{{ loan.status|badge }} status-badge">{{ loan.get_status_display }}</span></td>
+          <td class="wrap-sm"><a href="{{ loan.get_absolute_url }}" class="fw-semibold text-nowrap">{{ loan.reference }}</a>
+            <span class="d-block d-sm-none small text-secondary">{{ loan.customer }}{% if loan.days_past_due %} &middot; <span class="text-danger">{{ loan.days_past_due }} d</span>{% endif %}</span></td>
+          <td class="d-none d-sm-table-cell">{{ loan.customer }}</td>
+          <td class="d-none d-md-table-cell">{{ loan.disbursement_date|date:"d/m/Y"|default:"-" }}</td>
+          <td class="num d-none d-sm-table-cell">{{ loan.principal|mxn }}</td>
+          <td class="num d-none d-md-table-cell">{{ loan.total_interest|mxn }}</td>
+          <td class="num d-none d-md-table-cell">{{ loan.total_payable|mxn }}</td>
+          <td class="num fw-semibold">{{ loan.outstanding_balance|mxn }}
+            <span class="d-block d-sm-none mt-1"><span class="badge text-bg-{{ loan.status|badge }} status-badge">{{ loan.get_status_display }}</span></span></td>
+          <td class="num d-none d-sm-table-cell">{% if loan.days_past_due %}<span class="text-danger">{{ loan.days_past_due }} d</span>{% else %}-{% endif %}</td>
+          <td class="d-none d-sm-table-cell"><span class="badge text-bg-{{ loan.status|badge }} status-badge">{{ loan.get_status_display }}</span></td>
         </tr>
       {% empty %}
         <tr><td colspan="9">{% if loan_form %}{% url 'loans:create' as create_url %}{% include "components/empty_state.html" with message=_("No loans match the filter.") icon="bi-file-earmark-text" action_url=create_url action_modal="#newLoanModal" action_label=_("Register loan") %}{% else %}{% include "components/empty_state.html" with message=_("No loans match the filter.") icon="bi-file-earmark-text" %}{% endif %}</td></tr>

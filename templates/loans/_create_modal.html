@@ -1,6 +1,6 @@
 {% load i18n %}
 <div class="modal fade" id="newLoanModal" tabindex="-1" aria-labelledby="newLoanTitle" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-sm-down">
     <form class="modal-content" method="post" action="{% url 'loans:create' %}" novalidate
           data-ajax-form data-confirm-step data-simulate-url="{% url 'loans:simulate' %}">
       {% csrf_token %}

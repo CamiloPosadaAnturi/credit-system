@@ -95,8 +95,9 @@ body {
 .card-panel { background: #fff; border: 1px solid var(--border); border-radius: 12px; }
 .card-panel-header {
   padding: .9rem 1.1rem; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem .75rem;
 }
+.card-panel-header > .btn { white-space: nowrap; }
 .card-panel-header h2, .card-panel-header h3 { font-size: 1rem; font-weight: 600; margin: 0; }
 .card-panel-body { padding: 1.1rem; }
 
@@ -128,6 +129,9 @@ table.data-table tr.row-clickable:hover { background: #f1f6ff; }
 
 .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--grey); }
 .empty-state i { font-size: 2rem; display: block; margin-bottom: .6rem; opacity: .5; }
+
+/* Charts: fixed-height box so they keep a usable size on any screen width. */
+.chart-box { position: relative; height: 260px; }
 
 .filters { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
 .filters .row > div { margin-bottom: .5rem; }
@@ -176,6 +180,13 @@ table.data-table tr.row-clickable:hover { background: #f1f6ff; }
   /* Tabs scroll sideways instead of wrapping into several rows. */
   .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
   .nav-tabs .nav-link { white-space: nowrap; }
+
+  /* Empty-state rows inside wide tables: keep the message visible in the
+     screen instead of centered across the (scrollable) table width. */
+  .table-wrap td .empty-state {
+    position: sticky; left: 0; white-space: normal;
+    width: calc(100vw - 2rem - 2px - 1.7rem);
+  }
 }
 
 @media (max-width: 767.98px) {
@@ -204,6 +215,9 @@ table.data-table tr.row-clickable:hover { background: #f1f6ff; }
   .period-form .form-control { flex: 1 1 0; min-width: 0; }
   .modal-footer { flex-wrap: wrap; }
   .modal-footer > .d-flex { width: 100%; justify-content: flex-end; }
+  .table-wrap td .empty-state { width: calc(100vw - 1.5rem - 2px - 1.7rem); }
+  .chart-box { height: 220px; }
+  .card-panel-header h2, .card-panel-header h3 { font-size: .95rem; }
 }
 
 @media print {

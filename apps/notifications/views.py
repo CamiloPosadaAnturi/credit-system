@@ -3,7 +3,6 @@ from django.shortcuts import redirect
 from django.utils.translation import gettext as _
 from django.views.generic import ListView, View
 
-from apps.notifications.models import Notification
 from apps.notifications.services import notifications_for
 
 
@@ -28,9 +27,3 @@ class MarkAllReadView(LoginRequiredMixin, View):
         return redirect("notifications:list")
 
 
-class MarkReadView(LoginRequiredMixin, View):
-    def post(self, request, pk):
-        Notification.objects.filter(
-            pk=pk, business__in=request.user.allowed_businesses()
-        ).update(is_read=True)
-        return redirect(request.META.get("HTTP_REFERER", "notifications:list"))

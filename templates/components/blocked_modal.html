@@ -1,0 +1,24 @@
+{% load i18n %}
+{% comment %}Notice shown when a record cannot be deleted. A .js-confirm-delete
+trigger with data-target="#blockedActionModal" fills the title (data-title),
+the reason (data-message) and an optional link (data-link, data-link-label).{% endcomment %}
+<div class="modal fade" id="blockedActionModal" tabindex="-1" aria-labelledby="blockedActionTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="blockedActionTitle" data-fill="title">{% trans "It cannot be deleted" %}</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex gap-3 align-items-start">
+          <i class="bi bi-info-circle-fill text-warning fs-4 lh-1"></i>
+          <p class="mb-0" data-fill="message"></p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary" href="#" data-fill-href="link" data-fill="linkLabel"></a>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">{% trans "Understood" %}</button>
+      </div>
+    </div>
+  </div>
+</div>

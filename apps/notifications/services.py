@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from apps.notifications.models import Notification, NotificationKind
 
 
@@ -14,7 +16,9 @@ def notifications_for(user, unread_only: bool = True):
 
     queryset = Notification.objects.filter(
         business__in=permissions.allowed_businesses(user))
-    queryset = queryset.filter(user__in=[user, None])
+    # Addressed to this user or to everyone (user empty). Note: ``user__in``
+    # with ``None`` would silently drop the "everyone" ones.
+    queryset = queryset.filter(Q(user=user) | Q(user__isnull=True))
     if unread_only:
         queryset = queryset.filter(is_read=False)
     return queryset

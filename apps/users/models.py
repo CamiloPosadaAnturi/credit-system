@@ -68,21 +68,11 @@ class User(AbstractUser):
     def is_superadmin(self) -> bool:
         return self.role == Role.SUPERADMIN or self.is_superuser
 
-    @property
-    def is_admin(self) -> bool:
-        return self.role == Role.ADMIN
-
-    @property
-    def is_manager(self) -> bool:
-        return self.role == Role.MANAGER
 
     @property
     def is_collector(self) -> bool:
         return self.role == Role.COLLECTOR
 
-    @property
-    def is_viewer(self) -> bool:
-        return self.role == Role.VIEWER
 
     def can(self, action: str) -> bool:
         """Shortcut into the permission matrix (``apps.users.permissions``)."""

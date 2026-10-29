@@ -42,7 +42,7 @@ class CustomerEditModalTests(TestCase):
     def management(self, **extra):
         data = {
             "first_name": "Lucia", "last_name": "Cabrera", "second_last_name": "Fuentes",
-            "phone": "5575171986", "status": "active", "notes": "",
+            "phone": "5575171986", "notes": "",
         }
         data.update(extra)
         return data

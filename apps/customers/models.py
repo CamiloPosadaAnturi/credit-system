@@ -8,16 +8,7 @@ from apps.core.models import BaseModel
 from apps.core.validators import validate_phone
 
 
-class CustomerStatus(models.TextChoices):
-    ACTIVE = "active", _("Active")
-    INACTIVE = "inactive", _("Inactive")
-    RESTRICTED = "restricted", _("Restricted")
-
-
 class CustomerQuerySet(models.QuerySet):
-    def active(self):
-        return self.filter(status=CustomerStatus.ACTIVE)
-
     def of_business(self, business):
         return self.filter(business=business)
 
@@ -29,7 +20,6 @@ class CustomerQuerySet(models.QuerySet):
             | Q(last_name__icontains=term)
             | Q(second_last_name__icontains=term)
             | Q(phone__icontains=term)
-            | Q(code__icontains=term)
         )
 
 
@@ -44,10 +34,6 @@ class Customer(BaseModel):
         "businesses.Business", verbose_name=_("business"), on_delete=models.PROTECT,
         related_name="customers",
     )
-    code = models.CharField(
-        _("code"), max_length=20, blank=True,
-        help_text=_("Internal identifier of the customer within the business."),
-    )
     first_name = models.CharField(_("first name(s)"), max_length=100)
     last_name = models.CharField(_("last name"), max_length=80)
     second_last_name = models.CharField(_("second last name"), max_length=80, blank=True)
@@ -55,9 +41,6 @@ class Customer(BaseModel):
     phone = models.CharField(_("primary phone"), max_length=20,
                              validators=[validate_phone])
 
-    status = models.CharField(
-        _("status"), max_length=15, choices=CustomerStatus.choices,
-        default=CustomerStatus.ACTIVE)
     notes = models.TextField(_("internal notes"), blank=True)
 
     objects = CustomerQuerySet.as_manager()
@@ -66,15 +49,7 @@ class Customer(BaseModel):
         verbose_name = _("customer")
         verbose_name_plural = _("customers")
         ordering = ["last_name", "second_last_name", "first_name"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["business", "code"],
-                condition=~Q(code=""),
-                name="customer_code_unique_per_business",
-            ),
-        ]
         indexes = [
-            models.Index(fields=["business", "status"]),
             models.Index(fields=["phone"]),
         ]
 
@@ -88,13 +63,3 @@ class Customer(BaseModel):
     def full_name(self) -> str:
         parts = [self.first_name, self.last_name, self.second_last_name]
         return " ".join(part for part in parts if part).strip()
-
-    @property
-    def is_restricted(self) -> bool:
-        return self.status == CustomerStatus.RESTRICTED
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        if not self.code:
-            self.code = f"CU-{self.pk:05d}"
-            super().save(update_fields=["code"])

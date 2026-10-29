@@ -13,6 +13,7 @@ class AuditAction(models.TextChoices):
     CREATE = "create", _("Creation")
     UPDATE = "update", _("Update")
     DEACTIVATE = "deactivate", _("Deactivation")
+    DELETE = "delete", _("Deletion")
     APPROVE = "approve", _("Approval")
     DISBURSE = "disburse", _("Disbursement")
     CANCEL = "cancel", _("Cancellation")

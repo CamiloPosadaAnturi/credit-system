@@ -467,10 +467,41 @@ document.addEventListener("click", function (event) {
   event.preventDefault();
 
   document.getElementById("customerSummaryTitle").textContent = link.dataset.name;
-  document.getElementById("summaryCode").textContent = link.dataset.code || "-";
   document.getElementById("summaryPhone").textContent = link.dataset.phone || "-";
   document.getElementById("summaryLoans").textContent = link.dataset.loans || "0";
-  document.getElementById("summaryStatus").textContent = link.dataset.status || "-";
 
   bootstrap.Modal.getOrCreateInstance(modal).show();
+});
+
+// Delete confirmation / "cannot be deleted" notice in a modal. The trigger
+// (.js-confirm-delete) carries data-target (the modal) and the values to show:
+// every [data-fill="key"] in the modal gets the text of data-<key>, every
+// [data-fill-href="key"] gets it as href (hidden when empty), and a form gets
+// action = data-url and "next" = data-next. Without JavaScript the link opens
+// the confirmation page instead.
+document.addEventListener('click', function (e) {
+  const trigger = e.target.closest('.js-confirm-delete');
+  if (!trigger) { return; }
+  if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) { return; }
+  const modalEl = document.querySelector(trigger.dataset.target);
+  if (!modalEl || typeof bootstrap === 'undefined') { return; }
+  e.preventDefault();
+  const data = trigger.dataset;
+  const form = modalEl.querySelector('form');
+  if (form && data.url) {
+    form.action = data.url;
+    const next = form.querySelector('[name=next]');
+    if (next) { next.value = data.next || ''; }
+  }
+  modalEl.querySelectorAll('[data-fill]').forEach(function (element) {
+    const value = data[element.dataset.fill];
+    if (value !== undefined) { element.textContent = value; }
+    element.classList.toggle('d-none', element.textContent.trim() === '');
+  });
+  modalEl.querySelectorAll('[data-fill-href]').forEach(function (element) {
+    const value = data[element.dataset.fillHref] || '';
+    element.setAttribute('href', value || '#');
+    element.classList.toggle('d-none', !value);
+  });
+  bootstrap.Modal.getOrCreateInstance(modalEl).show();
 });

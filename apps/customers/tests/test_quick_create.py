@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from apps.core.factories import create_business, create_user
-from apps.customers.models import Customer, CustomerStatus
+from apps.customers.models import Customer
 from apps.users.models import Role
 
 AJAX = {"HTTP_X_REQUESTED_WITH": "XMLHttpRequest"}
@@ -34,9 +34,7 @@ class QuickCustomerCreateTests(TestCase):
         self.assertEqual(customer.last_name, "Mendez")
         self.assertEqual(customer.phone, "5512345678")
         self.assertEqual(customer.business, self.business)
-        self.assertEqual(customer.status, CustomerStatus.ACTIVE)
         self.assertEqual(customer.created_by, self.admin)
-        self.assertTrue(customer.code)
 
     def test_ajax_errors_come_back_as_html(self):
         response = self.client.post(self.url, {"first_name": "Laura"}, **AJAX)

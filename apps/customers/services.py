@@ -1,7 +1,9 @@
 """Credit history and repayment behaviour of a customer."""
 from decimal import Decimal
 
-from django.db.models import Count, F, Q, Sum
+from django.db import transaction
+from django.db.models import Count, F, ProtectedError, Q, Sum
+from django.utils.translation import gettext as _
 
 from apps.core.dates import today_local
 from apps.core.money import ZERO, money
@@ -85,3 +87,43 @@ def payment_history(customer, limit: int | None = None):
         .order_by("-paid_at")
     )
     return queryset[:limit] if limit else queryset
+
+
+class CustomerDeletionError(Exception):
+    """The customer cannot be deleted (it has financial history)."""
+
+
+def can_delete_customer(customer) -> bool:
+    """Only customers without loans can be deleted.
+
+    Their loans are deleted first (each loan takes its payments with it).
+    """
+    return not customer.loans.exists()
+
+
+@transaction.atomic
+def delete_customer(customer, user) -> None:
+    """Delete a customer with no financial history and record it in the audit log."""
+    from apps.audit.models import AuditAction
+    from apps.audit.services import log
+    from apps.customers.models import Customer
+
+    customer = Customer.objects.select_for_update().get(pk=customer.pk)
+    if not can_delete_customer(customer):
+        raise CustomerDeletionError(
+            _("%(name)s has registered loans. Delete them first to be able to delete "
+              "the customer.") % {"name": customer.full_name})
+    # Snapshot first: after delete() the row (and its pk) no longer exist.
+    snapshot = {
+        "full_name": customer.full_name,
+        "phone": customer.phone,
+    }
+    log(AuditAction.DELETE,
+        _("Customer %(name)s deleted") % {"name": customer.full_name},
+        target=customer, user=user, data=snapshot)
+    try:
+        customer.delete()
+    except ProtectedError as error:  # a related record appeared in the meantime
+        raise CustomerDeletionError(
+            _("%(name)s has related records and cannot be deleted.") % {
+                "name": customer.full_name}) from error

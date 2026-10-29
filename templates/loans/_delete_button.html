@@ -1,0 +1,16 @@
+{% load i18n %}
+{% comment %}Delete button for a loan. Params: loan, reason (why it cannot be
+deleted, empty when it can), payment_count (payments deleted with it), next,
+compact (icon only, for tables; aria-label keeps it accessible).{% endcomment %}
+{% url 'loans:delete' loan.pk as delete_url %}
+{% if reason %}
+<a class="btn btn-sm btn-outline-danger text-nowrap js-confirm-delete" href="{{ delete_url }}"
+   data-target="#blockedActionModal" data-title="{% trans 'This loan cannot be deleted' %}"
+   data-message="{{ reason }}" title="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"><i class="bi bi-trash"></i>{% if not compact %} {% trans "Delete" %}{% endif %}</a>
+{% else %}
+<a class="btn btn-sm btn-outline-danger text-nowrap js-confirm-delete" href="{{ delete_url }}?next={{ next|urlencode }}"
+   data-url="{{ delete_url }}" data-target="#deleteLoanModal"
+   data-name="{{ loan.reference }} · {{ loan.customer }}" data-next="{{ next }}"
+   data-detail="{% if payment_count %}{% blocktrans count counter=payment_count %}Its {{ counter }} payment will also be deleted.{% plural %}Its {{ counter }} payments will also be deleted.{% endblocktrans %}{% endif %}"
+   title="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"><i class="bi bi-trash"></i>{% if not compact %} {% trans "Delete" %}{% endif %}</a>
+{% endif %}

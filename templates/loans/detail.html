@@ -19,6 +19,9 @@
   {% if can_cancel %}
     <a class="btn btn-sm btn-outline-danger" href="{% url 'loans:cancel' loan.pk %}">{% trans "Cancel" %}</a>
   {% endif %}
+  {% if can_delete %}
+    {% include "loans/_delete_button.html" with reason=delete_blocker payment_count=payment_count next=loan.customer.get_absolute_url %}
+  {% endif %}
 {% endblock %}
 {% block content %}
 {% if loan.is_live %}
@@ -133,4 +136,11 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block modals %}
+{% if can_delete %}
+  {% if delete_blocker %}{% include "components/blocked_modal.html" %}
+  {% else %}{% include "components/delete_modal.html" with modal_id="deleteLoanModal" title=_("Delete loan") lead=_("You are about to delete this loan:") %}{% endif %}
+{% endif %}
 {% endblock %}

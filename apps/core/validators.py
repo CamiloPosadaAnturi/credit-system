@@ -13,6 +13,7 @@ POSTAL_CODE_REGEX = re.compile(r"^\d{5}$")
 PHONE_REGEX = re.compile(r"^[\d\s\-\+\(\)]{7,20}$")
 
 
+# Kept for old migrations (customers/businesses 0001 import it).
 def validate_tax_id(value: str) -> None:
     """Validate a Mexican RFC (12 characters for companies, 13 for individuals)."""
     if not value:
@@ -24,6 +25,7 @@ def validate_tax_id(value: str) -> None:
         )
 
 
+# Kept for old migrations (customers/businesses 0001 import it).
 def validate_national_id(value: str) -> None:
     """Validate a Mexican CURP (18 characters)."""
     if not value:
@@ -32,6 +34,7 @@ def validate_national_id(value: str) -> None:
         raise ValidationError(_("The CURP format is not valid (18 characters)."))
 
 
+# Kept for old migrations (customers/businesses 0001 import it).
 def validate_postal_code(value: str) -> None:
     if not value:
         return
@@ -46,8 +49,3 @@ def validate_phone(value: str) -> None:
         raise ValidationError(_("The phone number format is not valid."))
 
 
-def validate_positive_amount(value) -> None:
-    if value is None:
-        return
-    if value <= 0:
-        raise ValidationError(_("The amount must be greater than zero."))

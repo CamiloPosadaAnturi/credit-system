@@ -39,16 +39,16 @@ class LoanForm(BootstrapFormMixin, forms.ModelForm):
             "installment_count": forms.NumberInput(attrs={"min": "1"}),
         }
 
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args, user=None, business=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
-        self.fields["customer"].queryset = Customer.objects.active()
+        self.fields["customer"].queryset = Customer.objects.all()
         self.fields["customer"].empty_label = _("Select a customer")
         self.fields["payment_frequency"].choices = LOAN_FREQUENCIES
         from apps.businesses.models import Business
 
         #: Shown in the preview: the interest is always this rate x principal.
-        self.rate_percentage = Business.objects.current().rate_percentage
+        self.rate_percentage = (business or Business.objects.current()).rate_percentage
         self.apply_widget_styles()
 
     @classmethod
@@ -68,7 +68,7 @@ class LoanForm(BootstrapFormMixin, forms.ModelForm):
         }
         if customer is not None:
             initial["customer"] = customer.pk
-        return cls(initial=initial, user=user)
+        return cls(initial=initial, user=user, business=business)
 
     def full_clean(self):
         super().full_clean()

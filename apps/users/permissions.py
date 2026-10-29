@@ -16,10 +16,12 @@ MANAGE_BUSINESSES = "manage_businesses"
 MANAGE_USERS = "manage_users"
 VIEW_CUSTOMERS = "view_customers"
 MANAGE_CUSTOMERS = "manage_customers"
+DELETE_CUSTOMER = "delete_customer"
 VIEW_SENSITIVE_DATA = "view_sensitive_data"
 VIEW_LOANS = "view_loans"
 CREATE_LOAN = "create_loan"
 CANCEL_LOAN = "cancel_loan"
+DELETE_LOAN = "delete_loan"
 RESTRUCTURE_LOAN = "restructure_loan"
 VIEW_PAYMENTS = "view_payments"
 REGISTER_PAYMENT = "register_payment"
@@ -37,10 +39,12 @@ MATRIX: dict[str, set[str]] = {
     MANAGE_USERS: {Role.SUPERADMIN, Role.ADMIN},
     VIEW_CUSTOMERS: EVERYONE,
     MANAGE_CUSTOMERS: {Role.SUPERADMIN, Role.ADMIN, Role.MANAGER},
+    DELETE_CUSTOMER: {Role.SUPERADMIN, Role.ADMIN},
     VIEW_SENSITIVE_DATA: {Role.SUPERADMIN, Role.ADMIN},
     VIEW_LOANS: EVERYONE,
     CREATE_LOAN: {Role.SUPERADMIN, Role.ADMIN, Role.MANAGER},
     CANCEL_LOAN: {Role.SUPERADMIN, Role.ADMIN},
+    DELETE_LOAN: {Role.SUPERADMIN, Role.ADMIN},
     RESTRUCTURE_LOAN: {Role.SUPERADMIN, Role.ADMIN},
     VIEW_PAYMENTS: EVERYONE,
     REGISTER_PAYMENT: {Role.SUPERADMIN, Role.ADMIN, Role.MANAGER, Role.COLLECTOR},
@@ -80,10 +84,6 @@ def allowed_businesses(user) -> QuerySet:
     return Business.objects.all()
 
 
-def allowed_business_ids(user) -> list[int]:
-    return list(allowed_businesses(user).values_list("id", flat=True))
-
-
 def filter_by_business(queryset: QuerySet, user, field: str = "business") -> QuerySet:
     """Restrict a queryset to what the user may see.
 
@@ -101,12 +101,3 @@ def filter_collector_portfolio(queryset: QuerySet, user,
     if user and getattr(user, "is_collector", False):
         return queryset.filter(**{field: user})
     return queryset
-
-
-def user_has_business(user, business) -> bool:
-    return bool(user and user.is_authenticated and business is not None)
-
-
-def require_business(user, business) -> None:
-    if not user_has_business(user, business):
-        raise PermissionDenied(_("You do not have access to this business."))

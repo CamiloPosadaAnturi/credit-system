@@ -9,7 +9,7 @@ import datetime as dt
 from decimal import Decimal
 
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import ProtectedError, Sum
 from django.utils.translation import gettext as _
 
 from apps.audit.models import AuditAction
@@ -80,10 +80,6 @@ def create_loan(
     """
     if customer.business_id != business.pk:
         raise LoanError(_("The customer does not belong to the selected business."))
-    if customer.is_restricted:
-        raise LoanError(
-            _("The customer is restricted. Review their history before lending.")
-        )
     principal = to_decimal(principal)
     if principal <= ZERO:
         raise LoanError(_("The principal must be greater than zero."))
@@ -378,11 +374,70 @@ def pre_loan_summary(customer) -> dict:
             _("They have %(count)s unpaid overdue installment(s).") % {
                 "count": summary["overdue_installments"]}
         )
-    if customer.is_restricted:
-        summary["warnings"].append(_("The customer is flagged as RESTRICTED."))
     return summary
 
 
 def interest_per_thousand(rate) -> Decimal:
     """Presentation helper: how much interest corresponds to 1,000 MXN."""
     return money(to_decimal(rate) * 1000)
+
+
+# --------------------------------------------------------------------------
+# Deletion
+# --------------------------------------------------------------------------
+def loan_deletion_blocker(loan: Loan) -> str | None:
+    """Why the loan cannot be deleted, or ``None`` when it can.
+
+    A loan with payments IS deleted (its payments go with it, see
+    ``delete_loan``). Only restructurings are kept: deleting one half would
+    leave the other loan pointing at a balance that no longer exists.
+    """
+    if loan.original_loan_id:
+        return _("The loan comes from a restructuring and cannot be deleted.")
+    if loan.restructurings.exists():
+        return _("The loan was restructured into another loan and cannot be deleted.")
+    return None
+
+
+@transaction.atomic
+def delete_loan(loan: Loan, user) -> None:
+    """Delete a loan together with its payments, schedule and collection notes.
+
+    Payments protect the loan (and their allocations protect the installments),
+    so they are deleted first. The audit entry keeps a copy of every payment.
+    """
+    from apps.payments.models import Payment
+
+    loan = Loan.objects.select_for_update().select_related("customer").get(pk=loan.pk)
+    blocker = loan_deletion_blocker(loan)
+    if blocker:
+        raise LoanError(blocker)
+    snapshot = {
+        "reference": loan.reference,
+        "customer": loan.customer.full_name,
+        "customer_id": loan.customer_id,
+        "status": loan.status,
+        "principal": loan.principal,
+        "total_payable": loan.total_payable,
+        "installment_count": loan.installment_count,
+        "collection_actions": loan.collection_actions.count(),
+        "payments": [
+            {"reference": payment.reference, "amount": str(payment.amount),
+             "status": payment.status, "paid_at": payment.paid_at.isoformat()}
+            for payment in loan.payments.order_by("paid_at")
+        ],
+    }
+    log(AuditAction.DELETE,
+        _("Loan %(ref)s of %(customer)s deleted") % {
+            "ref": loan.reference, "customer": loan.customer.full_name},
+        target=loan, user=user, data=snapshot)
+    contract = loan.contract.name if loan.contract else ""
+    storage = loan.contract.storage if loan.contract else None
+    try:
+        Payment.objects.filter(loan=loan).delete()  # allocations go with them
+        loan.delete()
+    except ProtectedError as error:  # another record points at the loan
+        raise LoanError(_("The loan has related records and cannot be deleted.")) from error
+    if contract:
+        # Remove the uploaded document only once the deletion is committed.
+        transaction.on_commit(lambda: storage.delete(contract))

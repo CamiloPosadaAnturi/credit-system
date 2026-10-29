@@ -62,12 +62,6 @@ class LifeCycleTests(TestCase):
         self.assertEqual(loan.status, LoanStatus.CANCELLED)
         self.assertEqual(loan.outstanding_balance, Decimal("0.00"))
 
-    def test_restricted_customer_cannot_get_a_loan(self):
-        self.customer.status = "restricted"
-        self.customer.save()
-        with self.assertRaises(LoanError):
-            create_loan(self.customer, self.admin)
-
     def test_customer_from_another_business(self):
         other = create_business("Other business")
         with self.assertRaises(LoanError):

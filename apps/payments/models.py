@@ -44,9 +44,6 @@ class PaymentQuerySet(models.QuerySet):
         """Only money actually received (write-offs excluded)."""
         return self.confirmed().filter(kind=PaymentKind.PAYMENT)
 
-    def on_day(self, date):
-        return self.filter(paid_at__date=date)
-
 
 class Payment(models.Model):
     reference = models.CharField(_("reference"), max_length=30, unique=True,
@@ -138,10 +135,6 @@ class Payment(models.Model):
     @property
     def is_confirmed(self) -> bool:
         return self.status == PaymentStatus.CONFIRMED
-
-    @property
-    def is_write_off(self) -> bool:
-        return self.kind == PaymentKind.WRITE_OFF
 
 
 class PaymentAllocation(models.Model):

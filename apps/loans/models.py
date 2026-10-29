@@ -67,6 +67,22 @@ class LoanQuerySet(models.QuerySet):
     def of_business(self, business):
         return self.filter(business=business)
 
+    def with_days_past_due(self):
+        """Annotate the due date of the oldest overdue installment.
+
+        ``Loan.days_past_due`` uses it, so a list of loans computes the days
+        past due in the same query instead of one query per row.
+        """
+        from apps.core.dates import today_local
+
+        oldest = (
+            Installment.objects.filter(loan=models.OuterRef("pk"), due_date__lt=today_local())
+            .exclude(status=InstallmentStatus.PAID)
+            .order_by("due_date")
+            .values("due_date")[:1]
+        )
+        return self.annotate(oldest_overdue_due_date=models.Subquery(oldest))
+
 
 class Loan(BaseModel):
     reference = models.CharField(_("reference"), max_length=30, unique=True,
@@ -220,6 +236,11 @@ class Loan(BaseModel):
     @property
     def days_past_due(self) -> int:
         """Days past due of the loan = those of its oldest overdue installment."""
+        if hasattr(self, "oldest_overdue_due_date"):  # LoanQuerySet.with_days_past_due()
+            from apps.core.dates import today_local
+
+            oldest = self.oldest_overdue_due_date
+            return max((today_local() - oldest).days, 0) if oldest else 0
         installment = self.overdue_installments().order_by("due_date").first()
         return installment.days_past_due if installment else 0
 
@@ -277,9 +298,6 @@ class Installment(models.Model):
     def balance(self) -> Decimal:
         return self.scheduled_amount - self.amount_paid
 
-    @property
-    def principal_balance(self) -> Decimal:
-        return self.scheduled_principal - self.principal_paid
 
     @property
     def interest_balance(self) -> Decimal:
@@ -298,5 +316,3 @@ class Installment(models.Model):
         days = (today_local() - self.due_date).days
         return max(days, 0)
 
-    def days_past_due_with_grace(self, grace_days: int = 0) -> int:
-        return max(self.days_past_due - grace_days, 0)

@@ -30,7 +30,3 @@ def today_local() -> dt.date:
     return timezone.localdate()
 
 
-def now_local():
-    from django.utils import timezone
-
-    return timezone.localtime()

@@ -3,14 +3,14 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.businesses.models import Business
 from apps.core.forms import BootstrapFormMixin
-from apps.customers.models import Customer, CustomerStatus
+from apps.customers.models import Customer
 
 
 class CustomerForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = Customer
         fields = [
-            "first_name", "last_name", "second_last_name", "phone", "status", "notes",
+            "first_name", "last_name", "second_last_name", "phone", "notes",
         ]
         widgets = {
             "phone": forms.TextInput(attrs={"type": "tel", "inputmode": "tel"}),
@@ -19,7 +19,7 @@ class CustomerForm(BootstrapFormMixin, forms.ModelForm):
 
     SECTIONS = [
         (_("Identification"), ["first_name", "last_name", "second_last_name", "phone"]),
-        (_("Operations"), ["status", "notes"]),
+        (_("Operations"), ["notes"]),
     ]
 
     def __init__(self, *args, user=None, **kwargs):
@@ -77,11 +77,7 @@ class CustomerFilterForm(forms.Form):
     q = forms.CharField(
         label=_("Search"), required=False,
         widget=forms.TextInput(attrs={"class": "form-control",
-                                      "placeholder": _("Name, phone or code")}))
-    status = forms.ChoiceField(
-        label=_("Status"), required=False,
-        choices=[("", _("All"))] + list(CustomerStatus.choices),
-        widget=forms.Select(attrs={"class": "form-select"}))
+                                      "placeholder": _("Name or phone")}))
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)

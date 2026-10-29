@@ -113,15 +113,6 @@ msgstr "Buscar"
 msgid "Status"
 msgstr "Estado"
 
-msgid "Created from"
-msgstr "Creado desde"
-
-msgid "Created to"
-msgstr "Creado hasta"
-
-msgid "If the business charges late fees you must set the daily rate."
-msgstr "Si el negocio aplica cargos moratorios debes definir la tasa diaria."
-
 msgid "All"
 msgstr "Todos"
 
@@ -130,9 +121,6 @@ msgstr "Activo"
 
 msgid "Inactive"
 msgstr "Inactivo"
-
-msgid "Name, RFC or person in charge"
-msgstr "Nombre, RFC o responsable"
 
 msgid "trade name"
 msgstr "nombre comercial"
@@ -179,12 +167,6 @@ msgstr "número de cuotas predeterminado"
 msgid "grace days"
 msgstr "días de gracia"
 
-msgid "charges late fees"
-msgstr "aplica cargo moratorio"
-
-msgid "daily late fee rate"
-msgstr "tasa moratoria diaria"
-
 msgid "allows early payoff"
 msgstr "permite liquidación anticipada"
 
@@ -213,39 +195,14 @@ msgid "Days after the due date before an installment counts as overdue."
 msgstr "Días posteriores al vencimiento antes de considerar la cuota vencida."
 
 msgid ""
-"When off, the system never adds late charges. Turn it on only with a "
-"documented and authorized policy."
-msgstr ""
-"Si está desactivado, el sistema NO genera cargos por atraso. Actívalo solo "
-"con una política documentada y autorizada."
-
-msgid "Ratio applied to the overdue balance, per day past due."
-msgstr "Tanto por uno sobre el saldo vencido, por día de atraso."
-
-msgid ""
 "Ratio discounted from the UNEARNED interest. 0 = the full contractual "
 "balance is charged."
 msgstr ""
 "Tanto por uno de descuento sobre el interés NO devengado. 0 = se cobra el "
 "saldo contractual completo."
 
-msgid "New business"
-msgstr "Nuevo negocio"
-
-msgid "Business updated successfully."
-msgstr "Negocio actualizado correctamente."
-
 msgid "Edit %(name)s"
 msgstr "Editar %(name)s"
-
-msgid "Business '%(name)s' created successfully."
-msgstr "Negocio '%(name)s' creado correctamente."
-
-msgid "Business '%(name)s' was activated."
-msgstr "El negocio '%(name)s' fue activado."
-
-msgid "Business '%(name)s' was deactivated."
-msgstr "El negocio '%(name)s' fue desactivado."
 
 msgid "Collections"
 msgstr "Cobranza"
@@ -403,9 +360,6 @@ msgstr "Por quincena"
 msgid "Per month"
 msgstr "Por mes"
 
-msgid "Operation without an associated business."
-msgstr "Operación sin negocio asociado."
-
 msgid "You are not allowed to perform this operation."
 msgstr "No tienes autorización para esta operación."
 
@@ -443,26 +397,11 @@ msgstr "Clientes"
 msgid "Identification"
 msgstr "Identificación"
 
-msgid "Documents (restricted access)"
-msgstr "Documentos (acceso restringido)"
-
-msgid "Contact"
-msgstr "Contacto"
-
 msgid "Address"
 msgstr "Domicilio"
 
 msgid "Operations"
 msgstr "Operación"
-
-msgid "The selected collector is not authorized for that business."
-msgstr "El cobrador seleccionado no está autorizado en ese negocio."
-
-msgid "Name, phone or code"
-msgstr "Nombre, teléfono o código"
-
-msgid "Restricted"
-msgstr "Restringido"
 
 msgid "code"
 msgstr "código"
@@ -479,14 +418,8 @@ msgstr "apellido materno"
 msgid "CURP"
 msgstr "CURP"
 
-msgid "date of birth"
-msgstr "fecha de nacimiento"
-
 msgid "primary phone"
 msgstr "teléfono principal"
-
-msgid "alternate phone"
-msgstr "teléfono alterno"
 
 msgid "postal code"
 msgstr "código postal"
@@ -506,35 +439,14 @@ msgstr "clientes"
 msgid "name"
 msgstr "nombre"
 
-msgid "relationship"
-msgstr "parentesco o relación"
-
-msgid "personal reference"
-msgstr "referencia personal"
-
-msgid "personal references"
-msgstr "referencias personales"
-
-msgid "Internal identifier of the customer within the business."
-msgstr "Identificador interno del cliente dentro del negocio."
-
 msgid "assigned collector"
 msgstr "cobrador asignado"
 
 msgid "New customer"
 msgstr "Nuevo cliente"
 
-msgid "Customer registered successfully."
-msgstr "Cliente registrado correctamente."
-
 msgid "Customer updated."
 msgstr "Cliente actualizado."
-
-msgid "Invalid status."
-msgstr "Estado no válido."
-
-msgid "The customer is now %(status)s."
-msgstr "El cliente quedó como %(status)s."
 
 msgid "Dashboard"
 msgstr "Panel"
@@ -545,20 +457,11 @@ msgstr "Créditos"
 msgid "Only for the custom frequency."
 msgstr "Solo para la frecuencia personalizada."
 
-msgid "Ratio. 0.40 = 40% (400 MXN per 1,000 MXN lent)."
-msgstr "Tanto por uno. 0.40 = 40% (400 MXN por cada 1,000 MXN prestados)."
-
 msgid "Application"
 msgstr "Solicitud"
 
-msgid "Financial terms"
-msgstr "Condiciones financieras"
-
 msgid "Schedule"
 msgstr "Calendario"
-
-msgid "Documents"
-msgstr "Documentos"
 
 msgid "Disbursed from"
 msgstr "Desembolso desde"
@@ -593,29 +496,14 @@ msgstr "Observaciones"
 msgid "The customer does not belong to the selected business."
 msgstr "El cliente no pertenece al negocio seleccionado."
 
-msgid "State how many days apart the installments fall."
-msgstr "Indica cada cuántos días vence una cuota."
-
 msgid "The principal must be greater than zero."
 msgstr "El capital debe ser mayor que cero."
 
 msgid "There must be at least one installment."
 msgstr "Debe haber al menos una cuota."
 
-msgid "State the applied rate."
-msgstr "Indica la tasa aplicada."
-
 msgid "Reference or customer"
 msgstr "Folio o cliente"
-
-msgid "Draft"
-msgstr "Borrador"
-
-msgid "Pending approval"
-msgstr "Pendiente de aprobación"
-
-msgid "Approved"
-msgstr "Aprobado"
 
 msgid "Disbursed"
 msgstr "Desembolsado"
@@ -649,9 +537,6 @@ msgstr "folio"
 
 msgid "application date"
 msgstr "fecha de solicitud"
-
-msgid "approval date"
-msgstr "fecha de aprobación"
 
 msgid "disbursement date"
 msgstr "fecha de desembolso"
@@ -731,34 +616,15 @@ msgstr "cuota"
 msgid "installments"
 msgstr "cuotas"
 
-msgid "Ratio frozen when the loan was approved."
-msgstr "Tanto por uno congelado al aprobar el crédito."
-
 msgid "restructured loan"
 msgstr "crédito reestructurado"
-
-msgid "approved by"
-msgstr "aprobado por"
 
 msgid "disbursed by"
 msgstr "desembolsado por"
 
-msgid ""
-"An approved or disbursed loan cannot be freely recalculated. Use an "
-"authorized restructuring instead."
-msgstr ""
-"Un crédito aprobado o desembolsado no puede recalcularse libremente. Usa una"
-" reestructuración autorizada."
-
 msgid "The schedule cannot be rebuilt: the loan already has payments applied."
 msgstr ""
 "No se puede regenerar el calendario: el crédito ya tiene pagos aplicados."
-
-msgid "The customer is restricted. Review their history before approving."
-msgstr "El cliente está restringido. Revisa su historial antes de aprobar."
-
-msgid "Only an approved loan can be disbursed."
-msgstr "Solo se puede desembolsar un crédito aprobado."
 
 msgid "A settled loan cannot be cancelled."
 msgstr "Un crédito liquidado no se puede cancelar."
@@ -779,48 +645,17 @@ msgstr "Solo se reestructura un crédito vigente."
 msgid "The loan has no outstanding balance to restructure."
 msgstr "El crédito no tiene saldo pendiente que reestructurar."
 
-msgid "The customer is flagged as RESTRICTED."
-msgstr "El cliente está marcado como RESTRINGIDO."
-
-msgid ""
-"Only a draft or pending loan can be approved (current status: %(status)s)."
-msgstr ""
-"Solo se puede aprobar un crédito en borrador o pendiente (estado actual: "
-"%(status)s)."
-
 msgid "The customer owes %(amount)s MXN."
 msgstr "El cliente tiene %(amount)s MXN de saldo pendiente."
 
 msgid "They have %(count)s unpaid overdue installment(s)."
 msgstr "Tiene %(count)s cuota(s) vencida(s) sin pagar."
 
-msgid "Terms updated and schedule rebuilt."
-msgstr "Condiciones actualizadas y calendario regenerado."
-
-msgid "Edit %(ref)s"
-msgstr "Editar %(ref)s"
-
 msgid "New loan"
 msgstr "Nuevo crédito"
 
 msgid "Loan %(ref)s created."
 msgstr "Crédito %(ref)s creado."
-
-msgid ""
-"A disbursed loan cannot be edited. Use an authorized restructuring or a "
-"payment reversal."
-msgstr ""
-"Un crédito desembolsado no se edita. Usa una reestructuración autorizada o "
-"un reverso de pago."
-
-msgid "Confirm the loan terms"
-msgstr "Confirmar condiciones del crédito"
-
-msgid "Loan %(ref)s approved."
-msgstr "Crédito %(ref)s aprobado."
-
-msgid "Loan %(ref)s disbursed. The schedule is now active."
-msgstr "Crédito %(ref)s desembolsado. El calendario está activo."
 
 msgid "Loan %(ref)s cancelled."
 msgstr "Crédito %(ref)s cancelado."
@@ -1043,12 +878,6 @@ msgstr "Créditos activos y liquidados"
 msgid "Count and balances per loan status."
 msgstr "Conteo y saldos por estado del crédito."
 
-msgid "Loans per business or branch"
-msgstr "Créditos por negocio o sucursal"
-
-msgid "Lending and balance grouped by business."
-msgstr "Colocación y saldo agrupados por negocio."
-
 msgid "Payments in the period"
 msgstr "Pagos del periodo"
 
@@ -1253,9 +1082,6 @@ msgstr "Datos de la persona"
 msgid "Access"
 msgstr "Acceso"
 
-msgid "Role and businesses"
-msgstr "Rol y negocios"
-
 msgid "New password"
 msgstr "Nueva contraseña"
 
@@ -1267,13 +1093,6 @@ msgstr "Usuario"
 
 msgid "Password"
 msgstr "Contraseña"
-
-msgid ""
-"Select at least one business. Without an authorized business the user cannot"
-" see any data."
-msgstr ""
-"Selecciona al menos un negocio. Sin negocio autorizado el usuario no podrá "
-"ver información."
 
 msgid "The passwords do not match."
 msgstr "Las contraseñas no coinciden."
@@ -1304,9 +1123,6 @@ msgstr "negocios autorizados"
 
 msgid "Businesses or branches this user may operate on."
 msgstr "Negocios o sucursales sobre los que este usuario puede operar."
-
-msgid "You do not have access to this business."
-msgstr "No tienes acceso a este negocio."
 
 msgid "You are not authorized to: %(action)s"
 msgstr "No tienes autorización para: %(action)s"
@@ -1416,17 +1232,8 @@ msgstr "Sin registros de auditoría."
 msgid "Apply"
 msgstr "Aplicar"
 
-msgid "Details"
-msgstr "Ficha"
-
-msgid "Money lent out"
-msgstr "Dinero prestado"
-
 msgid "Agreed"
 msgstr "Pactado"
-
-msgid "Outstanding portfolio"
-msgstr "Cartera pendiente"
 
 msgid "Overdue portfolio"
 msgstr "Cartera vencida"
@@ -1437,26 +1244,8 @@ msgstr "% de recuperación"
 msgid "Overdue portfolio rate"
 msgstr "% cartera vencida"
 
-msgid "Dashboard - %(name)s"
-msgstr "Panel - %(name)s"
-
-msgid "Business dashboard"
-msgstr "Panel del negocio"
-
 msgid "Edit"
 msgstr "Editar"
-
-msgid "The financial history is kept. Confirm the status change?"
-msgstr "El historial financiero se conserva. ¿Confirmas el cambio de estado?"
-
-msgid "Deactivate"
-msgstr "Desactivar"
-
-msgid "Activate"
-msgstr "Activar"
-
-msgid "Details and configuration"
-msgstr "Datos y configuración"
 
 msgid "Email"
 msgstr "Correo"
@@ -1482,9 +1271,6 @@ msgstr "Cargo moratorio"
 msgid "daily"
 msgstr "diario"
 
-msgid "Not applied"
-msgstr "No aplica"
-
 msgid "Early payoff"
 msgstr "Liquidación anticipada"
 
@@ -1494,17 +1280,8 @@ msgstr "Permitida"
 msgid "Not allowed"
 msgstr "No permitida"
 
-msgid "Recent loans"
-msgstr "Créditos recientes"
-
 msgid "Balance"
 msgstr "Saldo"
-
-msgid "Authorized users"
-msgstr "Usuarios autorizados"
-
-msgid "No users assigned."
-msgstr "Sin usuarios asignados."
 
 msgid "Total collected"
 msgstr "Total recaudado"
@@ -1512,26 +1289,14 @@ msgstr "Total recaudado"
 msgid "Settled loans"
 msgstr "Créditos liquidados"
 
-msgid "This business has no loans yet."
-msgstr "Este negocio aún no tiene créditos."
-
 msgid "Save"
 msgstr "Guardar"
 
 msgid "Cancel"
 msgstr "Cancelar"
 
-msgid "Clear"
-msgstr "Limpiar"
-
 msgid "City"
 msgstr "Ciudad"
-
-msgid "You have no businesses registered yet."
-msgstr "Aún no tienes negocios registrados."
-
-msgid "Register the first business"
-msgstr "Registrar el primer negocio"
 
 msgid "Promised"
 msgstr "Prometido"
@@ -1673,18 +1438,6 @@ msgstr[1] "Página %(number)s de %(total)s (%(counter)s registros)"
 msgid "Customer details"
 msgstr "Datos del cliente"
 
-msgid "Alternate"
-msgstr "Alterno"
-
-msgid "Postal code"
-msgstr "CP"
-
-msgid "Occupation"
-msgstr "Ocupación"
-
-msgid "CURP and RFC hidden: your role has no access to sensitive data."
-msgstr "CURP y RFC ocultos: tu rol no tiene acceso a datos sensibles."
-
 msgid "References"
 msgstr "Referencias"
 
@@ -1712,26 +1465,14 @@ msgstr "Este cliente aún no tiene créditos."
 msgid "No payments recorded."
 msgstr "Sin pagos registrados."
 
-msgid "Personal references (optional)"
-msgstr "Referencias personales (opcional)"
-
-msgid "Save the customer and edit them again to add more references."
-msgstr "Guarda el cliente y vuelve a editarlo para agregar más referencias."
-
 msgid "Save customer"
 msgstr "Guardar cliente"
-
-msgid "Code"
-msgstr "Código"
 
 msgid "No customers match the filter."
 msgstr "No hay clientes que coincidan con el filtro."
 
 msgid "Register customer"
 msgstr "Registrar cliente"
-
-msgid "all businesses"
-msgstr "todos los negocios"
 
 msgid "All businesses"
 msgstr "Todos los negocios"
@@ -1868,14 +1609,8 @@ msgstr "Cancelar crédito"
 msgid "Cancel %(ref)s"
 msgstr "Cancelar %(ref)s"
 
-msgid "Review before granting:"
-msgstr "Revisa antes de otorgar:"
-
 msgid "Terms"
 msgstr "Condiciones"
-
-msgid "Total interest"
-msgstr "Interés total"
 
 msgid "Total payable"
 msgstr "Total a pagar"
@@ -1891,37 +1626,6 @@ msgstr "Primer pago"
 
 msgid "Final due date"
 msgstr "Vencimiento final"
-
-msgid "Customer history"
-msgstr "Historial del cliente"
-
-msgid "Historical punctuality"
-msgstr "Puntualidad histórica"
-
-msgid ""
-"The system does not approve or reject automatically: the decision is yours."
-msgstr ""
-"El sistema no aprueba ni rechaza automáticamente: la decisión es tuya."
-
-msgid "Proposed schedule"
-msgstr "Calendario propuesto"
-
-msgid "Confirm and register the loan"
-msgstr "Confirmar y registrar crédito"
-
-msgid "Change the terms"
-msgstr "Corregir condiciones"
-
-msgid "Approving freezes the rate and builds the final schedule. Continue?"
-msgstr ""
-"Al aprobar se congela la tasa y se genera el calendario definitivo. "
-"¿Continuar?"
-
-msgid "Approve"
-msgstr "Aprobar"
-
-msgid "Confirm the money was handed to the customer?"
-msgstr "¿Confirmas la entrega del dinero al cliente?"
 
 msgid "Disburse"
 msgstr "Desembolsar"
@@ -1942,9 +1646,6 @@ msgstr ""
 "Este crédito ya fue desembolsado: sus condiciones no se editan. Cualquier "
 "ajuste se hace con un reverso de pago auditado o una reestructuración "
 "autorizada."
-
-msgid "Approved by"
-msgstr "Aprobado por"
 
 msgid "View contract"
 msgstr "Ver contrato"
@@ -1967,18 +1668,8 @@ msgstr "Aún no hay pagos registrados."
 msgid "restructuring of %(ref)s"
 msgstr "reestructuración de %(ref)s"
 
-msgid "Continue and review the terms"
-msgstr "Continuar y revisar condiciones"
-
 msgid "Preview"
 msgstr "Previsualización"
-
-msgid ""
-"This preview is informational. The server recomputes the interest, the total"
-" and the schedule when the loan is saved."
-msgstr ""
-"Esta previsualización es informativa. El servidor vuelve a calcular el "
-"interés, el total y el calendario al guardar el crédito."
 
 msgid "No loans match the filter."
 msgstr "No hay créditos con ese filtro."
@@ -2143,13 +1834,6 @@ msgstr "Reversar pago"
 msgid "Reverse payment %(ref)s"
 msgstr "Reversar pago %(ref)s"
 
-msgid ""
-"Every report uses real data and respects your permissions and authorized "
-"businesses."
-msgstr ""
-"Todos los reportes usan datos reales y respetan tus permisos y negocios "
-"autorizados."
-
 msgid "Catalog"
 msgstr "Catálogo"
 
@@ -2188,9 +1872,6 @@ msgstr "Nombre o usuario"
 msgid "Name"
 msgstr "Nombre"
 
-msgid "Not assigned"
-msgstr "Sin asignar"
-
 msgid "View"
 msgstr "Ver"
 
@@ -2211,12 +1892,6 @@ msgstr "Gestión de cobranza (%(type)s) del crédito %(reference)s"
 
 msgid "Loan %(reference)s created for %(customer)s for %(amount)s MXN"
 msgstr "Crédito %(reference)s creado para %(customer)s por %(amount)s MXN"
-
-msgid "Loan %(reference)s approved (total %(total)s MXN)"
-msgstr "Crédito %(reference)s aprobado (total %(total)s MXN)"
-
-msgid "Loan %(reference)s disbursed for %(amount)s MXN"
-msgstr "Crédito %(reference)s desembolsado por %(amount)s MXN"
 
 msgid "Loan %(reference)s cancelled: %(reason)s"
 msgstr "Crédito %(reference)s cancelado: %(reason)s"
@@ -2331,17 +2006,8 @@ msgstr "Cargando..."
 msgid "Could not load the payment."
 msgstr "No se pudo cargar el pago."
 
-msgid "Open full page"
-msgstr "Ver página completa"
-
-msgid "Are you sure the data is correct? The loan will be approved right away."
-msgstr "¿Está seguro de que los datos son correctos? El crédito quedará aprobado de inmediato."
-
 msgid "Are you sure the data is correct?"
 msgstr "¿Está seguro de que los datos son correctos?"
-
-msgid "When you confirm, the loan is created already approved and its schedule becomes active. It can no longer be edited."
-msgstr "Al confirmar, el crédito se crea ya aprobado y su calendario de pagos queda activo. Después no se podrá editar."
 
 msgid "Create loan"
 msgstr "Crear crédito"
@@ -2351,10 +2017,6 @@ msgstr "Revisar datos"
 
 msgid "Yes, create loan"
 msgstr "Sí, crear crédito"
-
-#, python-format
-msgid "Loan %(ref)s created and approved."
-msgstr "Crédito %(ref)s creado y aprobado."
 
 msgid "Edit customer"
 msgstr "Editar cliente"
@@ -2371,8 +2033,93 @@ msgstr "¿Está seguro de que los datos son correctos? El crédito queda activo 
 msgid "When you confirm, the loan is created active and its payment schedule starts. It can no longer be edited."
 msgstr "Al confirmar, el crédito se crea activo y su calendario de pagos empieza a correr. Después no se podrá editar."
 
-msgid "The customer is restricted. Review their history before lending."
-msgstr "El cliente está restringido. Revisa su historial antes de prestarle."
-
 msgid "Ratio frozen when the loan was created."
 msgstr "Proporción fijada al crear el crédito."
+
+msgid "Deletion"
+msgstr "Eliminación"
+
+msgid "Delete customer"
+msgstr "Eliminar cliente"
+
+msgid "Delete %(name)s"
+msgstr "Eliminar a %(name)s"
+
+msgid "You are about to delete this customer:"
+msgstr "Vas a eliminar a este cliente:"
+
+msgid "This action cannot be undone and is recorded in the audit log."
+msgstr "Esta acción no se puede deshacer y queda registrada en la auditoría."
+
+msgid "Deleting..."
+msgstr "Eliminando..."
+
+msgid "Yes, delete"
+msgstr "Sí, eliminar"
+
+msgid "%(name)s has related records and cannot be deleted."
+msgstr "%(name)s tiene registros relacionados y no se puede eliminar."
+
+msgid "Customer %(name)s deleted."
+msgstr "Cliente %(name)s eliminado."
+
+msgid "Customer with loans"
+msgstr "Cliente con créditos"
+
+msgid "See their loans"
+msgstr "Ver sus créditos"
+
+msgid "%(name)s has %(counter)s registered loan. Delete it first to be able to delete the customer."
+msgid_plural "%(name)s has %(counter)s registered loans. Delete them first to be able to delete the customer."
+msgstr[0] "%(name)s tiene %(counter)s crédito registrado. Elimínalo primero para poder eliminar al cliente."
+msgstr[1] "%(name)s tiene %(counter)s créditos registrados. Elimínalos primero para poder eliminar al cliente."
+
+msgid "It cannot be deleted"
+msgstr "No se puede eliminar"
+
+msgid "Understood"
+msgstr "Entendido"
+
+msgid "Delete loan"
+msgstr "Eliminar crédito"
+
+msgid "Delete %(ref)s"
+msgstr "Eliminar %(ref)s"
+
+msgid "You are about to delete this loan:"
+msgstr "Vas a eliminar este crédito:"
+
+msgid "This loan cannot be deleted"
+msgstr "Este crédito no se puede eliminar"
+
+msgid "Its %(counter)s payment will also be deleted."
+msgid_plural "Its %(counter)s payments will also be deleted."
+msgstr[0] "También se eliminará %(counter)s pago registrado."
+msgstr[1] "También se eliminarán %(counter)s pagos registrados."
+
+msgid "The loan comes from a restructuring and cannot be deleted."
+msgstr "El crédito proviene de una reestructuración y no se puede eliminar."
+
+msgid "The loan was restructured into another loan and cannot be deleted."
+msgstr "El crédito fue reestructurado en otro crédito y no se puede eliminar."
+
+msgid "The loan has related records and cannot be deleted."
+msgstr "El crédito tiene registros relacionados y no se puede eliminar."
+
+msgid "Loan %(ref)s of %(customer)s deleted"
+msgstr "Crédito %(ref)s de %(customer)s eliminado"
+
+msgid "Loan %(ref)s deleted."
+msgstr "Crédito %(ref)s eliminado."
+
+msgid "Name or phone"
+msgstr "Nombre o teléfono"
+
+msgid "Customer %(name)s deleted"
+msgstr "Cliente %(name)s eliminado"
+
+msgid "%(name)s has registered loans. Delete them first to be able to delete the customer."
+msgstr "%(name)s tiene créditos registrados. Elimínalos primero para poder eliminar al cliente."
+
+msgid "This customer has registered loans. Delete them first to be able to delete the customer."
+msgstr "Este cliente tiene créditos registrados. Elimínalos primero para poder eliminar al cliente."

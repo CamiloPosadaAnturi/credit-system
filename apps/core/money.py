@@ -45,24 +45,3 @@ def split_into_installments(total, installment_count: int) -> list[Decimal]:
     return installments
 
 
-def distribute(amount, weights: list[Decimal]) -> list[Decimal]:
-    """Split ``amount`` proportionally to ``weights``.
-
-    The last element absorbs the rounding difference.
-    """
-    amount = money(amount)
-    total_weight = sum(to_decimal(weight) for weight in weights)
-    if total_weight <= ZERO:
-        return [ZERO for _ in weights]
-    result: list[Decimal] = []
-    running_total = ZERO
-    for weight in weights[:-1]:
-        value = money(amount * to_decimal(weight) / total_weight)
-        result.append(value)
-        running_total += value
-    result.append(money(amount - running_total))
-    return result
-
-
-def is_positive(value) -> bool:
-    return to_decimal(value) > ZERO

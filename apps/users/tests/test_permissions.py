@@ -104,7 +104,6 @@ class SingleBusinessTests(TestCase):
         self.client.force_login(self.admin)
         response = self.client.post(reverse("customers:create"), {
             "first_name": "Carla", "last_name": "Lopez", "phone": "5512345678",
-            "status": "active",
         })
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Customer.objects.get(first_name="Carla").business, self.business)
@@ -132,7 +131,7 @@ class SingleBusinessTests(TestCase):
             "trade_name": "Renamed", "interest_mode": "flat_on_principal",
             "interest_rate": "0.3000", "rate_period": "contract",
             "payment_frequency": "weekly", "installment_count": "4",
-            "grace_days": "2", "late_fee_rate": "0", "early_payoff_discount": "0",
+            "grace_days": "2", "early_payoff_discount": "0",
             "allows_early_payoff": "on",
         })
         self.assertRedirects(response, reverse("businesses:settings"))

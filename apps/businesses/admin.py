@@ -15,8 +15,7 @@ class BusinessAdmin(admin.ModelAdmin):
         (_("Location"), {"fields": ("address", "city", "state")}),
         (_("Interest"), {"fields": ("interest_mode", "interest_rate", "rate_period",
                                     "payment_frequency", "installment_count")}),
-        (_("Late fees and payoff"), {"fields": ("grace_days", "charges_late_fee",
-                                                "late_fee_rate", "allows_early_payoff",
+        (_("Late fees and payoff"), {"fields": ("grace_days", "allows_early_payoff",
                                                 "early_payoff_discount")}),
         (_("Other"), {"fields": ("notes", "created_at", "updated_at")}),
     )

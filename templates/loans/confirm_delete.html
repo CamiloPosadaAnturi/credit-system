@@ -1,0 +1,34 @@
+{% extends "base.html" %}{% load i18n formatting %}
+{% block heading %}{% blocktrans with ref=loan.reference %}Delete {{ ref }}{% endblocktrans %}{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-6">
+  {% if delete_blocker %}
+    <div class="alert alert-warning">{{ delete_blocker }}</div>
+  {% else %}
+    <div class="alert alert-danger">
+      {% if payment_count %}<strong class="d-block">{% blocktrans count counter=payment_count %}Its {{ counter }} payment will also be deleted.{% plural %}Its {{ counter }} payments will also be deleted.{% endblocktrans %}</strong>{% endif %}
+      {% trans "This action cannot be undone and is recorded in the audit log." %}
+    </div>
+  {% endif %}
+  <div class="card-panel"><div class="card-panel-body">
+    <dl class="row small">
+      <dt class="col-6">{% trans "Customer" %}</dt><dd class="col-6">{{ loan.customer }}</dd>
+      <dt class="col-6">{% trans "Principal" %}</dt><dd class="col-6">{{ loan.principal|mxn }}</dd>
+      <dt class="col-6">{% trans "Total payable" %}</dt><dd class="col-6">{{ loan.total_payable|mxn }}</dd>
+      <dt class="col-6">{% trans "Status" %}</dt><dd class="col-6">{{ loan.get_status_display }}</dd>
+    </dl>
+    {% if delete_blocker %}
+      <a class="btn btn-outline-soft" href="{{ loan.get_absolute_url }}">{% trans "Back" %}</a>
+    {% else %}
+      <form method="post" data-submit-once>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-danger" type="submit" data-busy-label="{% trans 'Deleting...' %}">{% trans "Yes, delete" %}</button>
+          <a class="btn btn-outline-soft" href="{{ loan.get_absolute_url }}">{% trans "Cancel" %}</a>
+        </div>
+      </form>
+    {% endif %}
+  </div></div>
+</div></div>
+{% endblock %}

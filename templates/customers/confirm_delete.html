@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% load i18n %}
+{% block heading %}{% trans "Delete customer" %}{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-6">
+  {% if can_delete %}
+    <div class="alert alert-danger">
+      {% trans "This action cannot be undone and is recorded in the audit log." %}
+    </div>
+  {% else %}
+    <div class="alert alert-warning">
+      {% trans "This customer has registered loans. Delete them first to be able to delete the customer." %}
+    </div>
+  {% endif %}
+  <div class="card-panel"><div class="card-panel-body">
+    <dl class="row small">
+      <dt class="col-5">{% trans "Customer" %}</dt><dd class="col-7">{{ customer.full_name }}</dd>
+      <dt class="col-5">{% trans "Phone" %}</dt><dd class="col-7">{{ customer.phone }}</dd>
+    </dl>
+    {% if can_delete %}
+      <form method="post" data-submit-once>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-danger" type="submit" data-busy-label="{% trans 'Deleting...' %}">{% trans "Yes, delete" %}</button>
+          <a class="btn btn-outline-soft" href="{{ customer.get_absolute_url }}">{% trans "Cancel" %}</a>
+        </div>
+      </form>
+    {% else %}
+      <a class="btn btn-outline-soft" href="{{ customer.get_absolute_url }}">{% trans "Back" %}</a>
+    {% endif %}
+  </div></div>
+</div></div>
+{% endblock %}

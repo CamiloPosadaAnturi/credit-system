@@ -14,8 +14,7 @@ class BusinessForm(BootstrapFormMixin, forms.ModelForm):
             "trade_name", "legal_name", "tax_id", "phone", "email",
             "address", "city", "state", "manager",
             "interest_rate", "payment_frequency", "installment_count",
-            "grace_days", "charges_late_fee", "late_fee_rate",
-            "allows_early_payoff", "early_payoff_discount",
+            "grace_days", "allows_early_payoff", "early_payoff_discount",
             "notes",
         ]
         widgets = {
@@ -30,8 +29,7 @@ class BusinessForm(BootstrapFormMixin, forms.ModelForm):
         (_("Location"), ["address", "city", "state"]),
         (_("Interest configuration"), ["interest_rate", "payment_frequency",
                                        "installment_count"]),
-        (_("Late payment and payoff policy"), ["grace_days", "charges_late_fee",
-                                               "late_fee_rate", "allows_early_payoff",
+        (_("Late payment and payoff policy"), ["grace_days", "allows_early_payoff",
                                                "early_payoff_discount"]),
         (_("Other"), ["notes"]),
     ]
@@ -51,14 +49,3 @@ class BusinessForm(BootstrapFormMixin, forms.ModelForm):
 
     def clean_tax_id(self):
         return (self.cleaned_data.get("tax_id") or "").upper().strip()
-
-    def clean(self):
-        data = super().clean()
-        if data.get("charges_late_fee") and not data.get("late_fee_rate"):
-            self.add_error(
-                "late_fee_rate",
-                _("If the business charges late fees you must set the daily rate."),
-            )
-        if not data.get("charges_late_fee"):
-            data["late_fee_rate"] = 0
-        return data

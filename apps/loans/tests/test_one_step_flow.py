@@ -7,7 +7,6 @@ from django.urls import NoReverseMatch, reverse
 from apps.core.dates import today_local
 from apps.core.errors import LoanError
 from apps.core.factories import create_business, create_customer, create_user
-from apps.customers.models import CustomerStatus
 from apps.loans import services
 from apps.loans.models import LIVE_STATUSES, Loan, LoanStatus
 from apps.users.models import Role
@@ -52,11 +51,9 @@ class OneStepLoanFlowTests(TestCase):
         self.assertIn(loan.status, LIVE_STATUSES)
 
     def test_a_failing_rule_saves_nothing(self):
-        self.customer.status = CustomerStatus.RESTRICTED
-        self.customer.save()
         with self.assertRaises(LoanError):
             services.create_loan(
-                customer=self.customer, business=self.business, principal=Decimal("1000"),
+                customer=self.customer, business=self.business, principal=Decimal("0"),
                 installment_count=4, frequency="weekly",
                 first_payment_date=today_local(), user=self.admin)
         self.assertFalse(Loan.objects.exists())

@@ -86,6 +86,15 @@ ASGI_APPLICATION = "config.asgi.application"
 # Otherwise SQLite is used so the project runs with no extra setup.
 if env("DATABASE_URL"):
     DATABASES = {"default": env.db("DATABASE_URL")}
+    # Reuse the connection between requests instead of opening a new TLS
+    # connection on every click (with a remote database such as Neon that
+    # handshake alone costs several round trips). The health check discards
+    # a connection the server closed (e.g. Neon suspending the compute).
+    DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
+    DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+    # Neon's "-pooler" endpoint is PgBouncer in transaction mode, which does
+    # not support server-side cursors (used by QuerySet.iterator()).
+    DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
 else:
     DATABASES = {
         "default": {
@@ -142,6 +151,8 @@ STORAGES = {
 }
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
+# Bootstrap has no "alert-error": map Django's error level to "danger".
+MESSAGE_TAGS = {40: "danger"}  # messages.ERROR
 
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = False

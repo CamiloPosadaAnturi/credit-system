@@ -16,7 +16,7 @@ from django.utils import timezone
 from apps.businesses.models import Business
 from apps.collections.models import ActionOutcome, ActionType, CollectionAction
 from apps.core.dates import today_local
-from apps.customers.models import Customer, CustomerStatus
+from apps.customers.models import Customer
 from apps.loans import services as loan_services
 from apps.payments import services as payment_services
 from apps.payments.models import PaymentMethod
@@ -98,7 +98,6 @@ class Command(BaseCommand):
                 business=business, first_name=first_name, last_name=last_name,
                 second_last_name=second_last_name,
                 phone=f"55{random.randint(10000000, 99999999)}",
-                status=CustomerStatus.RESTRICTED if index == 19 else CustomerStatus.ACTIVE,
                 notes="Cliente de demostración (datos ficticios).",
                 created_by=admin,
             )

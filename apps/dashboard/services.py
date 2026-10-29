@@ -20,14 +20,22 @@ from __future__ import annotations
 import datetime as dt
 from decimal import Decimal
 
-from django.db.models import Count, DecimalField, F, Sum, Value
+from django.db.models import (
+    Count,
+    DecimalField,
+    ExpressionWrapper,
+    F,
+    OuterRef,
+    Q,
+    Subquery,
+    Sum,
+    Value,
+)
 from django.db.models.functions import Coalesce, TruncDate
 
 from apps.collections.services import (
     installments_due_on,
-    overdue_balance_for,
-    overdue_installments,
-    upcoming_installments,
+    installments_of,
 )
 from apps.core.dates import today_local
 from apps.core.money import ZERO, money
@@ -64,62 +72,78 @@ def scope(user, business=None):
 
 def indicators(user, business=None, start: dt.date | None = None,
                end: dt.date | None = None) -> dict:
+    """Dashboard figures in three aggregate queries (loans, payments and
+    installments) instead of one query per figure: with a remote database
+    every query is a network round trip."""
+    from apps.loans.models import LIVE_STATUSES, InstallmentStatus
+
     loans, payments = scope(user, business)
     today = today_local()
     start = start or today.replace(day=1)
     end = end or today
 
-    disbursed = loans.filter(status__in=DISBURSED_STATUSES)
-    in_period = disbursed.filter(disbursement_date__gte=start, disbursement_date__lte=end)
-
-    lending = in_period.aggregate(
-        principal=Coalesce(Sum("principal"), _zero()),
-        interest=Coalesce(Sum("total_interest"), _zero()),
-        payable=Coalesce(Sum("total_payable"), _zero()),
-        count=Count("id"),
+    in_period = Q(status__in=DISBURSED_STATUSES,
+                  disbursement_date__gte=start, disbursement_date__lte=end)
+    is_live = Q(status__in=LIVE_STATUSES)
+    loan_totals = loans.aggregate(
+        principal=Coalesce(Sum("principal", filter=in_period), _zero()),
+        interest=Coalesce(Sum("total_interest", filter=in_period), _zero()),
+        payable=Coalesce(Sum("total_payable", filter=in_period), _zero()),
+        granted=Count("id", filter=in_period),
+        outstanding=Coalesce(Sum("outstanding_balance", filter=is_live), _zero()),
+        live=Count("id", filter=is_live),
+        settled=Count("id", filter=Q(status=LoanStatus.SETTLED)),
+        past_due=Count("id", filter=Q(status=LoanStatus.PAST_DUE)),
+        customers=Count("customer", filter=is_live, distinct=True),
     )
 
-    period_payments = payments.cash_received().filter(
-        paid_at__date__gte=start, paid_at__date__lte=end)
-    collected = period_payments.aggregate(
-        total=Coalesce(Sum("amount"), _zero()))["total"]
+    in_range = Q(paid_at__date__gte=start, paid_at__date__lte=end)
+    is_today = Q(paid_at__date=today)
+    payment_totals = payments.cash_received().aggregate(
+        collected=Coalesce(Sum("amount", filter=in_range), _zero()),
+        today=Coalesce(Sum("amount", filter=is_today), _zero()),
+        today_count=Count("id", filter=is_today),
+    )
 
-    live = loans.live()
-    outstanding = live.aggregate(
-        total=Coalesce(Sum("outstanding_balance"), _zero()))["total"]
-    overdue = overdue_balance_for(live, today)
-
-    today_payments = payments.cash_received().filter(paid_at__date=today).aggregate(
-        total=Coalesce(Sum("amount"), _zero()), count=Count("id"))
-    today_installments = installments_due_on(live, today)
-    scheduled_today = today_installments.aggregate(
-        total=Coalesce(Sum(F("scheduled_amount") - F("amount_paid"),
-                           output_field=DECIMAL), _zero()))["total"]
-
-    active_customers = live.values("customer_id").distinct().count()
+    balance = ExpressionWrapper(F("scheduled_amount") - F("amount_paid"), output_field=DECIMAL)
+    overdue_q = Q(due_date__lt=today)
+    today_q = Q(due_date=today)
+    upcoming_q = Q(due_date__gt=today, due_date__lte=today + dt.timedelta(days=7))
+    installment_totals = (
+        installments_of(loans.live()).exclude(status=InstallmentStatus.PAID).aggregate(
+            overdue=Coalesce(Sum(balance, filter=overdue_q), _zero()),
+            overdue_count=Count("id", filter=overdue_q),
+            scheduled_today=Coalesce(Sum(balance, filter=today_q), _zero()),
+            scheduled_today_count=Count("id", filter=today_q),
+            upcoming_count=Count("id", filter=upcoming_q),
+        )
+    )
+    collected = payment_totals["collected"]
+    outstanding = loan_totals["outstanding"]
+    overdue = installment_totals["overdue"]
 
     return {
         "start": start,
         "end": end,
-        "disbursed_principal": money(lending["principal"]),
-        "contractual_interest": money(lending["interest"]),
-        "contractual_total": money(lending["payable"]),
-        "loans_granted": lending["count"],
+        "disbursed_principal": money(loan_totals["principal"]),
+        "contractual_interest": money(loan_totals["interest"]),
+        "contractual_total": money(loan_totals["payable"]),
+        "loans_granted": loan_totals["granted"],
         "total_collected": money(collected),
         "outstanding_balance": money(outstanding),
         "overdue_balance": money(overdue),
-        "live_loans": live.count(),
-        "settled_loans": loans.filter(status=LoanStatus.SETTLED).count(),
-        "past_due_loans": loans.filter(status=LoanStatus.PAST_DUE).count(),
-        "active_customers": active_customers,
-        "scheduled_today_count": today_installments.count(),
-        "scheduled_today": money(scheduled_today),
-        "collected_today": money(today_payments["total"]),
-        "collected_today_count": today_payments["count"],
-        "overdue_installments": overdue_installments(live, today).count(),
-        "upcoming_installments": upcoming_installments(live, 7, today).count(),
-        "recovery_rate": ratio(collected, lending["payable"]),
-        "overdue_portfolio_rate": ratio(overdue, outstanding),
+        "live_loans": loan_totals["live"],
+        "settled_loans": loan_totals["settled"],
+        "past_due_loans": loan_totals["past_due"],
+        "active_customers": loan_totals["customers"],
+        "scheduled_today_count": installment_totals["scheduled_today_count"],
+        "scheduled_today": money(installment_totals["scheduled_today"]),
+        "collected_today": money(payment_totals["today"]),
+        "collected_today_count": payment_totals["today_count"],
+        "overdue_installments": installment_totals["overdue_count"],
+        "upcoming_installments": installment_totals["upcoming_count"],
+        "recovery_rate": ratio(collected, loan_totals["payable"]),
+        "overdue_portfolio_rate": ratio(money(overdue), outstanding),
     }
 
 
@@ -183,45 +207,72 @@ def collector_performance(user, business=None, start=None, end=None):
 
     WARNING: the amount a collector received is NOT business profit; it is
     collected money that includes both principal and interest.
+
+    Every figure comes from one grouped query for all the collectors, so the
+    number of queries does not grow with the collectors or their promises.
     """
     from apps.collections.models import CollectionAction
+    from apps.collections.services import INSTALLMENT_BALANCE, installments_of
+    from apps.loans.models import InstallmentStatus
+    from apps.payments.models import PaymentStatus
     from apps.users.models import Role, User
 
+    collectors = list(User.objects.filter(role=Role.COLLECTOR))
+    if not collectors:
+        return []
+    ids = [collector.pk for collector in collectors]
     loans, payments = scope(user, business)
-    collectors = User.objects.filter(role=Role.COLLECTOR)
+
+    received = payments.cash_received().filter(collector__in=ids)
+    actions = CollectionAction.objects.filter(user__in=ids)
+    if start:
+        received = received.filter(paid_at__date__gte=start)
+        actions = actions.filter(performed_at__date__gte=start)
+    if end:
+        received = received.filter(paid_at__date__lte=end)
+        actions = actions.filter(performed_at__date__lte=end)
+
+    def by(queryset, key, **aggregates):
+        rows = queryset.order_by().values(key).annotate(**aggregates)
+        return {row[key]: row for row in rows}
+
+    received = by(received, "collector",
+                  total=Coalesce(Sum("amount"), _zero()), count=Count("id"))
+    portfolio_loans = loans.live().filter(collector__in=ids)
+    portfolio = by(portfolio_loans, "collector",
+                   balance=Coalesce(Sum("outstanding_balance"), _zero()), count=Count("id"))
+    overdue = by(
+        installments_of(portfolio_loans).filter(due_date__lt=today_local())
+        .exclude(status=InstallmentStatus.PAID),
+        "loan__collector", total=Sum(INSTALLMENT_BALANCE))
+    action_counts = by(actions, "user", total=Count("id"),
+                       promises=Count("id", filter=Q(promised_amount__gt=0)))
+    # A promise is kept when the confirmed payments of the loan made after the
+    # action add up to the promised amount (same rule as promise_kept).
+    paid_after = (
+        Payment.objects.filter(loan=OuterRef("loan"), status=PaymentStatus.CONFIRMED,
+                               paid_at__gte=OuterRef("performed_at"))
+        .order_by().values("loan").annotate(total=Sum("amount")).values("total")
+    )
+    kept = by(
+        actions.filter(promised_amount__gt=0, promise_date__isnull=False)
+        .alias(paid_after=Coalesce(Subquery(paid_after), _zero()))
+        .filter(paid_after__gte=F("promised_amount")),
+        "user", total=Count("id"))
 
     rows = []
     for collector in collectors:
-        collector_payments = payments.cash_received().filter(collector=collector)
-        if start:
-            collector_payments = collector_payments.filter(paid_at__date__gte=start)
-        if end:
-            collector_payments = collector_payments.filter(paid_at__date__lte=end)
-        totals = collector_payments.aggregate(
-            total=Coalesce(Sum("amount"), _zero()), count=Count("id"))
-
-        portfolio = loans.live().filter(collector=collector)
-        portfolio_totals = portfolio.aggregate(
-            balance=Coalesce(Sum("outstanding_balance"), _zero()), count=Count("id"))
-
-        actions = CollectionAction.objects.filter(user=collector)
-        if start:
-            actions = actions.filter(performed_at__date__gte=start)
-        if end:
-            actions = actions.filter(performed_at__date__lte=end)
-        promises = actions.filter(promised_amount__gt=0)
-        kept = sum(1 for action in promises if action.promise_kept)
-
+        pk = collector.pk
         rows.append({
             "collector": collector,
-            "payments_received": money(totals["total"]),
-            "payment_count": totals["count"],
-            "assigned_portfolio": money(portfolio_totals["balance"]),
-            "assigned_loans": portfolio_totals["count"],
-            "actions": actions.count(),
-            "promises": promises.count(),
-            "promises_kept": kept,
-            "overdue_balance": overdue_balance_for(portfolio),
+            "payments_received": money(received.get(pk, {}).get("total", ZERO)),
+            "payment_count": received.get(pk, {}).get("count", 0),
+            "assigned_portfolio": money(portfolio.get(pk, {}).get("balance", ZERO)),
+            "assigned_loans": portfolio.get(pk, {}).get("count", 0),
+            "actions": action_counts.get(pk, {}).get("total", 0),
+            "promises": action_counts.get(pk, {}).get("promises", 0),
+            "promises_kept": kept.get(pk, {}).get("total", 0),
+            "overdue_balance": money(overdue.get(pk, {}).get("total") or ZERO),
         })
     rows.sort(key=lambda row: row["payments_received"], reverse=True)
     return rows

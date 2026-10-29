@@ -23,7 +23,7 @@
       <thead><tr><th>{% trans "Reference" %}</th><th class="d-none d-sm-table-cell">{% trans "Customer" %}</th><th class="d-none d-md-table-cell">{% trans "Disbursed" %}</th>
         <th class="num d-none d-sm-table-cell">{% trans "Principal" %}</th><th class="num d-none d-md-table-cell">{% trans "Interest" %}</th>
         <th class="num d-none d-md-table-cell">{% trans "Total" %}</th><th class="num">{% trans "Balance" %}</th>
-        <th class="num d-none d-sm-table-cell">{% trans "Past due" %}</th><th class="d-none d-sm-table-cell">{% trans "Status" %}</th></tr></thead>
+        <th class="num d-none d-sm-table-cell">{% trans "Past due" %}</th><th class="d-none d-sm-table-cell">{% trans "Status" %}</th>{% if user_permissions.delete_loan %}<th class="d-none d-sm-table-cell"></th>{% endif %}</tr></thead>
       <tbody>
       {% for loan in loans %}
         <tr>
@@ -38,6 +38,16 @@
             <span class="d-block d-sm-none mt-1"><span class="badge text-bg-{{ loan.status|badge }} status-badge">{{ loan.get_status_display }}</span></span></td>
           <td class="num d-none d-sm-table-cell">{% if loan.days_past_due %}<span class="text-danger">{{ loan.days_past_due }} d</span>{% else %}-{% endif %}</td>
           <td class="d-none d-sm-table-cell"><span class="badge text-bg-{{ loan.status|badge }} status-badge">{{ loan.get_status_display }}</span></td>
+          {% if user_permissions.delete_loan %}<td class="text-end d-none d-sm-table-cell">
+            {% comment %}Same rule as services.loan_deletion_blocker, from the list annotations.{% endcomment %}
+            {% if loan.original_loan_id %}{% trans "The loan comes from a restructuring and cannot be deleted." as reason_origin %}
+              {% include "loans/_delete_button.html" with reason=reason_origin compact=True %}
+            {% elif loan.has_restructurings %}{% trans "The loan was restructured into another loan and cannot be deleted." as reason_restructured %}
+              {% include "loans/_delete_button.html" with reason=reason_restructured compact=True %}
+            {% else %}
+              {% include "loans/_delete_button.html" with reason="" payment_count=loan.payment_count next=request.get_full_path compact=True %}
+            {% endif %}
+          </td>{% endif %}
         </tr>
       {% empty %}
         <tr><td colspan="9">{% if loan_form %}{% url 'loans:create' as create_url %}{% include "components/empty_state.html" with message=_("No loans match the filter.") icon="bi-file-earmark-text" action_url=create_url action_modal="#newLoanModal" action_label=_("Register loan") %}{% else %}{% include "components/empty_state.html" with message=_("No loans match the filter.") icon="bi-file-earmark-text" %}{% endif %}</td></tr>
@@ -50,5 +60,9 @@
 {% endblock %}
 
 {% block modals %}
+{% if user_permissions.delete_loan %}
+  {% include "components/delete_modal.html" with modal_id="deleteLoanModal" title=_("Delete loan") lead=_("You are about to delete this loan:") %}
+  {% include "components/blocked_modal.html" %}
+{% endif %}
 {% if loan_form %}{% include "loans/_create_modal.html" %}{% endif %}
 {% endblock %}

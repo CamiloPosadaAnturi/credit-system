@@ -38,7 +38,6 @@
       <div class="card-panel-body">
         <dl class="row small mb-0">
           <dt class="col-6">{% trans "Grace days" %}</dt><dd class="col-6">{{ business.grace_days }}</dd>
-          <dt class="col-6">{% trans "Late fee" %}</dt><dd class="col-6">{% if business.charges_late_fee %}{{ business.late_fee_rate }} {% trans "daily" %}{% else %}{% trans "Not applied" %}{% endif %}</dd>
           <dt class="col-6">{% trans "Early payoff" %}</dt><dd class="col-6">{% if business.allows_early_payoff %}{% trans "Allowed" %} ({{ business.early_payoff_discount }}){% else %}{% trans "Not allowed" %}{% endif %}</dd>
         </dl>
         <p class="form-hint mt-3 mb-0">{% trans "New loans take these rules as defaults. Loans already created keep the rule they were granted with." %}</p>

@@ -1,8 +1,5 @@
 {% extends "base.html" %}{% load i18n formatting %}
 {% block heading %}{{ customer.full_name }}{% endblock %}
-{% block subheading %}
-<p class="text-secondary small mb-0">{% if customer.code %}{{ customer.code }} &middot; {% endif %}<span class="badge text-bg-{{ customer.status|badge }} status-badge">{{ customer.get_status_display }}</span></p>
-{% endblock %}
 {% block actions %}
   {% if user_permissions.create_loan %}
     <a class="btn btn-sm btn-primary" href="{% url 'loans:create' %}?customer={{ customer.pk }}"
@@ -12,14 +9,18 @@
     <a class="btn btn-sm btn-outline-soft js-remote-form" href="{% url 'customers:update' customer.pk %}"
        data-url="{% url 'customers:update' customer.pk %}" data-target="#editCustomerModal"
        data-next="{{ request.get_full_path }}"><i class="bi bi-pencil"></i> {% trans "Edit" %}</a>
-    <form method="post" action="{% url 'customers:status' customer.pk %}" class="d-inline">
-      {% csrf_token %}
-      <select name="status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
-        <option value="active" {% if customer.status == 'active' %}selected{% endif %}>{% trans "Active" %}</option>
-        <option value="inactive" {% if customer.status == 'inactive' %}selected{% endif %}>{% trans "Inactive" %}</option>
-        <option value="restricted" {% if customer.status == 'restricted' %}selected{% endif %}>{% trans "Restricted" %}</option>
-      </select>
-    </form>
+  {% endif %}
+  {% if user_permissions.delete_customer %}
+    {% if can_delete %}
+    {% url 'customers:list' as list_url %}
+    <a class="btn btn-sm btn-outline-danger js-confirm-delete" href="{% url 'customers:delete' customer.pk %}?next={{ list_url|urlencode }}"
+       data-url="{% url 'customers:delete' customer.pk %}" data-target="#deleteCustomerModal"
+       data-name="{{ customer.full_name }}" data-next="{{ list_url }}"><i class="bi bi-trash"></i> {% trans "Delete" %}</a>
+    {% else %}
+    <a class="btn btn-sm btn-outline-danger js-confirm-delete" href="{% url 'customers:delete' customer.pk %}"
+       data-target="#blockedActionModal" data-title="{% trans 'Customer with loans' %}"
+       data-message="{% blocktrans with name=customer.full_name count counter=loans|length %}{{ name }} has {{ counter }} registered loan. Delete it first to be able to delete the customer.{% plural %}{{ name }} has {{ counter }} registered loans. Delete them first to be able to delete the customer.{% endblocktrans %}"><i class="bi bi-trash"></i> {% trans "Delete" %}</a>
+    {% endif %}
   {% endif %}
 {% endblock %}
 {% block content %}
@@ -49,7 +50,7 @@
 
   <div class="col-lg-8">
     <div class="card-panel mb-3">
-      <div class="card-panel-header"><h2>{% trans "Loan history" %}</h2></div>
+      <div class="card-panel-header" id="loan-history"><h2>{% trans "Loan history" %}</h2></div>
       <div class="table-wrap">
         <table class="data-table">
           <thead><tr><th>{% trans "Reference" %}</th><th>{% trans "Disbursed" %}</th>
@@ -94,5 +95,6 @@
 
 {% block modals %}
 {% if user_permissions.manage_customers %}{% include "customers/_edit_modal.html" %}{% endif %}
+{% if user_permissions.delete_customer %}{% if can_delete %}{% include "customers/_delete_modal.html" %}{% else %}{% include "components/blocked_modal.html" %}{% endif %}{% endif %}
 {% if loan_form %}{% include "loans/_create_modal.html" %}{% endif %}
 {% endblock %}

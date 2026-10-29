@@ -17,11 +17,11 @@ from __future__ import annotations
 import datetime as dt
 from decimal import Decimal
 
-from django.db.models import Count, DecimalField, ExpressionWrapper, F, Min, Q, Sum
+from django.db.models import Count, DecimalField, ExpressionWrapper, F, Min, Prefetch, Q, Sum
 
 from apps.core.dates import today_local
-from apps.core.money import ZERO, money, to_decimal
-from apps.loans.models import Installment, InstallmentStatus, Loan
+from apps.core.money import ZERO, money
+from apps.loans.models import LIVE_STATUSES, Installment, InstallmentStatus
 
 INSTALLMENT_BALANCE = ExpressionWrapper(
     F("scheduled_amount") - F("amount_paid"),
@@ -104,9 +104,14 @@ def past_due_summary(loans, today: dt.date | None = None) -> list[dict]:
         )
     )
     index = {row["loan_id"]: row for row in rows}
+    from apps.collections.models import CollectionAction
+
+    latest_first = CollectionAction.objects.order_by("-performed_at")
     selected = (
         loans.filter(pk__in=index.keys())
         .select_related("customer", "collector", "business")
+        .prefetch_related(Prefetch("collection_actions", queryset=latest_first,
+                                   to_attr="actions_latest_first"))
     )
     result = []
     for loan in selected:
@@ -118,55 +123,49 @@ def past_due_summary(loans, today: dt.date | None = None) -> list[dict]:
             "overdue_balance": money(row["overdue_balance"] or ZERO),
             "total_balance": money(loan.outstanding_balance),
             "days_past_due": (today - row["oldest_due_date"]).days,
-            "last_action": loan.collection_actions.order_by("-performed_at").first(),
+            "last_action": next(iter(loan.actions_latest_first), None),
         })
     result.sort(key=lambda row: row["days_past_due"], reverse=True)
     return result
 
 
-def late_fee_estimate(loan: Loan, today: dt.date | None = None) -> Decimal:
-    """Late fee ONLY when the business has it configured and enabled.
-
-    It is neither stored nor charged automatically: it is an informational
-    figure that requires a documented policy and a business decision.
-    """
-    business = loan.business
-    if not business.charges_late_fee or to_decimal(business.late_fee_rate) <= ZERO:
-        return ZERO
-    today = today or today_local()
-    cutoff = today - dt.timedelta(days=business.grace_days)
-    total = ZERO
-    for installment in loan.installments.filter(due_date__lt=cutoff).exclude(
-        status=InstallmentStatus.PAID
-    ):
-        days = (cutoff - installment.due_date).days
-        total += to_decimal(installment.balance) * to_decimal(business.late_fee_rate) * days
-    return money(total)
-
-
 def portfolio_breakdown(loans, today: dt.date | None = None) -> dict:
-    """Counts and balances per portfolio category."""
+    """Counts and balances per portfolio category, in three queries."""
     from apps.loans.models import LoanStatus
 
     today = today or today_local()
     live = loans.live()
+    loan_totals = loans.aggregate(
+        live=Count("id", filter=Q(status__in=LIVE_STATUSES)),
+        past_due=Count("id", filter=Q(status=LoanStatus.PAST_DUE)),
+        settled=Count("id", filter=Q(status=LoanStatus.SETTLED)),
+        total_balance=Sum("outstanding_balance", filter=Q(status__in=LIVE_STATUSES)),
+        partially_paid=Count("id", filter=Q(status__in=LIVE_STATUSES)
+                             & (Q(principal_paid__gt=0) | Q(interest_paid__gt=0))),
+    )
+    upcoming = Q(due_date__gt=today, due_date__lte=today + dt.timedelta(days=7))
+    installment_totals = (
+        installments_of(live).exclude(status=InstallmentStatus.PAID).aggregate(
+            due_today=Count("id", filter=Q(due_date=today)),
+            upcoming=Count("id", filter=upcoming),
+            overdue=Count("id", filter=Q(due_date__lt=today)),
+            overdue_balance=Sum(INSTALLMENT_BALANCE, filter=Q(due_date__lt=today)),
+        )
+    )
     return {
-        "due_today": installments_due_on(live, today).count(),
-        "upcoming": upcoming_installments(live, 7, today).count(),
-        "overdue": overdue_installments(live, today).count(),
-        "past_due_loans": live.filter(status=LoanStatus.PAST_DUE).count(),
-        "live_loans": live.count(),
-        "settled_loans": loans.settled().count(),
-        "overdue_balance": overdue_balance_for(live, today),
-        "total_balance": money(
-            live.aggregate(total=Sum("outstanding_balance"))["total"] or ZERO),
+        "due_today": installment_totals["due_today"],
+        "upcoming": installment_totals["upcoming"],
+        "overdue": installment_totals["overdue"],
+        "past_due_loans": loan_totals["past_due"],
+        "live_loans": loan_totals["live"],
+        "settled_loans": loan_totals["settled"],
+        "overdue_balance": money(installment_totals["overdue_balance"] or ZERO),
+        "total_balance": money(loan_totals["total_balance"] or ZERO),
         "customers_with_several_loans": (
-            live.values("customer_id")
+            live.order_by().values("customer_id")
             .annotate(count=Count("id"))
             .filter(count__gt=1)
             .count()
         ),
-        "partially_paid": live.filter(
-            Q(principal_paid__gt=0) | Q(interest_paid__gt=0)
-        ).count(),
+        "partially_paid": loan_totals["partially_paid"],
     }

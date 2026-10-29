@@ -9,38 +9,48 @@
 {% block content %}
 <form class="filters" method="get">
   <div class="row g-2 align-items-end">
-    <div class="col-md-6">{{ filter_form.q.label_tag }}{{ filter_form.q }}</div>
-    <div class="col-8 col-md-4">{{ filter_form.status.label_tag }}{{ filter_form.status }}</div>
+    <div class="col-8 col-md-10">{{ filter_form.q.label_tag }}{{ filter_form.q }}</div>
     <div class="col-4 col-md-2 d-grid"><button class="btn btn-primary btn-sm">{% trans "Filter" %}</button></div>
   </div>
 </form>
 <div class="card-panel">
   <div class="table-wrap">
     <table class="data-table">
-      <thead><tr><th class="d-none d-sm-table-cell">{% trans "Code" %}</th><th>{% trans "Customer" %}</th><th class="d-none d-sm-table-cell">{% trans "Phone" %}</th>
+      <thead><tr><th>{% trans "Customer" %}</th><th class="d-none d-sm-table-cell">{% trans "Phone" %}</th>
         <th class="num d-none d-sm-table-cell">{% trans "Loans" %}</th>
-        <th>{% trans "Status" %}</th><th></th></tr></thead>
+<th></th></tr></thead>
       <tbody>
       {% for customer in customers %}
         <tr>
-          <td class="text-secondary small d-none d-sm-table-cell">{{ customer.code }}</td>
           <td class="wrap-sm"><a href="{{ customer.get_absolute_url }}" class="fw-semibold js-customer-summary"
         data-name="{{ customer.full_name }}"
-        data-code="{{ customer.code }}"
         data-phone="{{ customer.phone }}"
-        data-loans="{{ customer.loans.count }}"
-   data-status="{{ customer.get_status_display }}">
+        data-loans="{{ customer.loan_count }}">
   {{ customer.full_name }}
 </a>
-            <span class="d-block d-sm-none small text-secondary">{{ customer.phone }}</span></td>
+            <span class="d-block d-sm-none small text-secondary">{{ customer.phone }}</span>
+</td>
           <td class="d-none d-sm-table-cell">{{ customer.phone }}</td>
-          <td class="num d-none d-sm-table-cell">{{ customer.loans.count }}</td>
-          <td><span class="badge text-bg-{{ customer.status|badge }} status-badge">{{ customer.get_status_display }}</span></td>
+          <td class="num d-none d-sm-table-cell">{{ customer.loan_count }}</td>
           <td class="text-end"><div class="row-actions">
             {% if user_permissions.manage_customers %}
             <a class="btn btn-sm btn-outline-soft js-remote-form" href="{% url 'customers:update' customer.pk %}"
                data-url="{% url 'customers:update' customer.pk %}" data-target="#editCustomerModal"
                data-next="{{ request.get_full_path }}" title="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"><i class="bi bi-pencil"></i><span class="d-none d-md-inline"> {% trans "Edit" %}</span></a>
+            {% endif %}
+            {% if user_permissions.delete_customer %}
+              {% if customer.loan_count %}
+              <a class="btn btn-sm btn-outline-danger js-confirm-delete" href="{% url 'customers:delete' customer.pk %}"
+                 data-target="#blockedActionModal" data-title="{% trans 'Customer with loans' %}"
+                 data-message="{% blocktrans with name=customer.full_name count counter=customer.loan_count %}{{ name }} has {{ counter }} registered loan. Delete it first to be able to delete the customer.{% plural %}{{ name }} has {{ counter }} registered loans. Delete them first to be able to delete the customer.{% endblocktrans %}"
+                 data-link="{{ customer.get_absolute_url }}" data-link-label="{% trans 'See their loans' %}"
+                 title="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"><i class="bi bi-trash"></i><span class="d-none d-md-inline"> {% trans "Delete" %}</span></a>
+              {% else %}
+              <a class="btn btn-sm btn-outline-danger js-confirm-delete" href="{% url 'customers:delete' customer.pk %}?next={{ request.get_full_path|urlencode }}"
+                 data-url="{% url 'customers:delete' customer.pk %}" data-target="#deleteCustomerModal"
+                 data-name="{{ customer.full_name }}" data-next="{{ request.get_full_path }}"
+                 title="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"><i class="bi bi-trash"></i><span class="d-none d-md-inline"> {% trans "Delete" %}</span></a>
+              {% endif %}
             {% endif %}
             {% if user_permissions.create_loan %}
             <a class="btn btn-sm btn-outline-soft" href="{% url 'loans:create' %}?customer={{ customer.pk }}"
@@ -49,7 +59,7 @@
           </div></td>
         </tr>
       {% empty %}
-        <tr><td colspan="6">{% if user_permissions.manage_customers %}{% url 'customers:create' as create_url %}{% include "components/empty_state.html" with message=_("No customers match the filter.") icon="bi-people" action_url=create_url action_modal="#newCustomerModal" action_label=_("Register customer") %}{% else %}{% include "components/empty_state.html" with message=_("No customers match the filter.") icon="bi-people" %}{% endif %}</td></tr>
+        <tr><td colspan="4">{% if user_permissions.manage_customers %}{% url 'customers:create' as create_url %}{% include "components/empty_state.html" with message=_("No customers match the filter.") icon="bi-people" action_url=create_url action_modal="#newCustomerModal" action_label=_("Register customer") %}{% else %}{% include "components/empty_state.html" with message=_("No customers match the filter.") icon="bi-people" %}{% endif %}</td></tr>
       {% endfor %}
       </tbody>
     </table>
@@ -70,10 +80,8 @@
       </div>
 
       <div class="modal-body">
-        <p><strong>Código:</strong> <span id="summaryCode"></span></p>
         <p><strong>Teléfono:</strong> <span id="summaryPhone"></span></p>
-        <p><strong>Créditos:</strong> <span id="summaryLoans"></span></p>
-        <p class="mb-0"><strong>Estado:</strong> <span id="summaryStatus"></span></p>
+        <p class="mb-0"><strong>Créditos:</strong> <span id="summaryLoans"></span></p>
       </div>
 
       <div class="modal-footer">
@@ -104,5 +112,6 @@
 </div>
 {% include "customers/_edit_modal.html" %}
 {% endif %}
+{% if user_permissions.delete_customer %}{% include "customers/_delete_modal.html" %}{% include "components/blocked_modal.html" %}{% endif %}
 {% if loan_form %}{% include "loans/_create_modal.html" %}{% endif %}
 {% endblock %}

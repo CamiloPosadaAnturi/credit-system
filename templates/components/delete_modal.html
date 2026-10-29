@@ -1,0 +1,31 @@
+{% load i18n %}
+{% comment %}Reusable delete confirmation. Params: modal_id, title, lead.
+A .js-confirm-delete trigger sets the form action (data-url), "next"
+(data-next) and fills [data-fill="name"] (data-name).{% endcomment %}
+<div class="modal fade" id="{{ modal_id }}" tabindex="-1" aria-labelledby="{{ modal_id }}Title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="" data-submit-once>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="{{ modal_id }}Title">{{ title }}</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex gap-3 align-items-start">
+          <i class="bi bi-exclamation-triangle-fill text-danger fs-4 lh-1"></i>
+          <div>
+            <p class="mb-1">{{ lead }}</p>
+            <p class="fw-semibold mb-2" data-fill="name"></p>
+            <p class="text-danger fw-semibold mb-2" data-fill="detail"></p>
+            <p class="small text-secondary mb-0">{% trans "This action cannot be undone and is recorded in the audit log." %}</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-soft" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+        <button type="submit" class="btn btn-danger" data-busy-label="{% trans 'Deleting...' %}">{% trans "Yes, delete" %}</button>
+      </div>
+    </form>
+  </div>
+</div>

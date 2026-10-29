@@ -97,16 +97,6 @@ class Business(BaseModel):
         _("grace days"), default=0,
         help_text=_("Days after the due date before an installment counts as overdue."),
     )
-    charges_late_fee = models.BooleanField(
-        _("charges late fees"), default=False,
-        help_text=_("When off, the system never adds late charges. Turn it on only "
-                    "with a documented and authorized policy."),
-    )
-    late_fee_rate = models.DecimalField(
-        _("daily late fee rate"), max_digits=7, decimal_places=4, default=Decimal("0"),
-        validators=[MinValueValidator(Decimal("0"))],
-        help_text=_("Ratio applied to the overdue balance, per day past due."),
-    )
     allows_early_payoff = models.BooleanField(_("allows early payoff"), default=True)
     early_payoff_discount = models.DecimalField(
         _("early payoff discount"), max_digits=7, decimal_places=4,

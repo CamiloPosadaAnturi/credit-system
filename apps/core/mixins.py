@@ -19,26 +19,6 @@ class ActionRequiredMixin(LoginRequiredMixin):
         return super().dispatch(request, *args, **kwargs)
 
 
-class BusinessScopedMixin:
-    """Restrict the queryset to the businesses the user is allowed to see.
-
-    ``business_field`` is the ORM path to the business from the view's model
-    (for example ``"loan__business"``).
-    """
-
-    business_field: str = "business"
-    collector_field: str | None = None
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        queryset = permissions.filter_by_business(
-            queryset, self.request.user, self.business_field)
-        if self.collector_field:
-            queryset = permissions.filter_collector_portfolio(
-                queryset, self.request.user, self.collector_field)
-        return queryset
-
-
 class SearchMixin:
     """Simple ``?q=`` search over ``search_fields``."""
 
@@ -78,7 +58,3 @@ class AuditableMixin:
         return super().form_valid(form)
 
 
-def require_business_access(user, business) -> None:
-    if business is None:
-        raise PermissionDenied(_("Operation without an associated business."))
-    permissions.require_business(user, business)

@@ -4,9 +4,12 @@ import json
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.db.models import Count, Exists, IntegerField, OuterRef, Subquery
+from django.db.models.functions import Coalesce
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.generic import DetailView, ListView, View
 
@@ -26,6 +29,7 @@ from apps.loans.forms import (
     RestructuringForm,
 )
 from apps.loans.models import Loan, LoanStatus
+from apps.payments.models import Payment
 from apps.users import permissions
 
 
@@ -58,6 +62,14 @@ class LoanListView(SearchMixin, LoanBaseMixin, ListView):
                 queryset = queryset.filter(disbursement_date__gte=data["start"])
             if data.get("end"):
                 queryset = queryset.filter(disbursement_date__lte=data["end"])
+        queryset = queryset.with_days_past_due()
+        if permissions.can(self.request.user, permissions.DELETE_LOAN):
+            payment_count = (Payment.objects.filter(loan=OuterRef("pk")).values("loan")
+                             .annotate(total=Count("pk")).values("total"))
+            queryset = queryset.annotate(
+                payment_count=Coalesce(Subquery(payment_count, output_field=IntegerField()), 0),
+                has_restructurings=Exists(Loan.objects.filter(original_loan=OuterRef("pk"))),
+            )
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -91,6 +103,10 @@ class LoanDetailView(LoanBaseMixin, DetailView):
             permissions.can(self.request.user, permissions.RESTRUCTURE_LOAN)
             and loan.is_live
         )
+        if permissions.can(self.request.user, permissions.DELETE_LOAN):
+            context["can_delete"] = True
+            context["delete_blocker"] = services.loan_deletion_blocker(loan)
+            context["payment_count"] = loan.payments.count()
         return context
 
 
@@ -299,3 +315,42 @@ def simulate_loan(request):
     except (ValueError, TypeError, KeyError, ArithmeticError):
         simulation = None
     return JsonResponse({"simulation": simulation, "warnings": warnings})
+
+
+class DeleteLoanView(LoanActionView):
+    """Delete a loan registered by mistake (POST; GET shows a confirmation page).
+
+    The rule (no payments, not part of a restructuring) lives in
+    ``services.delete_loan``. Detail and list confirm in a modal; this page is
+    the fallback without JavaScript.
+    """
+
+    required_action = permissions.DELETE_LOAN
+
+    def safe_next(self, request, default: str) -> str:
+        next_url = request.POST.get("next") or request.GET.get("next")
+        if next_url and url_has_allowed_host_and_scheme(
+                next_url, allowed_hosts={request.get_host()},
+                require_https=request.is_secure()):
+            return next_url
+        return default
+
+    def get(self, request, pk):
+        loan = self.get_loan(request, pk)
+        return render(request, "loans/confirm_delete.html", {
+            "loan": loan, "title": _("Delete loan"),
+            "delete_blocker": services.loan_deletion_blocker(loan),
+            "payment_count": loan.payments.count(),
+            "next": request.GET.get("next", ""),
+        })
+
+    def post(self, request, pk):
+        loan = self.get_loan(request, pk)
+        reference, customer = loan.reference, loan.customer
+        try:
+            services.delete_loan(loan, request.user)
+        except BusinessRuleError as error:
+            messages.error(request, str(error))
+            return redirect(loan.get_absolute_url())
+        messages.success(request, _("Loan %(ref)s deleted.") % {"ref": reference})
+        return redirect(self.safe_next(request, customer.get_absolute_url()))

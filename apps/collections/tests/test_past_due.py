@@ -80,18 +80,6 @@ class PastDueTests(TestCase):
         self.assertEqual(breakdown["total_balance"], Decimal("2800.00"))
         self.assertEqual(breakdown["customers_with_several_loans"], 1)
 
-    def test_no_late_fee_without_a_policy(self):
-        loan = self.build(days_ago=30)
-        self.assertEqual(services.late_fee_estimate(loan, self.today), Decimal("0.00"))
-
-    def test_late_fee_only_when_configured(self):
-        self.business.charges_late_fee = True
-        self.business.late_fee_rate = Decimal("0.0100")  # 1% per day on the overdue balance
-        self.business.save()
-        loan = self.build(days_ago=7)
-        loan.refresh_from_db()
-        # Installment 1 (350) with 7 days past due: 350 * 0.01 * 7 = 24.50
-        self.assertEqual(services.late_fee_estimate(loan, self.today), Decimal("24.50"))
 
     def test_past_due_summary(self):
         loan = self.build(days_ago=21)

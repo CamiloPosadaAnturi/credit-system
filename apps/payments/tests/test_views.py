@@ -1,8 +1,10 @@
 """Tests for the payments list and the payment detail modal."""
+from datetime import timedelta
 from decimal import Decimal
 
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.core.factories import create_business, create_customer, create_loan, create_user
 from apps.payments import services
@@ -27,6 +29,16 @@ class PaymentViewsTests(TestCase):
         self.assertContains(response, f'data-url="{self.payment.get_absolute_url()}"')
         self.assertNotContains(response, "Cobrador")
         self.assertNotContains(response, "Collector")
+
+    def test_today_filter_only_returns_payments_from_today(self):
+        self.payment.paid_at = timezone.now() - timedelta(days=1)
+        self.payment.save(update_fields=["paid_at"])
+
+        response = self.client.get(reverse("payments:list"), {"today": "1"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, self.payment.reference)
+        self.assertTrue(response.context["today_filter"])
 
     def test_modal_returns_fragment_without_layout(self):
         response = self.client.get(self.payment.get_absolute_url(), {"modal": "1"})

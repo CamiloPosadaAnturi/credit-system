@@ -3,6 +3,7 @@ import uuid
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.generic import DetailView, ListView, View
 
@@ -53,6 +54,8 @@ class PaymentListView(SearchMixin, PaymentBaseMixin, ListView):
                 queryset = queryset.filter(paid_at__date__gte=data["start"])
             if data.get("end"):
                 queryset = queryset.filter(paid_at__date__lte=data["end"])
+        if self.request.GET.get("today") == "1":
+            queryset = queryset.filter(paid_at__date=timezone.localdate())
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -64,6 +67,7 @@ class PaymentListView(SearchMixin, PaymentBaseMixin, ListView):
             self.get_queryset().confirmed().aggregate(total=Sum("amount"))["total"] or 0
         )
         context["title"] = _("Payments")
+        context["today_filter"] = self.request.GET.get("today") == "1"
         return context
 
 

@@ -1,6 +1,15 @@
 {% extends "base.html" %}{% load i18n formatting %}
 {% block heading %}{% trans "Payments" %}{% endblock %}
-{% block subheading %}<p class="text-secondary small mb-0">{% trans "Confirmed total with the current filters" %}: <strong>{{ filtered_total|mxn }}</strong></p>{% endblock %}
+{% block subheading %}
+<p class="text-secondary small mb-0 d-flex flex-wrap align-items-center gap-2">
+  <span>{% trans "Confirmed total with the current filters" %}: <strong>{{ filtered_total|mxn }}</strong></span>
+  {% if today_filter %}
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'payments:list' %}">{% trans "Show all payments" %}</a>
+  {% else %}
+    <a class="btn btn-sm btn-primary" href="{% url 'payments:list' %}?today=1">{% trans "Payments today" %}</a>
+  {% endif %}
+</p>
+{% endblock %}
 {% block content %}
 <form class="filters" method="get">
   <div class="row g-2 align-items-end">

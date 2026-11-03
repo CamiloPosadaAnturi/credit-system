@@ -1,4 +1,4 @@
-"""Delete a loan (with its payments); only restructurings are kept."""
+"""Delete a loan (with its payments), including old restructurings."""
 import datetime as dt
 from decimal import Decimal
 
@@ -58,15 +58,22 @@ class LoanDeleteTests(TestCase):
         self.client.post(self.url)
         self.assertLoanExists(False)
 
-    def test_restructured_loans_are_not_deleted(self):
+    def test_restructured_loans_can_be_deleted(self):
         register_payment(loan=self.loan, amount=Decimal("300"), user=self.admin)
         self.loan.refresh_from_db()
         new_loan = services.restructure_loan(
             self.loan, self.admin, installment_count=4, frequency="weekly",
             first_payment_date=today_local() + dt.timedelta(days=7))
+        self.assertIsNone(services.loan_deletion_blocker(new_loan))
+        self.assertIsNone(services.loan_deletion_blocker(self.loan))
+        # Deleting the original leaves the new loan alive and unlinked.
+        self.client.post(self.url)
+        self.assertLoanExists(False)
+        new_loan.refresh_from_db()
+        self.assertIsNone(new_loan.original_loan_id)
+        # And the new one can be deleted too.
         self.client.post(reverse("loans:delete", args=[new_loan.pk]))
-        self.assertTrue(Loan.objects.filter(pk=new_loan.pk).exists())
-        self.assertIn("restructuring", services.loan_deletion_blocker(new_loan))
+        self.assertFalse(Loan.objects.filter(pk=new_loan.pk).exists())
 
     def test_only_admins_can_delete(self):
         for role in (Role.MANAGER, Role.COLLECTOR, Role.VIEWER):

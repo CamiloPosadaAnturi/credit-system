@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from apps.core.choices import InterestMode, PaymentFrequency
+from apps.core.choices import PaymentFrequency
 from apps.core.forms import BootstrapFormMixin, DateInput
 from apps.customers.models import Customer
 from apps.loans.models import Loan, LoanStatus
@@ -123,22 +123,43 @@ class CancellationForm(BootstrapFormMixin, forms.Form):
         self.apply_widget_styles()
 
 
-class RestructuringForm(BootstrapFormMixin, forms.Form):
-    installment_count = forms.IntegerField(label=_("New number of installments"),
-                                           min_value=1)
-    payment_frequency = forms.ChoiceField(
-        label=_("Frequency"), choices=PaymentFrequency.choices)
-    first_payment_date = forms.DateField(
-        label=_("First payment date"),
-        widget=DateInput())
-    interest_mode = forms.ChoiceField(
-        label=_("Interest mode"), choices=InterestMode.choices, required=False)
-    interest_rate = forms.DecimalField(
-        label=_("Applied rate"), max_digits=7, decimal_places=4, required=False,
-        help_text=_("Leave empty to keep the rate of the original loan."))
-    notes = forms.CharField(
-        label=_("Notes"), required=False, widget=forms.Textarea(attrs={"rows": 2}))
+class LoanEditForm(BootstrapFormMixin, forms.ModelForm):
+    """Edit the terms of an existing loan.
+
+    The customer and the interest rate (frozen in the loan) do not change;
+    interest, total and schedule are recomputed by ``services.update_loan``.
+    """
+
+    class Meta:
+        model = Loan
+        fields = [
+            "principal", "payment_frequency", "installment_count",
+            "first_payment_date", "application_date", "notes",
+        ]
+        widgets = {
+            "application_date": DateInput(),
+            "first_payment_date": DateInput(),
+            "notes": forms.Textarea(attrs={"rows": 2}),
+            "principal": forms.NumberInput(attrs={"step": "0.01", "min": "0.01",
+                                                  "inputmode": "decimal"}),
+            "installment_count": forms.NumberInput(attrs={"min": "1"}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        choices = list(LOAN_FREQUENCIES)
+        current = self.instance.payment_frequency if self.instance else None
+        if current and current not in dict(choices):
+            choices.append((current, PaymentFrequency(current).label))
+        self.fields["payment_frequency"].choices = choices
         self.apply_widget_styles()
+
+    def clean(self):
+        data = super().clean()
+        principal = data.get("principal")
+        installments = data.get("installment_count")
+        if principal is not None and principal <= 0:
+            self.add_error("principal", _("The principal must be greater than zero."))
+        if installments is not None and installments < 1:
+            self.add_error("installment_count", _("There must be at least one installment."))
+        return data

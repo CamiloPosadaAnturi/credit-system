@@ -22,14 +22,13 @@
     <div class="card-panel mb-3"><div class="card-panel-header"><h2>{% trans "Past due" %}</h2></div>
       <div class="table-wrap" style="max-height:340px;overflow-y:auto"><table class="data-table">
         <thead><tr><th>{% trans "Customer" %}</th><th class="num">{% trans "Days past due" %}</th>
-          <th class="num">{% trans "Balance" %}</th><th></th></tr></thead>
+          <th class="num">{% trans "Balance" %}</th></tr></thead>
         <tbody>
         {% for installment in overdue %}
           <tr><td>{{ installment.loan.customer }}<span class="d-block text-secondary small">{{ installment.loan.reference }} - {{ installment.number }}</span></td>
             <td class="num text-danger">{{ installment.days_past_due }} d</td>
-            <td class="num">{{ installment.balance|mxn }}</td>
-            <td>{% if user_permissions.log_collection_action %}<a class="btn btn-sm btn-outline-soft" href="{% url 'collections:log_action' installment.loan.pk %}">{% trans "Log" %}</a>{% endif %}</td></tr>
-        {% empty %}<tr><td colspan="4" class="text-secondary small p-3">{% trans "No overdue installments. Well done." %}</td></tr>{% endfor %}
+            <td class="num">{{ installment.balance|mxn }}</td></tr>
+        {% empty %}<tr><td colspan="3" class="text-secondary small p-3">{% trans "No overdue installments. Well done." %}</td></tr>{% endfor %}
         </tbody></table></div>
     </div>
     <div class="card-panel"><div class="card-panel-header"><h2>{% trans "Next 3 days" %}</h2></div>

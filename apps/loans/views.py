@@ -4,7 +4,7 @@ import json
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count, Exists, IntegerField, OuterRef, Subquery
+from django.db.models import Count, IntegerField, OuterRef, Subquery
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -25,8 +25,8 @@ from apps.loans.calculations import simulate
 from apps.loans.forms import (
     CancellationForm,
     LoanFilterForm,
+    LoanEditForm,
     LoanForm,
-    RestructuringForm,
 )
 from apps.loans.models import Loan, LoanStatus
 from apps.payments.models import Payment
@@ -68,7 +68,6 @@ class LoanListView(SearchMixin, LoanBaseMixin, ListView):
                              .annotate(total=Count("pk")).values("total"))
             queryset = queryset.annotate(
                 payment_count=Coalesce(Subquery(payment_count, output_field=IntegerField()), 0),
-                has_restructurings=Exists(Loan.objects.filter(original_loan=OuterRef("pk"))),
             )
         return queryset
 
@@ -99,9 +98,9 @@ class LoanDetailView(LoanBaseMixin, DetailView):
             permissions.can(self.request.user, permissions.CANCEL_LOAN)
             and loan.status not in (LoanStatus.SETTLED, LoanStatus.CANCELLED)
         )
-        context["can_restructure"] = (
-            permissions.can(self.request.user, permissions.RESTRUCTURE_LOAN)
-            and loan.is_live
+        context["can_edit"] = (
+            permissions.can(self.request.user, permissions.EDIT_LOAN)
+            and loan.status not in (LoanStatus.CANCELLED, LoanStatus.RESTRUCTURED)
         )
         if permissions.can(self.request.user, permissions.DELETE_LOAN):
             context["can_delete"] = True
@@ -213,40 +212,38 @@ class CancelLoanView(LoanActionView):
         return render(request, "loans/cancel.html", {"loan": loan, "form": form})
 
 
-class RestructureLoanView(LoanActionView):
-    required_action = permissions.RESTRUCTURE_LOAN
+class EditLoanView(LoanActionView):
+    """Edit the loan terms in place: same reference, payments re-applied."""
+
+    required_action = permissions.EDIT_LOAN
 
     def get(self, request, pk):
         loan = self.get_loan(request, pk)
-        initial = {"installment_count": loan.installment_count,
-                   "payment_frequency": loan.payment_frequency,
-                   "first_payment_date": today_local()}
-        return render(request, "loans/restructure.html",
-                      {"loan": loan, "form": RestructuringForm(initial=initial)})
+        return render(request, "loans/edit.html",
+                      {"loan": loan, "form": LoanEditForm(instance=loan)})
 
     def post(self, request, pk):
         loan = self.get_loan(request, pk)
-        form = RestructuringForm(request.POST)
+        # Bind to a copy so a failed submit does not alter the shown loan.
+        form = LoanEditForm(request.POST, instance=Loan.objects.get(pk=loan.pk))
         if form.is_valid():
             data = form.cleaned_data
             try:
-                new_loan = services.restructure_loan(
+                services.update_loan(
                     loan, request.user,
+                    principal=data["principal"],
                     installment_count=data["installment_count"],
                     frequency=data["payment_frequency"],
                     first_payment_date=data["first_payment_date"],
-                    interest_mode=data.get("interest_mode") or None,
-                    interest_rate=data.get("interest_rate"),
+                    application_date=data.get("application_date"),
                     notes=data.get("notes", ""),
                 )
                 messages.success(
-                    request,
-                    _("Loan restructured. New reference: %(ref)s") % {
-                        "ref": new_loan.reference})
-                return redirect(new_loan.get_absolute_url())
+                    request, _("Loan %(ref)s updated.") % {"ref": loan.reference})
+                return redirect(loan.get_absolute_url())
             except BusinessRuleError as error:
-                messages.error(request, str(error))
-        return render(request, "loans/restructure.html", {"loan": loan, "form": form})
+                form.add_error(None, str(error))
+        return render(request, "loans/edit.html", {"loan": loan, "form": form})
 
 
 class ScheduleView(LoanBaseMixin, DetailView):

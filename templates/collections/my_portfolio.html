@@ -17,6 +17,19 @@
         {% empty %}<tr><td colspan="4">{% include "components/empty_state.html" with message=_("You have no collections scheduled for today.") icon="bi-calendar-check" %}</td></tr>{% endfor %}
         </tbody></table></div>
     </div>
+    <div class="card-panel mt-3"><div class="card-panel-header"><h2>{% trans "Payments received today" %}</h2></div>
+      <div class="table-wrap"><table class="data-table">
+        <thead><tr><th>{% trans "Customer" %}</th><th>{% trans "Reference" %}</th>
+          <th>{% trans "Method" %}</th><th class="num">{% trans "Amount" %}</th></tr></thead>
+        <tbody>
+        {% for payment in paid_today %}
+          <tr><td>{{ payment.customer }}<span class="d-block text-secondary small">{{ payment.paid_at|date:"H:i" }}</span></td>
+            <td>{{ payment.reference }}</td>
+            <td>{{ payment.get_method_display }}</td>
+            <td class="num fw-semibold">{{ payment.amount|mxn }}</td></tr>
+        {% empty %}<tr><td colspan="4" class="text-secondary small p-3">{% trans "No payments received today." %}</td></tr>{% endfor %}
+        </tbody></table></div>
+    </div>
   </div>
   <div class="col-lg-6">
     <div class="card-panel mb-3"><div class="card-panel-header"><h2>{% trans "Past due" %}</h2></div>

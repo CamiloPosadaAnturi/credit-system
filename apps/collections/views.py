@@ -1,5 +1,7 @@
 import datetime as dt
 
+from apps.payments.models import Payment
+
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -154,11 +156,20 @@ class MyPortfolioView(ActionRequiredMixin, TemplateView):
             collector_id = self.request.GET.get("collector")
             if collector_id:
                 loans = loans.filter(collector_id=collector_id)
+        paid_today = (
+            Payment.objects
+            .cash_received()
+            .filter(loan__in=loans)
+            .filter(paid_at__date=today)
+            .select_related("customer", "loan", "received_by")
+            .order_by("-paid_at")
+        )
         context.update({
             "today": today,
             "due_today": services.installments_due_on(loans, today),
             "overdue": services.overdue_installments(loans, today),
             "upcoming": services.upcoming_installments(loans, 3, today),
+            "paid_today": paid_today,
             "title": _("My portfolio for today"),
         })
         return context

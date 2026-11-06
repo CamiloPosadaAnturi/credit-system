@@ -13,8 +13,8 @@
     <a class="btn btn-sm btn-outline-soft" href="{% url 'payments:payoff' loan.pk %}">{% trans "Pay off" %}</a>
   {% endif %}
   
-  {% if can_restructure %}
-    <a class="btn btn-sm btn-outline-warning" href="{% url 'loans:restructure' loan.pk %}">{% trans "Restructure" %}</a>
+  {% if can_edit %}
+    <a class="btn btn-sm btn-outline-warning" href="{% url 'loans:edit' loan.pk %}">{% trans "Edit" %}</a>
   {% endif %}
   {% if can_cancel %}
     <a class="btn btn-sm btn-outline-danger" href="{% url 'loans:cancel' loan.pk %}">{% trans "Cancel" %}</a>
@@ -24,11 +24,6 @@
   {% endif %}
 {% endblock %}
 {% block content %}
-{% if loan.is_live %}
-  <div class="alert alert-info py-2 small">
-    {% trans "This loan was already disbursed: its terms cannot be edited. Any adjustment is made with an audited payment reversal or an authorized restructuring." %}
-  </div>
-{% endif %}
 
 <div class="stat-grid mb-4">
   {% include "components/stat_tile.html" with label=_("Principal") value=loan.principal|mxn accent="accent-blue" %}

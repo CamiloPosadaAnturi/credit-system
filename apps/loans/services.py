@@ -151,6 +151,110 @@ def generate_schedule(loan: Loan) -> list[Installment]:
     return installments
 
 
+@transaction.atomic
+def update_loan(
+    loan: Loan,
+    user,
+    *,
+    principal,
+    installment_count: int,
+    frequency: str,
+    first_payment_date: dt.date,
+    application_date: dt.date | None = None,
+    notes: str = "",
+) -> Loan:
+    """Edit the terms of a loan in place (same reference, same payments).
+
+    The interest is recomputed with the rate frozen in the loan, the schedule
+    is rebuilt and every confirmed payment is applied again, oldest first, to
+    the new installments. The previous terms are kept in the audit log.
+    """
+    from apps.payments.models import Payment, PaymentAllocation, PaymentStatus
+    from apps.payments.services import allocate_payment
+
+    loan = Loan.objects.select_for_update().get(pk=loan.pk)
+    if loan.status in (LoanStatus.CANCELLED, LoanStatus.RESTRUCTURED):
+        raise LoanError(_("A cancelled loan cannot be edited."))
+    principal = to_decimal(principal)
+    if principal <= ZERO:
+        raise LoanError(_("The principal must be greater than zero."))
+    if installment_count < 1:
+        raise LoanError(_("There must be at least one installment."))
+
+    interest = calculate_interest(principal, loan.interest_mode, loan.interest_rate,
+                                  installment_count)
+    total = calculate_total_payable(principal, interest)
+
+    payments = list(
+        Payment.objects.select_for_update()
+        .filter(loan=loan, status=PaymentStatus.CONFIRMED)
+        .order_by("paid_at", "pk")
+    )
+    paid = money(sum((p.amount - p.overpayment for p in payments), ZERO))
+    if paid > total:
+        raise LoanError(
+            _("The payments already applied (%(paid)s MXN) exceed the new total "
+              "payable (%(total)s MXN).") % {"paid": paid, "total": total}
+        )
+
+    previous = {
+        "principal": str(loan.principal),
+        "total_interest": str(loan.total_interest),
+        "total_payable": str(loan.total_payable),
+        "installment_count": loan.installment_count,
+        "payment_frequency": loan.payment_frequency,
+        "first_payment_date": loan.first_payment_date.isoformat(),
+        "application_date": loan.application_date.isoformat(),
+    }
+
+    loan.principal = money(principal)
+    loan.total_interest = interest
+    loan.total_payable = total
+    loan.installment_count = installment_count
+    loan.payment_frequency = frequency
+    loan.first_payment_date = first_payment_date
+    if application_date:
+        loan.application_date = application_date
+        loan.disbursement_date = application_date
+    loan.notes = notes
+    loan.updated_by = user
+    if loan.status == LoanStatus.SETTLED:
+        loan.status = LoanStatus.ACTIVE  # refresh_status settles it again if paid
+    loan.save()
+
+    # The allocations point at the old installments: drop them, rebuild the
+    # schedule and apply the confirmed payments again in order.
+    PaymentAllocation.objects.filter(installment__loan=loan).delete()
+    loan.installments.all().delete()
+    generate_schedule(loan)
+    for payment in payments:
+        allocated, overpayment = allocate_payment(payment, loan)
+        payment.allocated_amount = allocated
+        payment.overpayment = overpayment
+        payment.save(update_fields=["allocated_amount", "overpayment"])
+        recalculate_loan(loan)
+    if not payments:
+        loan.outstanding_balance = total
+        loan.principal_paid = ZERO
+        loan.interest_paid = ZERO
+        loan.save(update_fields=["outstanding_balance", "principal_paid",
+                                 "interest_paid", "updated_at"])
+        refresh_status(loan)
+
+    log(
+        AuditAction.UPDATE,
+        _("Loan %(reference)s edited") % {"reference": loan.reference},
+        target=loan, user=user, business=loan.business,
+        data={"before": previous,
+              "after": {"principal": str(loan.principal),
+                        "total_interest": str(interest), "total_payable": str(total),
+                        "installment_count": installment_count,
+                        "payment_frequency": frequency,
+                        "first_payment_date": first_payment_date.isoformat()}},
+    )
+    return loan
+
+
 # --------------------------------------------------------------------------
 # Status transitions
 # --------------------------------------------------------------------------
@@ -162,7 +266,7 @@ def cancel_loan(loan: Loan, user, reason: str) -> Loan:
     if loan.total_paid > ZERO:
         raise LoanError(
             _("The loan has payments applied. Reverse the payments before cancelling "
-              "or register a restructuring.")
+              "or edit the loan.")
         )
     if not reason:
         raise LoanError(_("You must state the reason for the cancellation."))
@@ -388,14 +492,9 @@ def interest_per_thousand(rate) -> Decimal:
 def loan_deletion_blocker(loan: Loan) -> str | None:
     """Why the loan cannot be deleted, or ``None`` when it can.
 
-    A loan with payments IS deleted (its payments go with it, see
-    ``delete_loan``). Only restructurings are kept: deleting one half would
-    leave the other loan pointing at a balance that no longer exists.
+    Every loan can be deleted, with its payments (see ``delete_loan``),
+    including the ones linked by an old restructuring.
     """
-    if loan.original_loan_id:
-        return _("The loan comes from a restructuring and cannot be deleted.")
-    if loan.restructurings.exists():
-        return _("The loan was restructured into another loan and cannot be deleted.")
     return None
 
 
@@ -431,6 +530,8 @@ def delete_loan(loan: Loan, user) -> None:
         _("Loan %(ref)s of %(customer)s deleted") % {
             "ref": loan.reference, "customer": loan.customer.full_name},
         target=loan, user=user, data=snapshot)
+    # Loans created from an old restructuring of this one stay, unlinked.
+    Loan.objects.filter(original_loan=loan).update(original_loan=None)
     contract = loan.contract.name if loan.contract else ""
     storage = loan.contract.storage if loan.contract else None
     try:

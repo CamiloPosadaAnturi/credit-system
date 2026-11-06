@@ -22,7 +22,7 @@ VIEW_LOANS = "view_loans"
 CREATE_LOAN = "create_loan"
 CANCEL_LOAN = "cancel_loan"
 DELETE_LOAN = "delete_loan"
-RESTRUCTURE_LOAN = "restructure_loan"
+EDIT_LOAN = "edit_loan"
 VIEW_PAYMENTS = "view_payments"
 REGISTER_PAYMENT = "register_payment"
 REVERSE_PAYMENT = "reverse_payment"
@@ -45,7 +45,7 @@ MATRIX: dict[str, set[str]] = {
     CREATE_LOAN: {Role.SUPERADMIN, Role.ADMIN, Role.MANAGER},
     CANCEL_LOAN: {Role.SUPERADMIN, Role.ADMIN},
     DELETE_LOAN: {Role.SUPERADMIN, Role.ADMIN},
-    RESTRUCTURE_LOAN: {Role.SUPERADMIN, Role.ADMIN},
+    EDIT_LOAN: {Role.SUPERADMIN, Role.ADMIN},
     VIEW_PAYMENTS: EVERYONE,
     REGISTER_PAYMENT: {Role.SUPERADMIN, Role.ADMIN, Role.MANAGER, Role.COLLECTOR},
     REVERSE_PAYMENT: {Role.SUPERADMIN, Role.ADMIN},

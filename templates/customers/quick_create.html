@@ -3,7 +3,7 @@
 {% block content %}
 <div class="row"><div class="col-lg-6">
   <div class="card-panel"><div class="card-panel-body">
-    <form method="post" novalidate data-submit-once>
+    <form method="post" enctype="multipart/form-data" novalidate data-submit-once>
       {% csrf_token %}
       {% include "customers/_quick_form.html" %}
       <div class="d-flex gap-2 mt-3">

@@ -39,7 +39,7 @@ class Customer(BaseModel):
     second_last_name = models.CharField(_("second last name"), max_length=80, blank=True)
 
     phone = models.CharField(_("primary phone"), max_length=20,
-                             validators=[validate_phone])
+                            validators=[validate_phone])
 
     notes = models.TextField(_("internal notes"), blank=True)
 
@@ -63,3 +63,9 @@ class Customer(BaseModel):
     def full_name(self) -> str:
         parts = [self.first_name, self.last_name, self.second_last_name]
         return " ".join(part for part in parts if part).strip()
+
+    photo = models.ImageField(
+        _("photo"),
+        upload_to="customers/photos/",
+        blank=True, null=True
+    )

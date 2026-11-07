@@ -1,6 +1,7 @@
 """Quick customer registration from the modal of the customer list."""
 from django.test import TestCase
 from django.urls import reverse
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from apps.core.factories import create_business, create_user
 from apps.customers.models import Customer
@@ -21,7 +22,10 @@ class QuickCustomerCreateTests(TestCase):
         self.assertContains(response, 'id="newCustomerModal"')
         self.assertContains(response, 'data-bs-target="#newCustomerModal"')
         form = response.context["quick_form"]
-        self.assertEqual(list(form.fields), ["first_name", "last_name", "phone"])
+        self.assertEqual(
+            list(form.fields),
+            ["first_name", "last_name", "second_last_name", "phone", "photo", "notes"],
+        )
 
     def test_ajax_success_creates_the_customer(self):
         response = self.client.post(self.url, {
@@ -35,6 +39,23 @@ class QuickCustomerCreateTests(TestCase):
         self.assertEqual(customer.phone, "5512345678")
         self.assertEqual(customer.business, self.business)
         self.assertEqual(customer.created_by, self.admin)
+
+    def test_ajax_success_can_attach_a_photo(self):
+        photo = SimpleUploadedFile(
+            "customer.gif",
+            b"GIF87a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff!\xf9\x04\x01"
+            b"\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;",
+            content_type="image/gif",
+        )
+        response = self.client.post(self.url, {
+            "first_name": "Laura",
+            "last_name": "Mendez",
+            "phone": "5512345678",
+            "photo": photo,
+        }, **AJAX)
+        self.assertEqual(response.status_code, 200)
+        customer = Customer.objects.get(first_name="Laura")
+        self.assertTrue(customer.photo.name.startswith("customers/photos/customer"))
 
     def test_ajax_errors_come_back_as_html(self):
         response = self.client.post(self.url, {"first_name": "Laura"}, **AJAX)

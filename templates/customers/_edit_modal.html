@@ -2,7 +2,8 @@
 <div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerTitle" aria-hidden="true"
      data-loading-text="{% trans 'Loading...' %}" data-error-text="{% trans 'Could not load the form.' %}">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <form class="modal-content" method="post" action="" novalidate data-ajax-form data-no-autofocus>
+    <form class="modal-content" method="post" action="" enctype="multipart/form-data"
+          novalidate data-ajax-form data-no-autofocus>
       {% csrf_token %}
       <input type="hidden" name="next" value="">
       <div class="modal-header">

@@ -94,7 +94,8 @@
 {% if quick_form %}
 <div class="modal fade" id="newCustomerModal" tabindex="-1" aria-labelledby="newCustomerTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <form class="modal-content" method="post" action="{% url 'customers:create' %}" novalidate data-ajax-form>
+    <form class="modal-content" method="post" action="{% url 'customers:create' %}"
+          enctype="multipart/form-data" novalidate data-ajax-form>
       {% csrf_token %}
       <div class="modal-header">
         <h2 class="modal-title fs-5" id="newCustomerTitle">{% trans "New customer" %}</h2>

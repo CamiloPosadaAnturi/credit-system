@@ -10,15 +10,17 @@ class CustomerForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = Customer
         fields = [
-            "first_name", "last_name", "second_last_name", "phone", "notes",
+            "first_name", "last_name", "second_last_name", "phone", "photo", "notes",
         ]
         widgets = {
             "phone": forms.TextInput(attrs={"type": "tel", "inputmode": "tel"}),
+            "photo": forms.ClearableFileInput(attrs={"accept": "image/*"}),
             "notes": forms.Textarea(attrs={"rows": 3}),
         }
 
     SECTIONS = [
         (_("Identification"), ["first_name", "last_name", "second_last_name", "phone"]),
+        (_("Photo"), ["photo"]),
         (_("Operations"), ["notes"]),
     ]
 
@@ -48,13 +50,18 @@ class CustomerQuickForm(BootstrapFormMixin, forms.ModelForm):
 
     class Meta:
         model = Customer
-        fields = ["first_name", "last_name", "phone"]
-        labels = {"last_name": _("Last name"), "phone": _("Phone")}
+        fields = ["first_name", "last_name", "second_last_name", "phone", "photo", "notes"]
+        labels = {
+            "last_name": _("Last name"),
+            "phone": _("Phone"),
+            "photo": _("Photo (optional)"),
+        }
         widgets = {
             "first_name": forms.TextInput(attrs={"autocomplete": "off"}),
             "last_name": forms.TextInput(attrs={"autocomplete": "off"}),
             "phone": forms.TextInput(attrs={"type": "tel", "inputmode": "tel",
                                             "autocomplete": "off"}),
+            "photo": forms.ClearableFileInput(attrs={"accept": "image/*"}),
         }
 
     def __init__(self, *args, **kwargs):

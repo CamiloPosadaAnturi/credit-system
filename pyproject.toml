@@ -29,3 +29,13 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.coverage.run]
 source = ["apps"]
 omit = ["*/migrations/*", "*/tests/*"]
+
+
+dependencies = [
+    "django>=5.1,<5.2",
+    "django-environ>=0.11",
+    "psycopg[binary]>=3.1",
+    "openpyxl>=3.1",
+    "whitenoise>=6.6",
+    "Pillow>=11.0",
+]

@@ -40,6 +40,10 @@
     <div class="card-panel h-100">
       <div class="card-panel-header"><h2>{% trans "Customer details" %}</h2></div>
       <div class="card-panel-body">
+        {% if customer.photo %}
+          <img src="{{ customer.photo.url }}" alt="{{ customer.full_name }}"
+               class="rounded mb-3 w-100" style="max-width: 220px; height: auto;">
+        {% endif %}
         <dl class="row small mb-0">
           <dt class="col-5">{% trans "Phone" %}</dt><dd class="col-7">{{ customer.phone }}</dd>
         </dl>
